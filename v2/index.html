@@ -301,13 +301,13 @@ function goTo(n){
   const p=allSlides[current],nx=allSlides[n];
   p.classList.remove('active');p.classList.add(fwd?'exit-fwd':'exit-bwd');
   setTimeout(()=>p.classList.remove('exit-fwd','exit-bwd'),600);
+  // Position off-screen with no transition
   nx.style.transition='none';nx.style.transform=`translateX(${fwd?'6%':'-6%'}) scale(.97)`;nx.style.opacity='0';
-  current=n;
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    nx.style.transition='';nx.style.transform='';nx.style.opacity='';nx.classList.add('active');
-    updateHUD();
-    if(allSlides[current].dataset.type==='map')setTimeout(startMap,400);
-  }));
+  void nx.offsetHeight; // force reflow — browser commits the off-screen position
+  // Re-enable transitions and activate
+  nx.style.transition='';nx.style.transform='';nx.style.opacity='';nx.classList.add('active');
+  current=n;updateHUD();
+  if(allSlides[current].dataset.type==='map')setTimeout(startMap,400);
 }
 document.getElementById('btn-prev').addEventListener('click',()=>goTo(current-1));
 document.getElementById('btn-next').addEventListener('click',()=>goTo(current+1));
@@ -383,10 +383,11 @@ function mPos(i){const a=(-90+i*36)*Math.PI/180;return{x:MX+MR*Math.cos(a),y:MY+
 const CONSTELLATION_LINES=[[0,3],[1,5],[2,7],[3,8],[4,9],[5,0],[6,1],[7,2],[8,4],[9,6]];
 
 // Monocle logo overlay geometry (to align monocle-white.png with the circle)
-// The monocle PNG is 852×877, ring center at ~(415,380), ring radius ~335px
-const LOGO_SCALE=MR/335; // 0.582
-const LOGO_W=852*LOGO_SCALE, LOGO_H=877*LOGO_SCALE; // ~496×510
-const LOGO_X=MX-415*LOGO_SCALE, LOGO_Y=MY-380*LOGO_SCALE; // ~(198,39)
+// The monocle PNG is 852×877, ring center at ~(410,385), ring outer radius ~380px
+// We align the ring's CENTER stroke (not inner edge) with our constellation circle
+const LOGO_SCALE=MR/355;
+const LOGO_W=852*LOGO_SCALE, LOGO_H=877*LOGO_SCALE;
+const LOGO_X=MX-410*LOGO_SCALE, LOGO_Y=MY-385*LOGO_SCALE;
 
 let mapDone=false;
 function startMap(){

@@ -370,92 +370,167 @@ function updateTracker(){
 updateHUD();
 
 // ── Map animation ──
+// Monocle geometry: ring center, radius, cord attachment at ~5 o'clock, bonus at eyepiece circle
 const LSHORT=SECTIONS.map(s=>s.lesson.title.replace('\n',' '));
-const MX=460,MY=270,MR=195;
+const MX=440,MY=260,MR=195;
+// Cord attaches at ~5 o'clock on the ring (150° from 12 = angle 60° in our system)
+const CORD_ANGLE=55*Math.PI/180; // between nodes 4 and 5 on the ring
+const CORD_A={x:MX+MR*Math.cos(CORD_ANGLE), y:MY+MR*Math.sin(CORD_ANGLE)}; // ~553,420
+const CORD_B={x:CORD_A.x+95, y:CORD_A.y+100}; // bonus eyepiece ~648,520
 function mPos(i){const a=(-90+i*36)*Math.PI/180;return{x:MX+MR*Math.cos(a),y:MY+MR*Math.sin(a)}}
+
+// Constellation line pairs (connecting non-adjacent nodes for star pattern)
+const CONSTELLATION_LINES=[[0,3],[1,5],[2,7],[3,8],[4,9],[5,0],[6,1],[7,2],[8,4],[9,6]];
+
+// Monocle logo overlay geometry (to align monocle-white.png with the circle)
+// The monocle PNG is 852×877, ring center at ~(415,380), ring radius ~335px
+const LOGO_SCALE=MR/335; // 0.582
+const LOGO_W=852*LOGO_SCALE, LOGO_H=877*LOGO_SCALE; // ~496×510
+const LOGO_X=MX-415*LOGO_SCALE, LOGO_Y=MY-380*LOGO_SCALE; // ~(198,39)
 
 let mapDone=false;
 function startMap(){
   if(mapDone)return;mapDone=true;
   const svg=document.getElementById('map-svg');svg.innerHTML='';
   const CIRC=2*Math.PI*MR;
+
   // defs
-  const defs=svgE('defs');const f=svgE('filter',{id:'gl',x:'-40%',y:'-40%',width:'180%',height:'180%'});
+  const defs=svgE('defs');
+  const f=svgE('filter',{id:'gl',x:'-40%',y:'-40%',width:'180%',height:'180%'});
   f.appendChild(svgE('feGaussianBlur',{stdDeviation:'3',result:'b'}));
   const mg=svgE('feMerge');mg.appendChild(svgE('feMergeNode',{in:'b'}));mg.appendChild(svgE('feMergeNode',{in:'SourceGraphic'}));
-  f.appendChild(mg);defs.appendChild(f);svg.appendChild(defs);
+  f.appendChild(mg);defs.appendChild(f);
+  // softer glow for constellation lines
+  const f2=svgE('filter',{id:'gl2',x:'-50%',y:'-50%',width:'200%',height:'200%'});
+  f2.appendChild(svgE('feGaussianBlur',{stdDeviation:'1.5',result:'b2'}));
+  const mg2=svgE('feMerge');mg2.appendChild(svgE('feMergeNode',{in:'b2'}));mg2.appendChild(svgE('feMergeNode',{in:'SourceGraphic'}));
+  f2.appendChild(mg2);defs.appendChild(f2);
+  svg.appendChild(defs);
 
-  svg.appendChild(svgE('circle',{cx:MX,cy:MY,r:MR,fill:'none',stroke:'rgba(0,212,255,.06)','stroke-width':'1'}));
-  const ring=svgE('circle',{cx:MX,cy:MY,r:MR,fill:'none',stroke:'rgba(0,212,255,.6)','stroke-width':'2','stroke-dasharray':CIRC,'stroke-dashoffset':CIRC,'stroke-linecap':'round',transform:`rotate(-90 ${MX} ${MY})`,filter:'url(#gl)'});
+  // Monocle logo image (hidden, fades in at the end as the "reveal")
+  const logoImg=svgE('image',{href:'monocle-white.png',x:LOGO_X,y:LOGO_Y,width:LOGO_W,height:LOGO_H,opacity:'0'});
+  logoImg.style.transition='opacity 1.8s ease-in';
+  svg.appendChild(logoImg);
+
+  // Faint guide circle
+  svg.appendChild(svgE('circle',{cx:MX,cy:MY,r:MR,fill:'none',stroke:'rgba(0,212,255,.05)','stroke-width':'1'}));
+
+  // Constellation lines (thin, connecting non-adjacent nodes — appear with a delay)
+  const constLines=[];
+  CONSTELLATION_LINES.forEach(([a,b])=>{
+    const pa=mPos(a),pb=mPos(b);
+    const line=svgE('line',{x1:pa.x,y1:pa.y,x2:pb.x,y2:pb.y,stroke:'rgba(0,212,255,.06)','stroke-width':'0.5',filter:'url(#gl2)',opacity:'0'});
+    line.style.transition='opacity .6s';
+    svg.appendChild(line);
+    constLines.push(line);
+  });
+
+  // Animated ring (draws clockwise from top)
+  const ring=svgE('circle',{cx:MX,cy:MY,r:MR,fill:'none',stroke:'rgba(0,212,255,.55)','stroke-width':'1.8',
+    'stroke-dasharray':CIRC,'stroke-dashoffset':CIRC,'stroke-linecap':'round',
+    transform:`rotate(-90 ${MX} ${MY})`,filter:'url(#gl)'});
   svg.appendChild(ring);
 
-  const cB={x:MX+MR+125,y:MY+185};
-  const cord=svgE('path',{d:`M${MX+MR} ${MY} Q${MX+MR+65} ${MY+100} ${cB.x} ${cB.y}`,fill:'none',stroke:'rgba(245,158,11,.6)','stroke-width':'2','stroke-dasharray':'230','stroke-dashoffset':'230','stroke-linecap':'round',filter:'url(#gl)'});
+  // Cord path (from ~5 o'clock on ring to bonus eyepiece)
+  const cordCtrl={x:CORD_A.x+55,y:CORD_A.y+60};
+  const cord=svgE('path',{d:`M${CORD_A.x} ${CORD_A.y} Q${cordCtrl.x} ${cordCtrl.y} ${CORD_B.x} ${CORD_B.y}`,
+    fill:'none',stroke:'rgba(245,158,11,.55)','stroke-width':'1.8',
+    'stroke-dasharray':'200','stroke-dashoffset':'200','stroke-linecap':'round',filter:'url(#gl)'});
   svg.appendChild(cord);
 
-  // nodes
+  // Year nodes (on the ring)
   const nEls=[];
   for(let i=0;i<10;i++){
     const p=mPos(i),dx=p.x-MX,dy=p.y-MY,len=Math.hypot(dx,dy);
     const lx=p.x+(dx/len)*34,ly=p.y+(dy/len)*34;
     const anc=p.x>MX+20?'start':p.x<MX-20?'end':'middle';
     const g=svgE('g',{opacity:'0',class:'recap-pill'});g.style.transition='opacity .4s';g.dataset.lesson=i;
-    // crater
-    g.appendChild(svgE('circle',{cx:p.x,cy:p.y,r:'15',fill:'rgba(0,212,255,.03)',stroke:'rgba(0,212,255,.12)','stroke-width':'1'}));
-    g.appendChild(svgE('circle',{cx:p.x,cy:p.y,r:'5.5',fill:'#060810',stroke:'rgba(0,212,255,.7)','stroke-width':'2'}));
-    const yr=svgE('text',{x:lx,y:ly-(p.y<MY?12:-1),'text-anchor':anc,fill:'rgba(0,212,255,.8)','font-family':'Space Grotesk,sans-serif','font-size':'11','font-weight':'600','letter-spacing':'1.5'});
+    // star glow
+    g.appendChild(svgE('circle',{cx:p.x,cy:p.y,r:'16',fill:'rgba(0,212,255,.02)',stroke:'rgba(0,212,255,.08)','stroke-width':'0.5'}));
+    // center star
+    g.appendChild(svgE('circle',{cx:p.x,cy:p.y,r:'4.5',fill:'rgba(0,212,255,.15)',stroke:'rgba(0,212,255,.65)','stroke-width':'1.5'}));
+    // year label
+    const yr=svgE('text',{x:lx,y:ly-(p.y<MY?12:0),'text-anchor':anc,fill:'rgba(0,212,255,.8)',
+      'font-family':'Space Grotesk,sans-serif','font-size':'10.5','font-weight':'600','letter-spacing':'1.2'});
     yr.textContent=2016+i;g.appendChild(yr);
-    const tt=svgE('text',{x:lx,y:ly+(p.y<MY?3:15),'text-anchor':anc,fill:'rgba(255,255,255,.42)','font-family':'Space Grotesk,sans-serif','font-size':'8.5','font-weight':'400'});
+    // lesson label
+    const tt=svgE('text',{x:lx,y:ly+(p.y<MY?3:14),'text-anchor':anc,fill:'rgba(255,255,255,.38)',
+      'font-family':'Space Grotesk,sans-serif','font-size':'8','font-weight':'400'});
     tt.textContent=LSHORT[i];g.appendChild(tt);
     g.addEventListener('click',()=>{if(lessonIdxs[i]!==undefined)goTo(lessonIdxs[i])});
     svg.appendChild(g);nEls.push(g);
   }
 
-  // bonus
+  // Bonus node (the eyepiece circle of the monocle)
   const bG=svgE('g',{opacity:'0'});bG.style.transition='opacity .5s';
-  bG.appendChild(svgE('circle',{cx:cB.x,cy:cB.y,r:'15',fill:'rgba(245,158,11,.03)',stroke:'rgba(245,158,11,.12)','stroke-width':'1'}));
-  bG.appendChild(svgE('circle',{cx:cB.x,cy:cB.y,r:'6',fill:'#060810',stroke:'rgba(245,158,11,.7)','stroke-width':'2'}));
-  const bYr=svgE('text',{x:cB.x+20,y:cB.y-6,'text-anchor':'start',fill:'rgba(245,158,11,.85)','font-family':'Space Grotesk,sans-serif','font-size':'11','font-weight':'600','letter-spacing':'1.5'});
+  bG.appendChild(svgE('circle',{cx:CORD_B.x,cy:CORD_B.y,r:'18',fill:'rgba(245,158,11,.02)',stroke:'rgba(245,158,11,.1)','stroke-width':'0.5'}));
+  bG.appendChild(svgE('circle',{cx:CORD_B.x,cy:CORD_B.y,r:'6',fill:'rgba(245,158,11,.15)',stroke:'rgba(245,158,11,.65)','stroke-width':'1.5'}));
+  const bYr=svgE('text',{x:CORD_B.x+22,y:CORD_B.y-5,'text-anchor':'start',fill:'rgba(245,158,11,.85)',
+    'font-family':'Space Grotesk,sans-serif','font-size':'10.5','font-weight':'600','letter-spacing':'1.2'});
   bYr.textContent='2026';bG.appendChild(bYr);
-  const bTt=svgE('text',{x:cB.x+20,y:cB.y+10,'text-anchor':'start',fill:'rgba(255,255,255,.4)','font-family':'Space Grotesk,sans-serif','font-size':'8.5'});
+  const bTt=svgE('text',{x:CORD_B.x+22,y:CORD_B.y+10,'text-anchor':'start',fill:'rgba(255,255,255,.35)',
+    'font-family':'Space Grotesk,sans-serif','font-size':'8'});
   bTt.textContent='The Demo Will Break';bG.appendChild(bTt);
   svg.appendChild(bG);
 
-  // center
-  const cL=svgE('text',{x:MX,y:MY-2,'text-anchor':'middle','dominant-baseline':'middle',fill:'rgba(255,255,255,0)','font-family':'Space Grotesk,sans-serif','font-size':'20','font-weight':'600','letter-spacing':'4'});
+  // Center text
+  const cL=svgE('text',{x:MX,y:MY-4,'text-anchor':'middle','dominant-baseline':'middle',fill:'rgba(255,255,255,0)',
+    'font-family':'Space Grotesk,sans-serif','font-size':'20','font-weight':'600','letter-spacing':'4'});
   cL.textContent='AGILE LENS';svg.appendChild(cL);
-  const cS=svgE('text',{x:MX,y:MY+22,'text-anchor':'middle','dominant-baseline':'middle',fill:'rgba(255,255,255,0)','font-family':'Space Grotesk,sans-serif','font-size':'10','font-weight':'400','letter-spacing':'2.5'});
+  const cS=svgE('text',{x:MX,y:MY+20,'text-anchor':'middle','dominant-baseline':'middle',fill:'rgba(255,255,255,0)',
+    'font-family':'Space Grotesk,sans-serif','font-size':'10','font-weight':'400','letter-spacing':'2.5'});
   cS.textContent='2016 – 2026';svg.appendChild(cS);
 
-  // avatar in center (fist pump)
+  // Avatar (fist pump celebration — appears in center at the end)
   const avG=svgE('g',{opacity:'0',id:'map-av'});avG.style.transition='opacity .6s';
-  avG.appendChild(svgE('circle',{cx:MX,cy:MY-70,r:'9',fill:'#fcd9b6'})); // head
-  avG.appendChild(svgE('rect',{x:MX-7,y:MY-61,width:'14',height:'18',rx:'3',fill:'#a78bfa'})); // body
-  avG.appendChild(svgE('rect',{x:MX-9,y:MY-81,width:'18',height:'7',rx:'2',fill:'#6B4226'})); // hair (bearded era)
-  // beard
+  avG.appendChild(svgE('circle',{cx:MX,cy:MY-70,r:'9',fill:'#fcd9b6'}));
+  avG.appendChild(svgE('rect',{x:MX-7,y:MY-61,width:'14',height:'18',rx:'3',fill:'#a78bfa'}));
+  avG.appendChild(svgE('rect',{x:MX-9,y:MY-81,width:'18',height:'7',rx:'2',fill:'#6B4226'}));
   avG.appendChild(svgE('rect',{x:MX-5,y:MY-64,width:'10',height:'4',rx:'2',fill:'#5C3D1F'}));
-  // fist pump arm
   avG.appendChild(svgE('line',{x1:MX+7,y1:MY-56,x2:MX+16,y2:MY-80,stroke:'#fcd9b6','stroke-width':'3.5','stroke-linecap':'round'}));
-  // fist
   avG.appendChild(svgE('circle',{cx:MX+17,cy:MY-82,r:'4',fill:'#fcd9b6'}));
-  // legs
   avG.appendChild(svgE('line',{x1:MX-3,y1:MY-43,x2:MX-6,y2:MY-30,stroke:'#4a5568','stroke-width':'3.5','stroke-linecap':'round'}));
   avG.appendChild(svgE('line',{x1:MX+3,y1:MY-43,x2:MX+6,y2:MY-30,stroke:'#4a5568','stroke-width':'3.5','stroke-linecap':'round'}));
   svg.appendChild(avG);
 
-  // animate
-  const DLY=300,CDUR=3200,STP=CDUR/10;
+  // ── Animation sequence ──
+  const DLY=300, CDUR=3200, STP=CDUR/10;
+
+  // 1. Ring draws (0.3s – 3.5s)
   let rs=null;
   function aR(ts){if(!rs)rs=ts;const p=Math.min((ts-rs)/CDUR,1);const e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;ring.setAttribute('stroke-dashoffset',CIRC*(1-e));if(p<1)requestAnimationFrame(aR)}
   setTimeout(()=>requestAnimationFrame(aR),DLY);
+
+  // 2. Nodes appear as ring passes through (star by star)
   nEls.forEach((g,i)=>setTimeout(()=>{g.style.opacity='1'},DLY+i*STP+80));
+
+  // 3. Constellation lines fade in after their nodes appear
+  constLines.forEach((line,i)=>{
+    const [a,b]=CONSTELLATION_LINES[i];
+    const t=DLY+Math.max(a,b)*STP+200;
+    setTimeout(()=>{line.style.opacity='1'},t);
+  });
+
+  // 4. Cord draws after ring completes
   const cStart=DLY+CDUR+250;
   let cs2=null;
-  function aC(ts){if(!cs2)cs2=ts;const p=Math.min((ts-cs2)/800,1);cord.setAttribute('stroke-dashoffset',230*(1-p));if(p<1)requestAnimationFrame(aC)}
+  function aC(ts){if(!cs2)cs2=ts;const p=Math.min((ts-cs2)/800,1);cord.setAttribute('stroke-dashoffset',200*(1-p));if(p<1)requestAnimationFrame(aC)}
   setTimeout(()=>requestAnimationFrame(aC),cStart);
+
+  // 5. Bonus node appears
   setTimeout(()=>{bG.style.opacity='1'},cStart+800);
-  setTimeout(()=>{cL.setAttribute('fill','rgba(255,255,255,.7)');cL.style.transition='fill 1s';cS.setAttribute('fill','rgba(255,255,255,.25)');cS.style.transition='fill 1s'},cStart+1200);
-  setTimeout(()=>{avG.style.opacity='1';avG.style.animation='fistPump .65s ease-in-out'},cStart+1600);
+
+  // 6. Center text fades in
+  setTimeout(()=>{
+    cL.setAttribute('fill','rgba(255,255,255,.65)');cL.style.transition='fill 1s';
+    cS.setAttribute('fill','rgba(255,255,255,.22)');cS.style.transition='fill 1s';
+  },cStart+1100);
+
+  // 7. Monocle logo fades in behind everything (the constellation IS the logo — reveal moment)
+  setTimeout(()=>{ logoImg.style.opacity='0.09'; },cStart+1500);
+
+  // 8. Avatar celebration
+  setTimeout(()=>{avG.style.opacity='1';avG.style.animation='fistPump .65s ease-in-out'},cStart+2000);
 }
 </script>
 </body>

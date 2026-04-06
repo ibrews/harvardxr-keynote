@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10 Lessons · Alex Coulombe · HXR 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #060810;
+  --teal: #00d4ff;
+  --purple: #a78bfa;
+  --amber: #f59e0b;
+  --rose: #f43f5e;
+  --text: #f0f4ff;
+  --dim: rgba(240,244,255,0.45);
+  --font: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+}
+
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--font); }
+
+/* ── Background ── */
+.bg { position:fixed; inset:0; z-index:0; overflow:hidden; }
+.bg-gradient {
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 50%, rgba(124,58,237,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 70% at 85% 20%, rgba(0,212,255,0.12) 0%, transparent 55%),
+    linear-gradient(180deg, #060810 0%, #0b0820 50%, #060810 100%);
+}
+.grid-floor {
+  position:absolute; bottom:0; left:-60%; right:-60%; height:52%;
+  background-image: linear-gradient(rgba(0,212,255,0.10) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0,212,255,0.10) 1px, transparent 1px);
+  background-size:80px 80px;
+  transform:perspective(700px) rotateX(72deg);
+  transform-origin:bottom center;
+  animation:gridScroll 10s linear infinite;
+  mask-image:linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 75%);
+  -webkit-mask-image:linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 75%);
+  transition: animation-duration 0.3s;
+}
+.grid-floor.fast { animation-duration: 1.5s; }
+@keyframes gridScroll { from{background-position:0 0} to{background-position:0 80px} }
+canvas#stars { position:absolute; inset:0; }
+
+/* ── Deck ── */
+#deck { position:relative; z-index:1; width:100%; height:100%; overflow:hidden; }
+
+/* ── Slides ── */
+.slide {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  padding: clamp(40px,6vw,100px);
+  text-align:center;
+  opacity:0; pointer-events:none;
+  transition: opacity 0.5s cubic-bezier(0.4,0,0.2,1), transform 0.55s cubic-bezier(0.4,0,0.2,1);
+}
+.slide.active { opacity:1; pointer-events:all; transform:translateX(0) scale(1) !important; }
+.slide.exit-fwd { transform:translateX(-7%) scale(0.96) !important; opacity:0 !important; }
+.slide.exit-bwd { transform:translateX(7%)  scale(0.96) !important; opacity:0 !important; }
+
+/* ── Cover ── */
+.event-tag {
+  font-size:clamp(0.6rem,1.2vw,0.75rem); font-weight:600; letter-spacing:0.3em;
+  text-transform:uppercase; color:var(--teal); margin-bottom:28px; opacity:0.8;
+}
+.talk-title {
+  font-size:clamp(3rem,7.5vw,6rem); font-weight:700; line-height:1.0; letter-spacing:-0.03em;
+  background:linear-gradient(130deg, #ffffff 20%, #a5d8ff 55%, #9b8cff 85%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:16px;
+}
+.talk-subtitle { font-size:clamp(1rem,2.2vw,1.4rem); font-weight:400; color:var(--dim); margin-bottom:56px; }
+.speaker-card {
+  display:flex; align-items:center; gap:20px;
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+  border-radius:64px; padding:14px 32px; backdrop-filter:blur(12px);
+}
+.speaker-name { font-size:1rem; font-weight:600; }
+.speaker-co   { font-size:0.8rem; color:var(--dim); margin-top:2px; }
+.card-sep     { width:1px; height:36px; background:rgba(255,255,255,0.15); }
+.event-detail { font-size:0.8rem; color:var(--dim); line-height:1.6; }
+
+/* ── Lesson slides ── */
+.slide-lesson { padding-bottom: clamp(80px,10vh,120px); }
+
+.year-ghost {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  font-size:clamp(8rem,22vw,18rem); font-weight:700; letter-spacing:-0.06em; line-height:1;
+  color:rgba(255,255,255,0.028); pointer-events:none; user-select:none; white-space:nowrap;
+}
+
+.lesson-eyebrow {
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  font-size:clamp(0.58rem,1vw,0.68rem); font-weight:600; letter-spacing:0.26em;
+  text-transform:uppercase; margin-bottom:22px;
+}
+.eyebrow-year  { color:rgba(255,255,255,0.35); }
+.eyebrow-sep   { color:rgba(255,255,255,0.15); }
+.eyebrow-badge { color:var(--teal); }
+
+.lesson-title {
+  font-size:clamp(2rem,5.5vw,4.2rem); font-weight:700; letter-spacing:-0.025em;
+  line-height:1.08; max-width:900px; margin-bottom:24px;
+}
+.lesson-tagline {
+  font-size:clamp(0.95rem,1.8vw,1.15rem); color:var(--dim);
+  max-width:650px; line-height:1.75; font-weight:400;
+}
+.lesson-rule  { width:48px; height:3px; border-radius:2px; background:var(--teal); margin:26px auto 0; opacity:0.7; }
+.case-tag     { margin-top:16px; font-size:clamp(0.56rem,0.9vw,0.64rem); font-weight:500; letter-spacing:0.16em; text-transform:uppercase; color:rgba(255,255,255,0.18); }
+
+/* accent variants */
+.accent-purple .eyebrow-badge { color:var(--purple); }
+.accent-purple .lesson-rule   { background:var(--purple); }
+.accent-amber  .eyebrow-badge { color:var(--amber); }
+.accent-amber  .lesson-rule   { background:var(--amber); }
+.accent-rose   .eyebrow-badge { color:var(--rose); }
+.accent-rose   .lesson-rule   { background:var(--rose); }
+
+/* bonus */
+.slide-bonus .eyebrow-badge { color:var(--amber); }
+.slide-bonus .lesson-rule   { background:var(--amber); }
+.slide-bonus .year-ghost    { color:rgba(245,158,11,0.04); }
+
+/* ── Road strip ── */
+#road {
+  position:fixed; bottom:32px; left:50%; transform:translateX(-50%);
+  z-index:20; display:flex; align-items:flex-start; gap:0;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.4s;
+}
+#road.visible { opacity:1; pointer-events:all; }
+
+.rn { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; }
+.rn-dot {
+  width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.15);
+  transition:all 0.35s;
+}
+.rn.past   .rn-dot { background:rgba(255,255,255,0.38); }
+.rn.active .rn-dot { width:9px; height:9px; background:var(--teal); box-shadow:0 0 10px rgba(0,212,255,0.7); }
+.rn.bonus.active .rn-dot { background:var(--amber); box-shadow:0 0 10px rgba(245,158,11,0.7); }
+.rn-yr {
+  font-size:0.55rem; font-weight:500; letter-spacing:0.06em;
+  color:rgba(255,255,255,0.18); transition:color 0.35s; white-space:nowrap;
+}
+.rn.past   .rn-yr { color:rgba(255,255,255,0.32); }
+.rn.active .rn-yr { color:var(--teal); font-weight:600; }
+.rn.bonus.active .rn-yr { color:var(--amber); }
+
+.rc {
+  width:22px; height:1px; background:rgba(255,255,255,0.12);
+  margin-top:4px; flex-shrink:0; transition:background 0.35s;
+}
+.rc.past { background:rgba(255,255,255,0.32); }
+
+/* ── Map slide ── */
+.slide-map { padding:clamp(20px,3vw,48px); }
+.map-eyebrow {
+  position:absolute; top:clamp(20px,3vh,40px); left:50%; transform:translateX(-50%);
+  font-size:clamp(0.58rem,1vw,0.7rem); font-weight:600; letter-spacing:0.3em;
+  text-transform:uppercase; color:rgba(255,255,255,0.2); white-space:nowrap;
+}
+#monocle-svg { width:100%; height:100%; max-height:80vh; }
+
+/* ── Closing ── */
+.close-eyebrow {
+  font-size:clamp(0.6rem,1.2vw,0.75rem); font-weight:600; letter-spacing:0.3em;
+  text-transform:uppercase; color:var(--amber); margin-bottom:28px; opacity:0.8;
+}
+.close-title {
+  font-size:clamp(3rem,7vw,5.5rem); font-weight:700; letter-spacing:-0.03em; line-height:1.0;
+  background:linear-gradient(130deg, #fff 20%, #fde68a 60%, #f59e0b 90%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:20px;
+}
+.close-sub { font-size:clamp(1rem,1.8vw,1.2rem); color:var(--dim); margin-bottom:48px; }
+.contact-row { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+.contact-pill {
+  display:flex; align-items:center; gap:10px;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12);
+  border-radius:40px; padding:10px 22px; font-size:0.88rem;
+}
+.contact-pill .lbl { opacity:0.4; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; }
+
+/* ── HUD ── */
+#counter {
+  position:fixed; top:32px; right:48px; z-index:20;
+  font-size:0.72rem; font-weight:500; letter-spacing:0.12em; color:rgba(255,255,255,0.22);
+}
+#brand {
+  position:fixed; bottom:28px; left:48px; z-index:20;
+  font-size:0.68rem; font-weight:600; letter-spacing:0.15em;
+  text-transform:uppercase; color:rgba(255,255,255,0.16);
+}
+.nav-arrows { position:fixed; bottom:24px; right:48px; z-index:20; display:flex; gap:8px; }
+.nav-btn {
+  width:38px; height:38px; border:1px solid rgba(255,255,255,0.18); border-radius:8px;
+  background:rgba(255,255,255,0.03); color:rgba(255,255,255,0.45); font-size:14px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s; backdrop-filter:blur(8px);
+}
+.nav-btn:hover { background:rgba(0,212,255,0.12); border-color:rgba(0,212,255,0.3); color:var(--teal); }
+</style>
+</head>
+<body>
+
+<div class="bg">
+  <div class="bg-gradient"></div>
+  <div class="grid-floor" id="grid"></div>
+  <canvas id="stars"></canvas>
+</div>
+
+<div id="road"></div>
+
+<div id="deck">
+
+  <!-- 0: Cover -->
+  <div class="slide active" data-type="cover">
+    <div class="event-tag">HXR · Harvard XR Conference · April 11, 2026</div>
+    <h1 class="talk-title">10 Lessons<br>from 10 Years</h1>
+    <p class="talk-subtitle">Running an XR Enterprise Studio</p>
+    <div class="speaker-card">
+      <div>
+        <div class="speaker-name">Alex Coulombe</div>
+        <div class="speaker-co">CEO, Agile Lens</div>
+      </div>
+      <div class="card-sep"></div>
+      <div class="event-detail">Closing Keynote<br>Gund Hall, Harvard</div>
+    </div>
+  </div>
+
+  <!-- 1: 2016 -->
+  <div class="slide slide-lesson" data-type="lesson" data-year="2016" data-n="1">
+    <div class="year-ghost">2016</div>
+    <div class="lesson-eyebrow">
+      <span class="eyebrow-year">2016</span><span class="eyebrow-sep">·</span>
+      <span class="eyebrow-badge">Lesson 01 / 10</span>
+    </div>
+    <h2 class="lesson-title">VR Is Theater.<br>Not Film. Not Games.</h2>
+    <p class="lesson-tagline">Everything changed when we stopped borrowing from cinema and started borrowing from live performance. Presence, liveness, co-authorship with the audience — those are theatrical ideas. They're the ones that actually work in VR.</p>
+    <div class="case-tag">Christmas Carol VR · Stage Presence · RSC</div>
+    <div class="lesson-rule"></div>
+  </div>
+
+  <!-- 2: 2017 -->
+  <div class="slide slide-lesson accent-purple" data-type="lesson" data-year="2017" data-n="2">
+    <div class="year-ghost">2017</div>
+    <div class="lesson-eyebrow">
+      <span class="eyebrow-year">2017</span><span class="eyebrow-sep">·</span>
+      <span class="eyebrow-badge">Lesson 02 / 10</span>
+    </div>
+    <h2 class="lesson-title">The Best XR Teams<br>Look Nothing Like Tech Teams</h2>
+    <p class="lesson-tagline">Our biggest creative breakthroughs came when theater directors, lighting designers, architects, and motion capture artists were in the same room as engineers. XR is too new to have native experts — so we build them from everywhere.</p>
+    <div class="case-tag">Fisher Dachs Associates · Fisher Marantz Stone</div>
+    <div class="lesson-rule"></div>
+  </div>
+
+  <!-- 3: 2018 -->
+  <div class="slide slide-lesson accent-amber" data-type="lesson" data-year="2018" data-n="3">
+    <div class="year-ghost">2018</div>
+    <div class="lesson-eyebrow">
+      <span class="eyebrow-year">2018</span><span class="eyebrow-sep">·</span>
+      <span class="eyebrow-badge">Lesson 03 / 10</span>
+    </div>
+    <h2 class="lesson-title">Know Which Work Pays<br>the Bills. Do Both.</h2>
+    <p class="lesson-tagline">Real estate visualization pays our salaries. VR theater and mixed reality art installations make us worth hiring. If you want to do ambitious, low-margin work — build a cash cow first. You need both, or eventually you lose both.</p>
+    <div class="case-tag">Diriyah Gate · Four Seasons · City of Apparition · Salle d'Or</div>
+    <div class="lesson-rule"></div>
+  </div>
+
+  <!-- 4: 2019 -->
+  <div class="slide slide-lesson" data-type="lesson" data-year="2019" data-n="4">
+    <div class="year-ghost">2019</div>
+    <div class="lesson-eyebrow">
+      <span class="eyebrow-year">2019</span><span class="eyebrow-sep">·</span>
+      <span class="eyebrow-badge">Lesson 04 / 10</span>
+    </div>
+    <h2 class="lesson-title">Being Sought-After<br>Is a Blessing and a Curse</h2>
+    <p class="lesson-tagline">Disney, the Kennedy Center, and the RSC all found us — we never pitched them. That's incredible. It also means we've never had to learn how to sell. Being sought-after and being able to pitch are different skills. Only one of them compounds.</p>
+    <div class="lesson-rule"></div>
+  </div>
+
+  <!-- 5: 2020 -->
+  <div class="slide slide-lesson accent-purple" data-type="lesson" data-year="2020" data-n="5">
+    <div class="year-ghost">2020</div>
+    <div class="lesson-eyebrow">
+      <span class="eyebrow-year">2020</span><span class="eyebrow-sep">·</span>
+      <span class="eyebrow-badge">Lesson 05 / 10</span>
+    </div>
+    <h2 class="lesson-title">Require a Deposit.<br>Before You Write a Line of Code.</h2>
+    <p class="lesson-tagline">The single best operational decision we ever made. It filters out clients who aren't serious, protects the team from scope creep, and means our R&D never happens on our own dime. The first check separates the curious from the committed.</p>
+    <div class="lesson-rule"></div>
+  </div>
+
+  <!-- 6: 2021 -->
+  <div class="slide slide-lesson accent-rose" data-type="lesson" data-year="2021" data-n="6">
+    <div class="year-ghost">2021</div>
+    <div class="lesson-eyebrow">
+      <span class="eyebrow-year">2021</span><span class="eyebrow-sep">·</span>
+      <span class="eyebrow-badge">Lesson 06 / 10</span>
+    </div>
+    <h2 class="lesson-title">Protect Time for<br>"We're Not Sure Either"</h2>
+    <p class="lesson-tagline">Our most common brief: "I don't know if this is possible, but…" The right answer is: "Honestly, us neither — let's find out together." That only works if Phase 1 of every project is explicitly dedicated to R&D. Build the discovery budget into the contract.</p>
+    <div class="case-tag">AI Dickens · Multi-Avatar (SIGGRAPH) · Space Opera · Salle d'Or</div>
+    <div class="lesson-rule"></div>
+  </div>
+
+  <!-- 7: 2022 -->
+  <div class="slide slide-lesson accent-amber" data-type="lesson" data-year="2022" data-n="7">
+    <div class="year-ghost">2022</div>
+    <div class="lesson-eyebrow">
+      <span class="eyebrow-year">2022</span><span class="eyebrow-sep">·</span>
+      <span class="eyebrow-badge">Lesson 07 / 10</span>
+    </div>
+    <h2 class="lesson-title">Your Tool Choices<br>Are Business Strategy</h2>
+    <p class="lesson-tagline">Going all-in on Unreal Engine — including Gold Instructor certification — wasn't a technical decision. It was a five-year bet on which skills would still be valuable. Every major pipeline choice has a long tail. Treat it like a business decision from day one.</p>
+    <div class="lesson-rule"></div>
+  </div>
+
+  <!-- 8: 2023 -->
+  <div class="slide slide-lesson" data-type="lesson" data-year="2023" data-n="8">
+    <div class="year-ghost">2023</div>
+    <div class="lesson-eyebrow">
+      <span class="eyebrow-year">2023</span><span class="eyebrow-sep">·</span>
+      <span class="eyebrow-badge">Lesson 08 / 10</span>
+    </div>
+    <h2 class="lesson-title">Spatial Design Is<br>Its Own Discipline</h2>
+    <p class="lesson-tagline">It's not UX with depth. The best spatial thinkers we've hired came from theater, not software — because they already understood blocking, sightlines, presence, and audience agency. Stop borrowing screen-design patterns that don't fit. Hire for spatial thinking directly.</p>
+    <div class="lesson-rule"></div>
+  </div>
+
+  <!-- 9: 2024 -->
+  <div class="slide slide-lesson accent-purple" data-type="lesson" data-year="2024" data-n="9">
+    <div class="year-ghost">2024</div>
+    <div class="lesson-eyebrow">
+      <span class="eyebrow-year">2024</span><span class="eyebrow-sep">·</span>
+      <span class="eyebrow-badge">Lesson 09 / 10</span>
+    </div>
+    <h2 class="lesson-title">Every Three Years,<br>Everything Changes. Ship Anyway.</h2>
+    <p class="lesson-tagline">DK1. Gear VR. Rift. Quest. Vision Pro. The platform reshuffles every few years and the "best" device rarely wins — the one people actually shipped on does. Don't wait for perfect. Build for now and design with the future in mind.</p>
+    <div class="lesson-rule"></div>
+  </div>
+
+  <!-- 10: 2025 -->
+  <div class="slide slide-lesson accent-rose" data-type="lesson" data-year="2025" data-n="10">
+    <div class="year-ghost">2025</div>
+    <div class="lesson-eyebrow">
+      <span class="eyebrow-year">2025</span><span class="eyebrow-sep">·</span>
+      <span class="eyebrow-badge">Lesson 10 / 10</span>
+    </div>
+    <h2 class="lesson-title">We Were Always<br>Building for This Moment</h2>
+    <p class="lesson-tagline">Ten years ago, telling clients that spatial computing would reshape how they design buildings and stage shows felt like a hard sell. Today it's table stakes. Every uncertain, underpaid, "is this even possible?" project laid the foundation. We're just getting started.</p>
+    <div class="lesson-rule"></div>
+  </div>
+
+  <!-- 11: BONUS 2026 -->
+  <div class="slide slide-lesson slide-bonus" data-type="bonus" data-year="2026">
+    <div class="year-ghost">2026</div>
+    <div class="lesson-eyebrow">
+      <span class="eyebrow-year">2026</span><span class="eyebrow-sep">·</span>
+      <span class="eyebrow-badge">BONUS LESSON</span>
+    </div>
+    <h2 class="lesson-title">The Demo Will Break.<br>Budget for It.</h2>
+    <p class="lesson-tagline">In ten years — at Harvard, at SIGGRAPH, at the Kennedy Center — something has gone wrong every single time. A headset dies. The Wi-Fi drops. A character's head detaches from their body mid-show. The audience doesn't remember any of it. They only remember how the moment made them feel.</p>
+    <div class="lesson-rule"></div>
+  </div>
+
+  <!-- 12: Map -->
+  <div class="slide slide-map" data-type="map">
+    <div class="map-eyebrow">The Journey, Mapped</div>
+    <svg id="monocle-svg" viewBox="0 0 1000 580" preserveAspectRatio="xMidYMid meet"></svg>
+  </div>
+
+  <!-- 13: Close -->
+  <div class="slide" data-type="close">
+    <div class="close-eyebrow">Thank You</div>
+    <h2 class="close-title">Let's Keep<br>Building</h2>
+    <p class="close-sub">Ten years in. Just getting started.</p>
+    <div class="contact-row">
+      <div class="contact-pill"><span class="lbl">Studio</span>Agile Lens</div>
+      <div class="contact-pill"><span class="lbl">Web</span>agilelens.com</div>
+      <div class="contact-pill"><span class="lbl">X / IG</span>@agile_lens</div>
+    </div>
+  </div>
+
+</div>
+
+<div id="counter">01 / 14</div>
+<div id="brand">Agile Lens · HXR 2026</div>
+<div class="nav-arrows">
+  <button class="nav-btn" id="btn-prev">←</button>
+  <button class="nav-btn" id="btn-next">→</button>
+</div>
+
+<script>
+// ── Stars ──
+const canvas = document.getElementById('stars');
+const ctx    = canvas.getContext('2d');
+let stars    = [];
+function initStars() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  stars = Array.from({length:140}, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height * 0.65,
+    r: Math.random() * 1.3 + 0.2,
+    o: Math.random() * 0.45 + 0.05,
+    d: (Math.random() - 0.5) * 0.015
+  }));
+}
+function drawStars() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  stars.forEach(s => {
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(210,225,255,${s.o})`; ctx.fill();
+    s.o += s.d;
+    if (s.o < 0.04 || s.o > 0.65) s.d *= -1;
+  });
+  requestAnimationFrame(drawStars);
+}
+initStars(); drawStars();
+window.addEventListener('resize', initStars);
+
+// ── Road strip ──
+const ROAD_YEARS = [2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026];
+const roadEl = document.getElementById('road');
+ROAD_YEARS.forEach((yr, i) => {
+  if (i > 0) {
+    const rc = document.createElement('div');
+    rc.className = 'rc'; rc.dataset.idx = i - 1;
+    roadEl.appendChild(rc);
+  }
+  const rn = document.createElement('div');
+  rn.className = 'rn' + (yr === 2026 ? ' bonus' : '');
+  rn.dataset.year = yr;
+  rn.innerHTML = `<div class="rn-dot"></div><div class="rn-yr">${yr}</div>`;
+  rn.addEventListener('click', () => {
+    const t = slides.findIndex(s => parseInt(s.dataset.year) === yr);
+    if (t >= 0) goTo(t);
+  });
+  roadEl.appendChild(rn);
+});
+
+// ── Slides ──
+const slides    = Array.from(document.querySelectorAll('#deck .slide'));
+const counterEl = document.getElementById('counter');
+const gridEl    = document.getElementById('grid');
+const total     = slides.length;
+let current     = 0;
+
+function updateRoad() {
+  const type = slides[current].dataset.type;
+  const yr   = parseInt(slides[current].dataset.year);
+  if (type === 'lesson' || type === 'bonus') {
+    roadEl.classList.add('visible');
+    roadEl.querySelectorAll('.rn').forEach(n => {
+      const ny = parseInt(n.dataset.year);
+      n.classList.toggle('active', ny === yr);
+      n.classList.toggle('past',   ny < yr);
+    });
+    roadEl.querySelectorAll('.rc').forEach((c, i) => {
+      c.classList.toggle('past', ROAD_YEARS[i] < yr);
+    });
+  } else {
+    roadEl.classList.remove('visible');
+  }
+}
+
+function updateHUD() {
+  counterEl.textContent = String(current+1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+  updateRoad();
+}
+
+function goTo(n) {
+  if (n < 0 || n >= total || n === current) return;
+  const fwd  = n > current;
+  const prev = slides[current];
+  const next = slides[n];
+
+  // Speed up the grid during transition
+  gridEl.classList.add('fast');
+  setTimeout(() => gridEl.classList.remove('fast'), 700);
+
+  // Exit current
+  prev.classList.remove('active');
+  prev.classList.add(fwd ? 'exit-fwd' : 'exit-bwd');
+  setTimeout(() => prev.classList.remove('exit-fwd','exit-bwd'), 600);
+
+  // Stage next off-screen (no transition)
+  next.style.transition = 'none';
+  next.style.transform  = `translateX(${fwd ? '7%' : '-7%'}) scale(0.96)`;
+  next.style.opacity    = '0';
+  current = n;
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    next.style.transition = '';
+    next.style.transform  = '';
+    next.style.opacity    = '';
+    next.classList.add('active');
+    updateHUD();
+    if (slides[current].dataset.type === 'map') setTimeout(startMap, 500);
+  }));
+}
+
+document.getElementById('btn-prev').addEventListener('click', () => goTo(current - 1));
+document.getElementById('btn-next').addEventListener('click', () => goTo(current + 1));
+document.addEventListener('keydown', e => {
+  if (['ArrowRight','ArrowDown',' '].includes(e.key)) { e.preventDefault(); goTo(current + 1); }
+  if (['ArrowLeft','ArrowUp'].includes(e.key))         { e.preventDefault(); goTo(current - 1); }
+  if (e.key === 'Home') goTo(0);
+  if (e.key === 'End')  goTo(total - 1);
+});
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, {passive:true});
+document.addEventListener('touchend',   e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 50) goTo(current + (dx < 0 ? 1 : -1));
+}, {passive:true});
+
+updateHUD();
+
+// ── Map / Monocle ──
+const CX = 460, CY = 285, R = 188;
+const CIRC = 2 * Math.PI * R; // ≈ 1181
+
+const LESSONS = [
+  'VR Is Theater',
+  'Multidisciplinary Teams',
+  'Cash Cow + Passion',
+  'Inbound: Blessing & Curse',
+  'Require a Deposit',
+  'Phase 1 = R&D',
+  'Tools = Strategy',
+  'Spatial Design ≠ UX',
+  'Ship on Today\'s Hardware',
+  'We Were Building for This',
+];
+
+function nodePos(i) {
+  const a = (-90 + i * 36) * Math.PI / 180;
+  return { x: CX + R * Math.cos(a), y: CY + R * Math.sin(a) };
+}
+
+// Cord: hangs from 3 o'clock position of circle
+const CORD_A = { x: CX + R,       y: CY };        // attach at right edge
+const CORD_C = { x: CX + R + 65,  y: CY + 95 };   // bezier control
+const CORD_B = { x: CX + R + 118, y: CY + 178 };  // bonus node position
+
+let mapDone = false;
+
+function svgE(tag, attrs) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  Object.entries(attrs || {}).forEach(([k,v]) => el.setAttribute(k, v));
+  return el;
+}
+
+function startMap() {
+  if (mapDone) return;
+  mapDone = true;
+
+  const svg = document.getElementById('monocle-svg');
+  svg.innerHTML = '';
+
+  // Glow filter
+  const defs = svgE('defs');
+  const filt = svgE('filter', {id:'gl', x:'-40%', y:'-40%', width:'180%', height:'180%'});
+  const fblur = svgE('feGaussianBlur', {stdDeviation:'3.5', result:'b'});
+  const fmrg  = svgE('feMerge');
+  [svgE('feMergeNode',{in:'b'}), svgE('feMergeNode',{in:'SourceGraphic'})].forEach(n=>fmrg.appendChild(n));
+  filt.appendChild(fblur); filt.appendChild(fmrg);
+  defs.appendChild(filt);
+  svg.appendChild(defs);
+
+  // Faint guide circle
+  svg.appendChild(svgE('circle', {cx:CX, cy:CY, r:R, fill:'none',
+    stroke:'rgba(0,212,255,0.07)', 'stroke-width':'1'}));
+
+  // Animated main circle (starts drawing at top = 2016)
+  const ring = svgE('circle', {cx:CX, cy:CY, r:R, fill:'none',
+    stroke:'rgba(0,212,255,0.65)', 'stroke-width':'1.8',
+    'stroke-dasharray': CIRC, 'stroke-dashoffset': CIRC,
+    'stroke-linecap':'round',
+    transform:`rotate(-90 ${CX} ${CY})`,
+    filter:'url(#gl)'
+  });
+  svg.appendChild(ring);
+
+  // Animated cord
+  const cordD = `M${CORD_A.x} ${CORD_A.y} Q${CORD_C.x} ${CORD_C.y} ${CORD_B.x} ${CORD_B.y}`;
+  const cordLen = 220;
+  const cord = svgE('path', {d:cordD, fill:'none',
+    stroke:'rgba(245,158,11,0.65)', 'stroke-width':'1.8',
+    'stroke-dasharray': cordLen, 'stroke-dashoffset': cordLen,
+    'stroke-linecap':'round', filter:'url(#gl)'
+  });
+  svg.appendChild(cord);
+
+  // Center label (fades in later)
+  const cLabel = svgE('text', {x:CX, y:CY+4, 'text-anchor':'middle',
+    'dominant-baseline':'middle', fill:'rgba(255,255,255,0)',
+    'font-family':'Space Grotesk,sans-serif', 'font-size':'19',
+    'font-weight':'600', 'letter-spacing':'4'});
+  cLabel.textContent = 'AGILE LENS';
+  svg.appendChild(cLabel);
+
+  const cSub = svgE('text', {x:CX, y:CY+26, 'text-anchor':'middle',
+    'dominant-baseline':'middle', fill:'rgba(255,255,255,0)',
+    'font-family':'Space Grotesk,sans-serif', 'font-size':'10',
+    'font-weight':'400', 'letter-spacing':'2.5'});
+  cSub.textContent = '2016 – 2026';
+  svg.appendChild(cSub);
+
+  // Year nodes + labels (hidden, revealed as circle draws)
+  const nodeEls = [];
+  for (let i = 0; i < 10; i++) {
+    const pos = nodePos(i);
+    const dx  = pos.x - CX, dy = pos.y - CY;
+    const len = Math.hypot(dx, dy);
+    // offset label outward
+    const lx  = pos.x + (dx/len) * 28;
+    const ly  = pos.y + (dy/len) * 28;
+    const anc = pos.x > CX + 15 ? 'start' : pos.x < CX - 15 ? 'end' : 'middle';
+
+    const g = svgE('g', {opacity:'0'});
+    g.style.transition = 'opacity 0.45s';
+
+    // Dot
+    g.appendChild(svgE('circle', {cx:pos.x, cy:pos.y, r:'5.5',
+      fill:'#060810', stroke:'rgba(0,212,255,0.75)', 'stroke-width':'2'}));
+    // Ring pulse
+    g.appendChild(svgE('circle', {cx:pos.x, cy:pos.y, r:'11',
+      fill:'none', stroke:'rgba(0,212,255,0.2)', 'stroke-width':'1'}));
+
+    // Year
+    const yrT = svgE('text', {x:lx, y: ly - (pos.y < CY ? 10 : -2),
+      'text-anchor':anc, fill:'rgba(0,212,255,0.9)',
+      'font-family':'Space Grotesk,sans-serif',
+      'font-size':'10.5', 'font-weight':'600', 'letter-spacing':'1.5'});
+    yrT.textContent = 2016 + i;
+    g.appendChild(yrT);
+
+    // Lesson title
+    const ttT = svgE('text', {x:lx, y: ly + (pos.y < CY ? 3 : 14),
+      'text-anchor':anc, fill:'rgba(255,255,255,0.5)',
+      'font-family':'Space Grotesk,sans-serif',
+      'font-size':'9', 'font-weight':'400'});
+    ttT.textContent = LESSONS[i];
+    g.appendChild(ttT);
+
+    svg.appendChild(g);
+    nodeEls.push(g);
+  }
+
+  // Bonus node
+  const bonusG = svgE('g', {opacity:'0'});
+  bonusG.style.transition = 'opacity 0.5s';
+  bonusG.appendChild(svgE('circle', {cx:CORD_B.x, cy:CORD_B.y, r:'6.5',
+    fill:'#060810', stroke:'rgba(245,158,11,0.8)', 'stroke-width':'2'}));
+  bonusG.appendChild(svgE('circle', {cx:CORD_B.x, cy:CORD_B.y, r:'13',
+    fill:'none', stroke:'rgba(245,158,11,0.2)', 'stroke-width':'1'}));
+  const bYr = svgE('text', {x:CORD_B.x+16, y:CORD_B.y-5,
+    'text-anchor':'start', fill:'rgba(245,158,11,0.9)',
+    'font-family':'Space Grotesk,sans-serif',
+    'font-size':'10.5', 'font-weight':'600', 'letter-spacing':'1.5'});
+  bYr.textContent = '2026';
+  bonusG.appendChild(bYr);
+  const bTt = svgE('text', {x:CORD_B.x+16, y:CORD_B.y+9,
+    'text-anchor':'start', fill:'rgba(255,255,255,0.45)',
+    'font-family':'Space Grotesk,sans-serif', 'font-size':'9'});
+  bTt.textContent = 'The Demo Will Break';
+  bonusG.appendChild(bTt);
+  svg.appendChild(bonusG);
+
+  // ── Animate ──
+  const DELAY      = 300;
+  const CIRCLE_DUR = 3400; // ms for ring to draw
+  const NODE_STEP  = CIRCLE_DUR / 10;
+
+  // Ring: JS-driven rAF
+  let ringStart = null;
+  function animRing(ts) {
+    if (!ringStart) ringStart = ts;
+    const p = Math.min((ts - ringStart) / CIRCLE_DUR, 1);
+    const ease = p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p+2,2)/2; // ease in-out quad
+    ring.setAttribute('stroke-dashoffset', CIRC * (1 - ease));
+    if (p < 1) requestAnimationFrame(animRing);
+  }
+  setTimeout(() => requestAnimationFrame(animRing), DELAY);
+
+  // Nodes appear as ring passes through each
+  nodeEls.forEach((g, i) => {
+    setTimeout(() => { g.style.opacity = '1'; }, DELAY + i * NODE_STEP + 80);
+  });
+
+  // Cord draws after ring completes
+  const cordStart = DELAY + CIRCLE_DUR + 250;
+  let cordS = null;
+  const CORD_DUR = 900;
+  function animCord(ts) {
+    if (!cordS) cordS = ts;
+    const p = Math.min((ts - cordS) / CORD_DUR, 1);
+    const e = 1 - Math.pow(1 - p, 3); // ease out cubic
+    cord.setAttribute('stroke-dashoffset', cordLen * (1 - e));
+    if (p < 1) requestAnimationFrame(animCord);
+  }
+  setTimeout(() => requestAnimationFrame(animCord), cordStart);
+
+  // Bonus node
+  setTimeout(() => { bonusG.style.opacity = '1'; }, cordStart + CORD_DUR);
+
+  // Center labels
+  setTimeout(() => {
+    cLabel.setAttribute('fill','rgba(255,255,255,0.75)');
+    cLabel.style.transition = 'fill 1s';
+    cSub.setAttribute('fill','rgba(255,255,255,0.28)');
+    cSub.style.transition = 'fill 1s';
+  }, cordStart + CORD_DUR + 400);
+}
+</script>
+</body>
+</html>

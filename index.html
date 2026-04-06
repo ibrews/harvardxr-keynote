@@ -151,10 +151,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 canvas#stars{position:absolute;inset:0}
 
 #deck{position:relative;z-index:1;width:100%;height:100%;overflow:hidden}
-.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:clamp(40px,5vw,80px);text-align:center;opacity:0;pointer-events:none;transition:opacity .5s cubic-bezier(.4,0,.2,1),transform .55s cubic-bezier(.4,0,.2,1)}
-.slide.active{opacity:1;pointer-events:all;transform:translateX(0) scale(1)!important}
-.slide.exit-fwd{transform:translateX(-6%) scale(.97)!important;opacity:0!important}
-.slide.exit-bwd{transform:translateX(6%) scale(.97)!important;opacity:0!important}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:clamp(40px,5vw,80px);text-align:center;opacity:0;pointer-events:none}
+.slide.active{opacity:1;pointer-events:all}
+@keyframes slideInFwd{from{opacity:0;transform:translateX(6%) scale(.97)}to{opacity:1;transform:none}}
+@keyframes slideInBwd{from{opacity:0;transform:translateX(-6%) scale(.97)}to{opacity:1;transform:none}}
+@keyframes slideOutFwd{from{opacity:1;transform:none}to{opacity:0;transform:translateX(-6%) scale(.97)}}
+@keyframes slideOutBwd{from{opacity:1;transform:none}to{opacity:0;transform:translateX(6%) scale(.97)}}
 
 /* Cover */
 .event-tag{font-size:clamp(.6rem,1.2vw,.75rem);font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--teal);margin-bottom:28px;opacity:.8}
@@ -299,13 +301,13 @@ function updateHUD(){counterEl.textContent=`${String(current+1).padStart(2,'0')}
 function goTo(n){
   if(n<0||n>=total||n===current)return;const fwd=n>current;
   const p=allSlides[current],nx=allSlides[n];
-  p.classList.remove('active');p.classList.add(fwd?'exit-fwd':'exit-bwd');
-  setTimeout(()=>p.classList.remove('exit-fwd','exit-bwd'),600);
-  // Position off-screen with no transition
-  nx.style.transition='none';nx.style.transform=`translateX(${fwd?'6%':'-6%'}) scale(.97)`;nx.style.opacity='0';
-  void nx.offsetHeight; // force reflow — browser commits the off-screen position
-  // Re-enable transitions and activate
-  nx.style.transition='';nx.style.transform='';nx.style.opacity='';nx.classList.add('active');
+  // Exit previous with animation
+  p.classList.remove('active');
+  p.style.animation=(fwd?'slideOutFwd':'slideOutBwd')+' .45s cubic-bezier(.4,0,.2,1) forwards';
+  setTimeout(()=>{p.style.animation='';p.style.cssText='';},500);
+  // Enter next with animation
+  nx.style.animation=(fwd?'slideInFwd':'slideInBwd')+' .5s cubic-bezier(.4,0,.2,1) forwards';
+  nx.classList.add('active');
   current=n;updateHUD();
   if(allSlides[current].dataset.type==='map')setTimeout(startMap,400);
 }

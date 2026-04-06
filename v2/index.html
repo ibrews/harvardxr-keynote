@@ -298,18 +298,23 @@ const total=allSlides.length;let current=0;const counterEl=document.getElementBy
 
 // ── Nav ──
 function updateHUD(){counterEl.textContent=`${String(current+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;updateTracker()}
+let animating=false;
 function goTo(n){
-  if(n<0||n>=total||n===current)return;const fwd=n>current;
+  if(n<0||n>=total||n===current||animating)return;
+  animating=true;const fwd=n>current;
   const p=allSlides[current],nx=allSlides[n];
-  // Exit previous with animation
+  // Ensure no stale active slides
+  allSlides.forEach(s=>{if(s!==p&&s!==nx){s.classList.remove('active');s.style.animation='';s.style.cssText=''}});
+  // Exit previous
   p.classList.remove('active');
   p.style.animation=(fwd?'slideOutFwd':'slideOutBwd')+' .45s cubic-bezier(.4,0,.2,1) forwards';
-  setTimeout(()=>{p.style.animation='';p.style.cssText='';},500);
-  // Enter next with animation
+  setTimeout(()=>{p.style.animation='';p.style.cssText=''},500);
+  // Enter next
   nx.style.animation=(fwd?'slideInFwd':'slideInBwd')+' .5s cubic-bezier(.4,0,.2,1) forwards';
   nx.classList.add('active');
   current=n;updateHUD();
   if(allSlides[current].dataset.type==='map')setTimeout(startMap,400);
+  setTimeout(()=>{animating=false},520);
 }
 document.getElementById('btn-prev').addEventListener('click',()=>goTo(current-1));
 document.getElementById('btn-next').addEventListener('click',()=>goTo(current+1));

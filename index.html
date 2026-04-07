@@ -248,11 +248,17 @@ canvas#stars{position:absolute;inset:0}
 @media(max-width:900px){.case-slide{flex-direction:column;text-align:center}.case-image{flex:none;width:85%;max-width:none;margin:0 auto}.case-bl li{text-align:left}}
 
 /* ── Annotation overlay ── */
-#anno-toggle{position:fixed;top:24px;left:24px;z-index:1000;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.4);color:var(--teal);font-family:var(--font);font-size:.66rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;padding:8px 14px;border-radius:6px;cursor:pointer;backdrop-filter:blur(8px);transition:all .2s}
+#anno-toggle,#move-toggle{position:fixed;top:24px;z-index:1000;border:1px solid rgba(0,212,255,.4);color:var(--teal);font-family:var(--font);font-size:.66rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;padding:8px 14px;border-radius:6px;cursor:pointer;backdrop-filter:blur(8px);transition:all .2s;background:rgba(0,212,255,.1)}
+#anno-toggle{left:24px}
+#move-toggle{left:148px;border-color:rgba(245,158,11,.4);color:var(--amber);background:rgba(245,158,11,.1)}
 #anno-toggle:hover{background:rgba(0,212,255,.2)}
+#move-toggle:hover{background:rgba(245,158,11,.2)}
 #anno-toggle.active{background:var(--amber);color:#060810;border-color:var(--amber)}
-body.annotate-mode *:not(#anno-panel):not(#anno-panel *):not(#anno-toggle):hover{outline:2px dashed var(--teal)!important;outline-offset:2px;cursor:crosshair!important}
-body.annotate-mode .slide{pointer-events:all!important}
+#move-toggle.active{background:var(--rose);color:#060810;border-color:var(--rose)}
+body.annotate-mode *:not(#anno-panel):not(#anno-panel *):not(#anno-toggle):not(#move-toggle):not(#slide-grid):not(#slide-grid *):not(#slide-grid-zone):hover{outline:2px dashed var(--teal)!important;outline-offset:2px;cursor:crosshair!important}
+body.move-mode .slide.active *:not(#anno-toggle):not(#move-toggle):hover{outline:2px dashed var(--amber)!important;outline-offset:2px;cursor:move!important}
+body.move-mode .slide.active *{user-select:none}
+.dragging{opacity:.85!important;outline:2px solid var(--amber)!important}
 #anno-panel{position:fixed;top:70px;left:24px;z-index:1001;width:320px;max-height:70vh;background:rgba(10,12,24,.96);border:1px solid rgba(0,212,255,.3);border-radius:10px;padding:16px;font-family:var(--font);font-size:.78rem;color:var(--text);backdrop-filter:blur(12px);overflow-y:auto;display:none}
 #anno-panel.visible{display:block}
 #anno-panel h3{font-size:.68rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);margin-bottom:10px}
@@ -291,6 +297,7 @@ body.annotate-mode .slide{pointer-events:all!important}
 
 <!-- Annotation overlay -->
 <button id="anno-toggle" title="Toggle annotation mode (A)">📝 Annotate</button>
+<button id="move-toggle" title="Toggle move mode (M) — drag elements to reposition them">✋ Move Mode</button>
 <div id="anno-panel">
   <h3>Annotations</h3>
   <div id="anno-list"></div>
@@ -805,6 +812,83 @@ document.getElementById('anno-clear').addEventListener('click',()=>{
   if(!confirm('Clear all annotations?'))return;
   annoSave([]); annoRender(); annoToast('Cleared');
 });
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MOVE MODE — drag any element to reposition; deltas saved as annotations
+   ═══════════════════════════════════════════════════════════════════════ */
+let moveMode=false;
+let dragEl=null, dragStart=null;
+const elDeltas=new Map(); // element -> {dx, dy}
+
+function moveModeToggle(on){
+  moveMode = on===undefined ? !moveMode : on;
+  // Can't have both modes at once
+  if(moveMode && annoMode) annoToggleMode(false);
+  document.body.classList.toggle('move-mode', moveMode);
+  document.getElementById('move-toggle').classList.toggle('active', moveMode);
+  document.getElementById('move-toggle').textContent = moveMode ? '✕ Exit Move' : '✋ Move Mode';
+  if(moveMode){
+    annoToast('Move mode: drag any element. Release to save offset as annotation.');
+  } else if(elDeltas.size>0){
+    annoToast('Move mode off. Drags saved as annotations. Refresh to reset positions.');
+  }
+}
+
+document.getElementById('move-toggle').addEventListener('click',()=>moveModeToggle());
+
+document.addEventListener('keydown',e=>{
+  if(['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return;
+  if(e.key==='m'||e.key==='M'){ e.preventDefault(); moveModeToggle(); }
+});
+
+document.addEventListener('mousedown',e=>{
+  if(!moveMode)return;
+  if(e.target.closest('#move-toggle')||e.target.closest('#anno-toggle')||e.target.closest('#slide-grid')||e.target.closest('#slide-grid-zone')||e.target.closest('#anno-panel')||e.target.closest('#anno-prompt'))return;
+  e.preventDefault(); e.stopPropagation();
+  dragEl = e.target;
+  const existing = elDeltas.get(dragEl) || {dx:0, dy:0};
+  dragStart = { x:e.clientX, y:e.clientY, ix:existing.dx, iy:existing.dy };
+  dragEl.classList.add('dragging');
+}, true);
+
+document.addEventListener('mousemove',e=>{
+  if(!dragEl)return;
+  const dx = dragStart.ix + (e.clientX - dragStart.x);
+  const dy = dragStart.iy + (e.clientY - dragStart.y);
+  elDeltas.set(dragEl, {dx, dy});
+  // Apply transform — works for fixed, absolute, AND relative/static elements
+  const existingTransform = dragEl.dataset.origTransform || '';
+  if(!dragEl.dataset.origTransform){
+    dragEl.dataset.origTransform = getComputedStyle(dragEl).transform === 'none' ? '' : getComputedStyle(dragEl).transform;
+  }
+  dragEl.style.transform = `${dragEl.dataset.origTransform} translate(${dx}px, ${dy}px)`;
+}, true);
+
+document.addEventListener('mouseup',e=>{
+  if(!dragEl)return;
+  const delta = elDeltas.get(dragEl);
+  dragEl.classList.remove('dragging');
+  if(delta && (Math.abs(delta.dx)>3 || Math.abs(delta.dy)>3)){
+    const sel = annoSelector(dragEl);
+    const ctx = annoContext(dragEl);
+    const arr = annoLoad();
+    // Look for an existing move annotation for this element and replace it
+    const existing = arr.findIndex(a => a.type==='move' && a.selector===sel);
+    const note = {
+      selector: sel,
+      context: ctx,
+      text: `MOVE by Δ(${delta.dx>=0?'+':''}${Math.round(delta.dx)}px, ${delta.dy>=0?'+':''}${Math.round(delta.dy)}px) from current position`,
+      timestamp: new Date().toISOString(),
+      type: 'move',
+      delta: {dx:Math.round(delta.dx), dy:Math.round(delta.dy)},
+    };
+    if(existing >= 0) arr[existing] = note; else arr.push(note);
+    annoSave(arr);
+    annoToast(`Saved: move ${sel} Δ(${Math.round(delta.dx)},${Math.round(delta.dy)})`);
+    annoRender();
+  }
+  dragEl = null; dragStart = null;
+}, true);
 </script>
 </body>
 </html>

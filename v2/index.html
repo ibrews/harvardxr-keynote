@@ -438,7 +438,11 @@ sgEl.addEventListener('mouseenter',sgShow);
 sgEl.addEventListener('mouseleave',sgHide);
 sgZone.addEventListener('mouseleave',sgHide);
 
-// Keep active thumb highlighted (hook into updateHUD)
+// Keep active thumb highlighted (hook into updateHUD).
+// Don't call updateHUD() here — trackerEl (used by updateTracker) is declared
+// later in this script, so calling it now would throw a TDZ error and halt
+// the rest of the script. The original updateHUD() call below (after the
+// monocle tracker setup) initializes everything safely.
 const _origUpdateHUD=updateHUD;
 updateHUD=function(){
   _origUpdateHUD();
@@ -447,7 +451,6 @@ updateHUD=function(){
   const active=sgEl.querySelector('.sg-thumb.active');
   if(active&&sgEl.classList.contains('visible'))active.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
 };
-updateHUD();
 let tx=0;
 document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
 document.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50)goTo(current+(dx<0?1:-1))},{passive:true});

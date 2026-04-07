@@ -226,6 +226,35 @@ canvas#stars{position:absolute;inset:0}
 
 @keyframes fistPump{0%{transform:translateY(0)}30%{transform:translateY(-14px) scale(1.15)}50%{transform:translateY(-18px) scale(1.2)}70%{transform:translateY(-14px) scale(1.15)}100%{transform:translateY(0)}}
 @media(max-width:900px){.case-slide{flex-direction:column;text-align:center}.case-image{flex:none;width:85%;max-width:none;margin:0 auto}.case-bl li{text-align:left}}
+
+/* ── Annotation overlay ── */
+#anno-toggle{position:fixed;top:24px;left:24px;z-index:1000;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.4);color:var(--teal);font-family:var(--font);font-size:.66rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;padding:8px 14px;border-radius:6px;cursor:pointer;backdrop-filter:blur(8px);transition:all .2s}
+#anno-toggle:hover{background:rgba(0,212,255,.2)}
+#anno-toggle.active{background:var(--amber);color:#060810;border-color:var(--amber)}
+body.annotate-mode *:not(#anno-panel):not(#anno-panel *):not(#anno-toggle):hover{outline:2px dashed var(--teal)!important;outline-offset:2px;cursor:crosshair!important}
+body.annotate-mode .slide{pointer-events:all!important}
+#anno-panel{position:fixed;top:70px;left:24px;z-index:1001;width:320px;max-height:70vh;background:rgba(10,12,24,.96);border:1px solid rgba(0,212,255,.3);border-radius:10px;padding:16px;font-family:var(--font);font-size:.78rem;color:var(--text);backdrop-filter:blur(12px);overflow-y:auto;display:none}
+#anno-panel.visible{display:block}
+#anno-panel h3{font-size:.68rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);margin-bottom:10px}
+#anno-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;max-height:300px;overflow-y:auto}
+.anno-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:8px 10px;font-size:.72rem;line-height:1.4}
+.anno-item .anno-meta{font-size:.6rem;color:var(--dim);margin-bottom:4px;font-weight:500}
+.anno-item .anno-rm{float:right;color:var(--rose);cursor:pointer;font-size:.68rem;opacity:.6;margin-left:6px}
+.anno-item .anno-rm:hover{opacity:1}
+.anno-actions{display:flex;gap:8px}
+.anno-btn{flex:1;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--teal);font-family:var(--font);font-size:.65rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:8px;border-radius:5px;cursor:pointer;transition:all .15s}
+.anno-btn:hover{background:rgba(0,212,255,.2)}
+.anno-btn.danger{color:var(--rose);border-color:rgba(244,63,94,.3);background:rgba(244,63,94,.06)}
+.anno-btn.danger:hover{background:rgba(244,63,94,.15)}
+#anno-prompt{position:fixed;z-index:1002;background:rgba(10,12,24,.98);border:1px solid var(--teal);border-radius:8px;padding:12px;display:none;flex-direction:column;gap:8px;width:280px;backdrop-filter:blur(12px)}
+#anno-prompt.visible{display:flex}
+#anno-prompt .anno-target{font-size:.62rem;color:var(--dim);font-family:monospace;word-break:break-all}
+#anno-prompt textarea{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--text);font-family:var(--font);font-size:.78rem;padding:8px;border-radius:5px;resize:vertical;min-height:60px;outline:none}
+#anno-prompt textarea:focus{border-color:var(--teal)}
+#anno-prompt .anno-prompt-actions{display:flex;gap:6px;justify-content:flex-end}
+#anno-empty{color:var(--dim);font-size:.7rem;font-style:italic;text-align:center;padding:14px 0}
+#anno-toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--teal);color:#060810;padding:10px 18px;border-radius:6px;font-size:.72rem;font-weight:600;letter-spacing:.05em;z-index:1003;opacity:0;transition:opacity .3s;pointer-events:none}
+#anno-toast.show{opacity:1}
 </style>
 </head>
 <body>
@@ -235,6 +264,26 @@ canvas#stars{position:absolute;inset:0}
 <div id="counter"></div>
 <div id="brand">Agile Lens · HXR 2026</div>
 <div class="nav-arrows"><button class="nav-btn" id="btn-prev">←</button><button class="nav-btn" id="btn-next">→</button></div>
+
+<!-- Annotation overlay -->
+<button id="anno-toggle" title="Toggle annotation mode (A)">📝 Annotate</button>
+<div id="anno-panel">
+  <h3>Annotations</h3>
+  <div id="anno-list"></div>
+  <div class="anno-actions">
+    <button class="anno-btn" id="anno-export">📋 Copy All</button>
+    <button class="anno-btn danger" id="anno-clear">Clear</button>
+  </div>
+</div>
+<div id="anno-prompt">
+  <div class="anno-target" id="anno-target-text"></div>
+  <textarea id="anno-text" placeholder="What should change?"></textarea>
+  <div class="anno-prompt-actions">
+    <button class="anno-btn" id="anno-cancel" style="flex:0">Cancel</button>
+    <button class="anno-btn" id="anno-save" style="flex:0">Save</button>
+  </div>
+</div>
+<div id="anno-toast"></div>
 
 <script>
 /* ═══════════════════════════════════════════════════════════════════════
@@ -540,6 +589,153 @@ function startMap(){
   // 8. Avatar celebration
   setTimeout(()=>{avG.style.opacity='1';avG.style.animation='fistPump .65s ease-in-out'},cStart+2000);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ANNOTATION OVERLAY — click elements to leave notes, export as markdown
+   ═══════════════════════════════════════════════════════════════════════ */
+const ANNO_KEY = 'hxr-keynote-annotations';
+let annoMode = false;
+let pendingTarget = null;
+
+function annoLoad(){ try{return JSON.parse(localStorage.getItem(ANNO_KEY)||'[]')}catch(e){return []} }
+function annoSave(arr){ localStorage.setItem(ANNO_KEY, JSON.stringify(arr)) }
+
+function annoToast(msg){
+  const t=document.getElementById('anno-toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+// Build a stable selector for an element
+function annoSelector(el){
+  if(el.id) return '#'+el.id;
+  const path=[];
+  let cur=el, depth=0;
+  while(cur && cur!==document.body && depth<5){
+    let part=cur.tagName.toLowerCase();
+    if(cur.id){ part='#'+cur.id; path.unshift(part); break; }
+    if(cur.classList.length){
+      const cls=Array.from(cur.classList).filter(c=>!['active','exit-fwd','exit-bwd'].includes(c)).slice(0,2).join('.');
+      if(cls) part+='.'+cls;
+    }
+    // nth-of-type if siblings exist
+    const sibs=Array.from(cur.parentNode?.children||[]).filter(s=>s.tagName===cur.tagName);
+    if(sibs.length>1){ part+=':nth-of-type('+(sibs.indexOf(cur)+1)+')'; }
+    path.unshift(part);
+    cur=cur.parentElement; depth++;
+  }
+  return path.join(' > ');
+}
+
+// Get slide context (year/type) for the element if it lives inside a slide
+function annoContext(el){
+  const slide=el.closest('.slide');
+  if(!slide) return null;
+  const type=slide.dataset.type||'?';
+  const year=slide.dataset.year||'';
+  return year ? `${type} ${year}` : type;
+}
+
+function annoRender(){
+  const list=document.getElementById('anno-list');
+  const items=annoLoad();
+  if(items.length===0){
+    list.innerHTML='<div id="anno-empty">No annotations yet.<br>Click any element on the page.</div>';
+    return;
+  }
+  list.innerHTML=items.map((a,i)=>`
+    <div class="anno-item">
+      <span class="anno-rm" data-i="${i}">×</span>
+      <div class="anno-meta">${a.context||'—'} · <code>${a.selector}</code></div>
+      <div>${a.text.replace(/</g,'&lt;')}</div>
+    </div>`).join('');
+  list.querySelectorAll('.anno-rm').forEach(b=>b.addEventListener('click',e=>{
+    const i=+e.target.dataset.i;
+    const arr=annoLoad(); arr.splice(i,1); annoSave(arr); annoRender();
+  }));
+}
+
+function annoToggleMode(on){
+  annoMode = on===undefined ? !annoMode : on;
+  document.body.classList.toggle('annotate-mode',annoMode);
+  document.getElementById('anno-toggle').classList.toggle('active',annoMode);
+  document.getElementById('anno-toggle').textContent=annoMode?'✕ Exit Annotate':'📝 Annotate';
+  document.getElementById('anno-panel').classList.toggle('visible',annoMode);
+  if(annoMode) annoRender();
+  if(!annoMode) document.getElementById('anno-prompt').classList.remove('visible');
+}
+
+document.getElementById('anno-toggle').addEventListener('click',()=>annoToggleMode());
+
+// Keyboard shortcut: A toggles annotate mode
+document.addEventListener('keydown',e=>{
+  if(e.key==='a'||e.key==='A'){
+    if(['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return;
+    e.preventDefault(); annoToggleMode();
+  }
+});
+
+// Click handler in annotate mode
+document.addEventListener('click',e=>{
+  if(!annoMode)return;
+  // Ignore clicks on the annotation UI itself
+  if(e.target.closest('#anno-toggle')||e.target.closest('#anno-panel')||e.target.closest('#anno-prompt')||e.target.closest('#anno-toast'))return;
+  e.preventDefault(); e.stopPropagation();
+  pendingTarget=e.target;
+  const sel=annoSelector(e.target);
+  const ctx=annoContext(e.target);
+  document.getElementById('anno-target-text').textContent=(ctx?ctx+' → ':'')+sel;
+  const prompt=document.getElementById('anno-prompt');
+  // Position prompt near click
+  const x=Math.min(e.clientX+10, innerWidth-300);
+  const y=Math.min(e.clientY+10, innerHeight-200);
+  prompt.style.left=x+'px'; prompt.style.top=y+'px';
+  prompt.classList.add('visible');
+  document.getElementById('anno-text').value='';
+  setTimeout(()=>document.getElementById('anno-text').focus(),50);
+},true);
+
+document.getElementById('anno-cancel').addEventListener('click',()=>{
+  document.getElementById('anno-prompt').classList.remove('visible');
+  pendingTarget=null;
+});
+
+document.getElementById('anno-save').addEventListener('click',()=>{
+  const text=document.getElementById('anno-text').value.trim();
+  if(!text||!pendingTarget)return;
+  const arr=annoLoad();
+  arr.push({
+    selector: annoSelector(pendingTarget),
+    context: annoContext(pendingTarget),
+    text,
+    timestamp: new Date().toISOString()
+  });
+  annoSave(arr);
+  document.getElementById('anno-prompt').classList.remove('visible');
+  pendingTarget=null;
+  annoRender();
+  annoToast('Annotation saved');
+});
+
+// Cmd/Ctrl+Enter to save in textarea
+document.getElementById('anno-text').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){ e.preventDefault(); document.getElementById('anno-save').click(); }
+  if(e.key==='Escape'){ document.getElementById('anno-cancel').click(); }
+});
+
+document.getElementById('anno-export').addEventListener('click',()=>{
+  const arr=annoLoad();
+  if(arr.length===0){ annoToast('Nothing to copy'); return; }
+  const md='# Keynote Annotations\n\n'+arr.map((a,i)=>
+    `## ${i+1}. ${a.context||'—'}\n**Selector:** \`${a.selector}\`\n**Note:** ${a.text}\n`
+  ).join('\n');
+  navigator.clipboard.writeText(md).then(()=>annoToast(`Copied ${arr.length} annotation${arr.length>1?'s':''} to clipboard`));
+});
+
+document.getElementById('anno-clear').addEventListener('click',()=>{
+  if(!confirm('Clear all annotations?'))return;
+  annoSave([]); annoRender(); annoToast('Cleared');
+});
 </script>
 </body>
 </html>

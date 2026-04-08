@@ -825,13 +825,24 @@ function buildAvatar(parent, opts = {}) {
   px(body, 5, -23, 1, 2, '#fff');
   // Mouth
   px(body, -3, -17, 6, 1, '#9c5040');
-  // Beard (only if requested)
+  // Beard (only if requested) — full chin coverage that connects sideburns
+  // down to the jawline at full head width. Mouth stays visible.
   if (withBeard) {
-    px(body, -10, -19, 20, 2, BEARD);  // jaw line
-    px(body, -8, -17, 16, 3, BEARD);   // chin beard
-    px(body, -6, -14, 12, 2, BEARD);   // chin tip
-    px(body, -10, -22, 4, 3, BEARD);   // left sideburn
-    px(body, 6, -22, 4, 3, BEARD);     // right sideburn
+    // Sideburns running down from the hair into the cheek area
+    px(body, -12, -22, 4, 5, BEARD);   // left sideburn
+    px(body, 8,   -22, 4, 5, BEARD);   // right sideburn
+    // Cheek beard around the eye / upper-face level
+    px(body, -12, -20, 5, 3, BEARD);   // left cheek
+    px(body, 7,   -20, 5, 3, BEARD);   // right cheek
+    // Sides of mouth (mouth at y=-17 stays visible)
+    px(body, -12, -17, 4, 1, BEARD);
+    px(body, 8,   -17, 4, 1, BEARD);
+    // Moustache (above the mouth line)
+    px(body, -6,  -18, 12, 1, BEARD);
+    // Lower lip / chin band — full head width
+    px(body, -12, -16, 24, 2, BEARD);  // jaw band
+    px(body, -12, -14, 24, 2, BEARD);  // chin band
+    px(body, -10, -12, 20, 1, BEARD);  // chin tip taper
   }
   // Neck
   px(body, -4, -12, 8, 3, SKIN_DARK);

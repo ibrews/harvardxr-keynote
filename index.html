@@ -1177,25 +1177,31 @@ function mPos(i){
   return{x:MX+MR*Math.cos(a), y:MY+MR*Math.sin(a)};
 }
 // Cord starts AT the 2025 node (i=9, lower-right) and ends at the monocle's
-// eyepiece. CORD_B was originally (619, 528) before Alex's move-mode pass —
-// his annotations pulled the cord and bonus elements up by ~62 units and
-// ~9 units left to better align with the actual PNG eyepiece position.
+// eyepiece — computed from the actual PNG eyepiece coordinates so the
+// bonus 2026 dot lands exactly inside the monocle's small circle.
 const CORD_A = mPos(9);
-const CORD_B = { x: 610, y: 466 };
+const PNG_EYE_CX = 775, PNG_EYE_CY = 788;
+const CORD_B = {
+  x: LOGO_X + PNG_EYE_CX * LOGO_SCALE,
+  y: LOGO_Y + PNG_EYE_CY * LOGO_SCALE,
+};
 
 // Constellation line pairs (connecting non-adjacent nodes for star pattern)
 const CONSTELLATION_LINES=[[0,3],[1,5],[2,7],[3,8],[4,9],[5,0],[6,1],[7,2],[8,4],[9,6]];
 
-// Monocle logo overlay geometry — aligns the monocle-white.png so its
-// circular lens overlaps with our constellation circle. The PNG is 852×877
-// with the ring's stroke centerline at roughly (415, 380) in image coords
-// and a radius of ~360. We scale by MR/360 to match the constellation.
-// LOGO_Y nudged up ~28 units per Alex's move-mode annotation 2026-04-08.
-const LOGO_SCALE = MR / 360;
+// Monocle logo overlay geometry — aligns monocle-white.png so its circular
+// lens overlaps with our constellation circle. The PNG is 852×877. Measured
+// values from inspecting the actual pixels (Python+PIL):
+//   ring center: (407, 432)
+//   stroke-center radius: 374
+//   eyepiece center: ~(775, 788)
+// We scale by MR/374 so the PNG's ring matches the constellation circle.
+const PNG_RING_CX = 407, PNG_RING_CY = 432, PNG_RING_R = 374;
+const LOGO_SCALE = MR / PNG_RING_R;
 const LOGO_W = 852 * LOGO_SCALE;
 const LOGO_H = 877 * LOGO_SCALE;
-const LOGO_X = MX - 415 * LOGO_SCALE;
-const LOGO_Y = MY - 380 * LOGO_SCALE - 28;
+const LOGO_X = MX - PNG_RING_CX * LOGO_SCALE;
+const LOGO_Y = MY - PNG_RING_CY * LOGO_SCALE;
 
 let mapDone=false;
 function startMap(){

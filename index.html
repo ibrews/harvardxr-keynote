@@ -314,7 +314,6 @@ body.presentation-mode #anno-prompt {
 }
 @keyframes introFallDown {
   0%   { transform: translate(160px, -95px) scale(1.5); }
-  85%  { transform: translate(160px, 0)     scale(1.58, 1.42); }
   100% { transform: translate(160px, 0)     scale(1.5); }
 }
 @keyframes introHeadsetBob {
@@ -731,12 +730,17 @@ function playAlexIntro() {
   }, 2400);
   // Paint worn headset mid-powerup
   setTimeout(() => { if (avatarBody) paintWornHeadset(avatarBody); }, 2900);
-  // Fall back down
+  // Fall back down — gentle gravity curve, no squash
   setTimeout(() => {
-    anim.style.animation = 'introFallDown .5s cubic-bezier(.5,.1,.8,1) forwards';
+    anim.style.animation = 'introFallDown .55s cubic-bezier(.55,0,.8,1) forwards';
   }, 3200);
+  // After fall, lock the final resting transform so nothing drifts
+  setTimeout(() => {
+    anim.style.animation = 'none';
+    anim.style.transform = 'translate(160px, 0) scale(1.5)';
+  }, 3780);
   // Kick tallies now that avatar has landed
-  setTimeout(() => { playTallies(introAlex); }, 3800);
+  setTimeout(() => { playTallies(introAlex); }, 3850);
 }
 
 // ── Slide 3: Agile Lens intro ──
@@ -847,6 +851,16 @@ function playTallies(slide){
   if (!slide) return;
   slide.querySelectorAll('.num').forEach(animateTally);
 }
+// Stash the final value and reset the display to "0" so the number
+// doesn't flash the target value before its tally starts.
+function primeTallies(slide){
+  if (!slide) return;
+  slide.querySelectorAll('.num').forEach(el => {
+    const orig = el.dataset.tally || el.textContent.trim();
+    el.dataset.tally = orig;
+    if (/^\d+\+?$/.test(orig)) el.textContent = '0';
+  });
+}
 
 let animating=false;
 function goTo(n){
@@ -866,7 +880,7 @@ function goTo(n){
   // Per-slide entry hooks
   const t = allSlides[current].dataset.type;
   if(t==='map') setTimeout(startMap, 400);
-  if(t==='intro-alex') setTimeout(playAlexIntro, 500);
+  if(t==='intro-alex') { primeTallies(nx); setTimeout(playAlexIntro, 500); }
   // Tally count-up for any .num element that's purely numeric.
   // Skip on intro-alex — the tallies are triggered AFTER the avatar lands
   // inside playAlexIntro(), so the stats count up as Alex grows.

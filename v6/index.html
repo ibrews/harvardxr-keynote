@@ -524,9 +524,18 @@ allSlides.push(introAlex);
   const svg = introAlex.querySelector('#intro-alex-svg');
   // Stage floor (a thin platform line at y=300)
   svg.appendChild(svgE('rect', { x:30, y:300, width:340, height:6, class:'stage-floor', rx:'2' }));
-  // VR headset "?" block — hovers above the stage waiting to be hit
-  const blockG = svgE('g', { class:'headset-block', transform:'translate(220, 180)' });
-  // Question block (Mario style)
+  // VR headset "?" block — two-group structure so the bob animation
+  // doesn't clobber the positioning transform.
+  // Outer = SVG transform attribute (positioning at viewBox 220, 180).
+  // Inner = CSS animation target (introHeadsetBob via class on inner).
+  // Block sits at (240, 200) — directly in the apex of the jumping avatar's
+  // arc (introJump translates from 0 → 160px right and -55px up, starting
+  // from outer position 80,270 → peak at viewBox 240, 215). The block is
+  // 15px above the apex so the avatar's head reaches it.
+  const blockPos = svgE('g', { class:'headset-block', id:'intro-block-pos', transform:'translate(240, 200)' });
+  const blockG = svgE('g', { id:'intro-block-anim' });
+  blockPos.appendChild(blockG);
+  // Question block (Mario style) — drawn relative to inner group local 0,0
   blockG.appendChild(svgE('rect', { x:-22, y:-22, width:44, height:44, fill:'#f59e0b', stroke:'#b45309', 'stroke-width':'2', rx:'3' }));
   blockG.appendChild(svgE('rect', { x:-18, y:-18, width:36, height:36, fill:'none', stroke:'#fde68a', 'stroke-width':'1', rx:'1' }));
   // VR headset icon centered in the block
@@ -534,9 +543,10 @@ allSlides.push(introAlex);
   blockG.appendChild(svgE('circle', { cx:-6, cy:0, r:'3', fill:'#00d4ff' }));
   blockG.appendChild(svgE('circle', { cx:6, cy:0, r:'3', fill:'#00d4ff' }));
   blockG.appendChild(svgE('rect', { x:-13, y:-9, width:26, height:2, fill:'#0a0a14' }));
+  // Animation runs on the INNER group so the outer position stays put
   blockG.style.transformOrigin = 'center';
   blockG.style.animation = 'introHeadsetBob 1.6s ease-in-out infinite';
-  svg.appendChild(blockG);
+  svg.appendChild(blockPos);
 
   // Walker (Alex sprite) starts at left, walks in
   const walkerG = svgE('g', { id:'alex-intro-walker', class:'stage-walker', transform:'translate(80, 270)' });
@@ -571,13 +581,17 @@ allSlides.push(introAlex);
 function playAlexIntro() {
   const walker = document.getElementById('alex-intro-walker');
   const anim = document.getElementById('alex-intro-anim');
-  const block = introAlex.querySelector('.headset-block');
+  // The headset has its own outer-position + inner-anim split. All animations
+  // run on the inner group; the outer keeps its SVG positioning transform.
+  const blockPos = document.getElementById('intro-block-pos');
+  const blockAnim = document.getElementById('intro-block-anim');
   const sparkles = document.getElementById('alex-intro-sparkles');
-  if (!walker || !anim || !block || !sparkles) return;
+  if (!walker || !anim || !blockAnim || !sparkles) return;
   // Reset everything
   anim.style.animation = 'none';
-  block.style.opacity = '1';
-  block.style.animation = 'introHeadsetBob 1.6s ease-in-out infinite';
+  blockPos.style.opacity = '1';
+  blockAnim.style.opacity = '1';
+  blockAnim.style.animation = 'introHeadsetBob 1.6s ease-in-out infinite';
   sparkles.style.opacity = '0';
   sparkles.querySelectorAll('circle').forEach(c => c.style.animation = 'none');
   // Force reflow then start the sequence
@@ -590,7 +604,7 @@ function playAlexIntro() {
   }, 1200);
   // 3. Headset "grabbed" — sparkle burst + power-up scale (2.2s+)
   setTimeout(() => {
-    block.style.animation = 'introHeadsetGrab .6s ease-out forwards';
+    blockAnim.style.animation = 'introHeadsetGrab .6s ease-out forwards';
     sparkles.style.opacity = '1';
     sparkles.querySelectorAll('circle').forEach(c => {
       c.style.animation = 'introSparkle 1.2s ease-out forwards';
@@ -796,10 +810,10 @@ function buildAvatar(parent, opts = {}) {
   if (scale !== 1) root.setAttribute('transform', `scale(${scale})`);
   parent.appendChild(root);
 
-  // Color palette (Stardew-inspired)
+  // Color palette (Stardew-inspired) — HAIR has 3 tones for shading depth
   const SKIN='#f2c79b', SKIN_DARK='#d9a77a';
-  const HAIR='#8b4a2a', HAIR_DARK='#5e2f1a';
-  const BEARD='#6e3a1e';
+  const HAIR_LIGHT='#a8602f', HAIR='#8b4a2a', HAIR_DARK='#5e2f1a', HAIR_SHADOW='#3a1c08';
+  const BEARD='#6e3a1e', BEARD_LIGHT='#8a4f2a';
   const SHIRT='#6a8fd6', SHIRT_DARK='#4a6fb8';
   const PANTS='#3f3025', BOOTS='#1f150c';
   const EYE='#1a1a26';
@@ -808,35 +822,61 @@ function buildAvatar(parent, opts = {}) {
 
   // ── Body group (head + torso + legs + DOWN-arms) ──
   const body = svgE('g', { class: 'av-body' });
-  // Mad-scientist hair — wide, tall, with chaotic tufts. Still brown.
-  // Top spikes (Einstein-style upward chaos)
-  px(body, -6, -46, 4, 3, HAIR_DARK);
-  px(body,  4, -46, 4, 3, HAIR_DARK);
-  px(body, -2, -48, 4, 4, HAIR_DARK);
-  // Upper crown
-  px(body, -12, -44, 24, 4, HAIR_DARK);
-  px(body, -16, -42, 32, 3, HAIR_DARK);
-  // Wide hair body — extends past the head
-  px(body, -20, -40, 40, 5, HAIR);
-  // Side wings (the iconic Einstein flare)
-  px(body, -22, -36, 4, 5, HAIR);
-  px(body, 18,  -36, 4, 5, HAIR);
-  px(body, -24, -34, 3, 4, HAIR_DARK);
-  px(body, 21,  -34, 3, 4, HAIR_DARK);
-  px(body, -22, -32, 3, 3, HAIR);
-  px(body, 19,  -32, 3, 3, HAIR);
-  // Random wisps for chaos
-  px(body, -18, -44, 3, 3, HAIR);
-  px(body, 15,  -44, 3, 3, HAIR);
-  px(body, -10, -47, 2, 3, HAIR);
-  px(body, 8,   -47, 2, 3, HAIR);
+  // ── Mad-scientist hair with 3D shading ──
+  // Built in layers from BACK (deep shadow) to FRONT (highlights):
+  // 1. Shadow silhouette behind everything (HAIR_SHADOW)
+  // 2. Mid-tone hair body (HAIR_DARK)
+  // 3. Main hair color (HAIR)
+  // 4. Top highlights catching the light (HAIR_LIGHT)
+  // 5. Chaotic tufts and wisps for the Einstein silhouette
+
+  // Layer 1 — deep shadow silhouette (largest, sits behind everything)
+  px(body, -22, -42, 44, 6, HAIR_SHADOW);
+  px(body, -24, -38, 48, 4, HAIR_SHADOW);
+  px(body, -16, -46, 32, 4, HAIR_SHADOW);
+
+  // Layer 2 — mid-tone fill (slightly smaller than shadow for outline effect)
+  px(body, -20, -42, 40, 5, HAIR_DARK);
+  px(body, -22, -38, 44, 3, HAIR_DARK);
+  px(body, -14, -45, 28, 3, HAIR_DARK);
+
+  // Layer 3 — main hair body
+  px(body, -18, -41, 36, 4, HAIR);
+  px(body, -20, -37, 40, 3, HAIR);
+  px(body, -12, -44, 24, 3, HAIR);
+  // Side wings (Einstein flare)
+  px(body, -22, -35, 4, 4, HAIR);
+  px(body, 18,  -35, 4, 4, HAIR);
+  // Top spikes
+  px(body, -8, -47, 5, 3, HAIR);
+  px(body, 3,  -47, 5, 3, HAIR);
+  px(body, -2, -48, 4, 2, HAIR_DARK);
+
+  // Layer 4 — highlights catching the light (top + crown)
+  px(body, -10, -42, 4, 1, HAIR_LIGHT);  // crown highlight
+  px(body, 6,   -42, 4, 1, HAIR_LIGHT);
+  px(body, -16, -39, 3, 1, HAIR_LIGHT);  // side glints
+  px(body, 13,  -39, 3, 1, HAIR_LIGHT);
+  px(body, -4,  -45, 8, 1, HAIR_LIGHT);  // top sheen
+  px(body, -6,  -47, 2, 1, HAIR_LIGHT);  // spike tips
+  px(body, 4,   -47, 2, 1, HAIR_LIGHT);
+
+  // Random wisps for chaotic feel
+  px(body, -19, -44, 2, 2, HAIR);
+  px(body, 17,  -44, 2, 2, HAIR);
+  px(body, -23, -33, 2, 2, HAIR_DARK);
+  px(body, 21,  -33, 2, 2, HAIR_DARK);
+
   // Head
   px(body, -12, -34, 24, 22, SKIN);
   px(body, -12, -16, 24, 4, SKIN_DARK); // chin shadow
-  // Front fringe — keeps some hair coming down over the forehead
-  px(body, -14, -34, 28, 4, HAIR);
-  px(body, -12, -30, 5, 3, HAIR);
-  px(body, 7,   -30, 5, 3, HAIR);
+  // Front fringe with shading — overlaps the forehead
+  px(body, -14, -34, 28, 4, HAIR_DARK); // back of fringe
+  px(body, -12, -33, 24, 3, HAIR);      // main fringe
+  px(body, -10, -32, 4, 1, HAIR_LIGHT); // fringe highlight
+  px(body, 6,   -32, 4, 1, HAIR_LIGHT);
+  px(body, -12, -30, 5, 3, HAIR_DARK);
+  px(body, 7,   -30, 5, 3, HAIR_DARK);
   // ── Eyebrows — distinctive feature, slightly bigger than eyes for emphasis
   px(body, -8, -27, 5, 2, HAIR_DARK);  // left brow
   px(body, 3,  -27, 5, 2, HAIR_DARK);  // right brow
@@ -859,8 +899,11 @@ function buildAvatar(parent, opts = {}) {
     // Sides of mouth (mouth at y=-17 stays visible)
     px(body, -12, -17, 4, 1, BEARD);
     px(body, 8,   -17, 4, 1, BEARD);
-    // Moustache (above the mouth line)
-    px(body, -6,  -18, 12, 1, BEARD);
+    // Moustache — 2px tall, full mouth-width, with a lighter highlight
+    px(body, -7,  -19, 14, 2, BEARD);
+    px(body, -6,  -19, 12, 1, BEARD_LIGHT);  // highlight on top
+    // Soul patch under the lower lip
+    px(body, -2,  -16, 4,  1, BEARD);
     // Lower lip / chin band — full head width
     px(body, -12, -16, 24, 2, BEARD);  // jaw band
     px(body, -12, -14, 24, 2, BEARD);  // chin band
@@ -1443,7 +1486,12 @@ function getXform(el) {
 function setXform(el, t) {
   transformMap.set(el, t);
   // Compose: translate + rotate + scale, anchored at the element's own center
-  // (transform-origin: center) so rotation/scale feel natural.
+  // so rotation/scale feel natural. For SVG elements, transform-origin
+  // defaults to the SVG canvas origin (0,0) which means scaling shoots
+  // them off toward the upper-left of the document. transform-box: fill-box
+  // makes transform-origin: center mean "center of THIS element's bounding
+  // box" which is what users expect.
+  el.style.transformBox = 'fill-box';
   el.style.transformOrigin = 'center center';
   el.style.transform = `translate(${t.tx}px, ${t.ty}px) rotate(${t.rot}deg) scale(${t.scale})`;
 }

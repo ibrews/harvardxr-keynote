@@ -1220,16 +1220,6 @@ function mPos(i){
 // Cord starts AT the 2025 node (i=9, lower-right) and ends at the monocle's
 // eyepiece — computed from the actual PNG eyepiece coordinates so the
 // bonus 2026 dot lands exactly inside the monocle's small circle.
-const CORD_A = mPos(9);
-const PNG_EYE_CX = 775, PNG_EYE_CY = 788;
-const CORD_B = {
-  x: LOGO_X + PNG_EYE_CX * LOGO_SCALE,
-  y: LOGO_Y + PNG_EYE_CY * LOGO_SCALE,
-};
-
-// Constellation line pairs (connecting non-adjacent nodes for star pattern)
-const CONSTELLATION_LINES=[[0,3],[1,5],[2,7],[3,8],[4,9],[5,0],[6,1],[7,2],[8,4],[9,6]];
-
 // Monocle logo overlay geometry — aligns monocle-white.png so its circular
 // lens overlaps with our constellation circle. The PNG is 852×877. Measured
 // values from inspecting the actual pixels (Python+PIL):
@@ -1243,6 +1233,19 @@ const LOGO_W = 852 * LOGO_SCALE;
 const LOGO_H = 877 * LOGO_SCALE;
 const LOGO_X = MX - PNG_RING_CX * LOGO_SCALE;
 const LOGO_Y = MY - PNG_RING_CY * LOGO_SCALE;
+
+// Cord starts AT the 2025 node (i=9, lower-right) and ends at the monocle's
+// eyepiece — computed from the actual PNG eyepiece coordinates so the
+// bonus 2026 dot lands exactly inside the monocle's small circle.
+const CORD_A = mPos(9);
+const PNG_EYE_CX = 775, PNG_EYE_CY = 788;
+const CORD_B = {
+  x: LOGO_X + PNG_EYE_CX * LOGO_SCALE,
+  y: LOGO_Y + PNG_EYE_CY * LOGO_SCALE,
+};
+
+// Constellation line pairs (connecting non-adjacent nodes for star pattern)
+const CONSTELLATION_LINES=[[0,3],[1,5],[2,7],[3,8],[4,9],[5,0],[6,1],[7,2],[8,4],[9,6]];
 
 let mapDone=false;
 function startMap(){

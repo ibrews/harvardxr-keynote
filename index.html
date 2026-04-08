@@ -333,10 +333,20 @@ body.presentation-mode #anno-prompt {
   80%  { transform: translate(160px, 0) scale(1.45); filter: brightness(1.2); }
   100% { transform: translate(160px, 0) scale(1.5);  filter: brightness(1); }
 }
+/* Particle burst — flies outward using per-element --tx/--ty CSS vars.
+   Pops up to full scale briefly then tapers out as it travels. */
 @keyframes introSparkle {
-  0%   { opacity: 0; transform: scale(.4) rotate(0deg); }
-  50%  { opacity: 1; transform: scale(1.2) rotate(180deg); }
-  100% { opacity: 0; transform: scale(.6) rotate(360deg); }
+  0%   { opacity: 0; transform: translate(0, 0)                                    scale(.3); }
+  10%  { opacity: 1; transform: translate(calc(var(--tx) * .15), calc(var(--ty) * .15)) scale(1.6); }
+  50%  { opacity: 1; transform: translate(calc(var(--tx) * .6),  calc(var(--ty) * .6))  scale(1); }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty))                     scale(.3); }
+}
+
+/* Screen flash — white overlay pops on hit, fades fast */
+@keyframes introFlash {
+  0%   { opacity: 0; }
+  8%   { opacity: .75; }
+  100% { opacity: 0; }
 }
 .intro-stage .stage-floor {
   fill: rgba(0,212,255,.12); stroke: rgba(0,212,255,.3); stroke-width: 1;
@@ -557,19 +567,85 @@ allSlides.push(introAlex);
   buildAvatar(walkerAnim, { withBeard: true });  // Alex with his pandemic beard
   svg.appendChild(walkerG);
 
-  // Sparkle particles for power-up moment (hidden initially)
+  // Particle burst for the power-up moment — 24 particles flying outward
+  // from the headset block's position (240, 200) in random directions
+  // with varying sizes and colors. Each particle stores its destination
+  // delta in data-dx/dy so the CSS keyframe can use it.
   const sparkles = svgE('g', { id:'alex-intro-sparkles', opacity:'0' });
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2;
+  const FW_COLORS = ['#fde68a','#00d4ff','#a78bfa','#f59e0b','#fff','#fb7185'];
+  const BURST_X = 240, BURST_Y = 200;
+  for (let i = 0; i < 24; i++) {
+    // Slight angular jitter so the burst isn't a perfect circle
+    const angle = (i / 24) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+    const dist = 55 + Math.random() * 45; // 55–100 viewBox units
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+    const r = (1.2 + Math.random() * 2.2).toFixed(1); // 1.2–3.4
     const sp = svgE('circle', {
-      cx: 80 + Math.cos(a) * 50, cy: 270 + Math.sin(a) * 50,
-      r: '3', fill: ['#fde68a','#00d4ff','#a78bfa','#f59e0b'][i % 4],
+      cx: BURST_X, cy: BURST_Y, r,
+      fill: FW_COLORS[Math.floor(Math.random() * FW_COLORS.length)],
+      'data-dx': dx.toFixed(1),
+      'data-dy': dy.toFixed(1),
     });
-    sp.style.transformOrigin = `${80 + Math.cos(a) * 50}px ${270 + Math.sin(a) * 50}px`;
+    sp.style.transformOrigin = `${BURST_X}px ${BURST_Y}px`;
     sparkles.appendChild(sp);
   }
   svg.appendChild(sparkles);
+
+  // Screen flash overlay — fills the viewBox with white for a brief flash
+  // on hit. Fades in fast, fades out. opacity:0 by default.
+  const flash = svgE('rect', {
+    id: 'alex-intro-flash',
+    x: 0, y: 0, width: 400, height: 400,
+    fill: '#fff',
+    opacity: '0',
+    'pointer-events': 'none',
+  });
+  svg.appendChild(flash);
 })();
+
+// Web Audio API — Mario-style power-up SFX, generated on the fly.
+// No audio files needed. Lazy-creates the AudioContext on first call
+// (browsers require a user gesture before audio can play — slide nav
+// counts as a gesture).
+let _introAudioCtx = null;
+function playIntroPowerUpSfx() {
+  try {
+    if (!_introAudioCtx) {
+      _introAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    const ctx = _introAudioCtx;
+    if (ctx.state === 'suspended') ctx.resume();
+    const now = ctx.currentTime;
+    // Helper to schedule a tone
+    const tone = (freq, start, dur, type = 'square', volume = 0.12) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(volume, now + start);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
+      osc.start(now + start);
+      osc.stop(now + start + dur);
+    };
+    // Mario coin "ding" — two fast high notes
+    tone(988, 0.00, 0.08, 'square', 0.10); // B5
+    tone(1319, 0.08, 0.18, 'square', 0.10); // E6
+    // Ascending power-up arpeggio
+    tone(392, 0.25, 0.06, 'square', 0.10); // G4
+    tone(523, 0.31, 0.06, 'square', 0.10); // C5
+    tone(659, 0.37, 0.06, 'square', 0.10); // E5
+    tone(784, 0.43, 0.06, 'square', 0.11); // G5
+    tone(1047, 0.49, 0.06, 'square', 0.11); // C6
+    tone(1319, 0.55, 0.18, 'square', 0.12); // E6
+    // Final triumphant blip
+    tone(1568, 0.80, 0.25, 'square', 0.13); // G6
+  } catch (e) {
+    // Audio blocked? silently fail — the visual animation still runs
+  }
+}
 
 // Trigger the Alex intro animation whenever this slide becomes active.
 // Reset on entry so it can replay if you navigate back.
@@ -578,6 +654,30 @@ allSlides.push(introAlex);
 // `walker` group. The outer group's `transform="translate(80,270)"` is the
 // stage anchor — if we apply CSS animations there, they'd overwrite that
 // transform and the sprite would jump to viewBox (0,0).
+// Helper — paints a VR headset onto the avatar's face. Called after the
+// power-up so the avatar emerges wearing the gear they grabbed.
+function paintWornHeadset(parentBody) {
+  // Remove any prior headset (replays should reset)
+  parentBody.querySelector('.worn-headset')?.remove();
+  const hs = svgE('g', { class: 'worn-headset' });
+  hs.style.shapeRendering = 'crispEdges';
+  const px = (x,y,w,h,fill) => hs.appendChild(svgE('rect',{x,y,width:w,height:h,fill}));
+  // Strap going around the head (covers eyes/eyebrows area)
+  px(-13, -27, 26, 1, '#0a0a14');         // top edge
+  px(-13, -26, 26, 9, '#1a1a26');         // main body
+  px(-13, -17, 26, 1, '#0a0a14');         // bottom edge
+  // Lenses (cyan glow)
+  px(-8, -24, 5, 5, '#00d4ff');
+  px(3,  -24, 5, 5, '#00d4ff');
+  // Lens highlight glints
+  px(-7, -23, 1, 1, '#fff');
+  px(4,  -23, 1, 1, '#fff');
+  // Side strap notches
+  px(-13, -23, 1, 3, '#3a3a4e');
+  px(12,  -23, 1, 3, '#3a3a4e');
+  parentBody.appendChild(hs);
+}
+
 function playAlexIntro() {
   const walker = document.getElementById('alex-intro-walker');
   const anim = document.getElementById('alex-intro-anim');
@@ -586,7 +686,10 @@ function playAlexIntro() {
   const blockPos = document.getElementById('intro-block-pos');
   const blockAnim = document.getElementById('intro-block-anim');
   const sparkles = document.getElementById('alex-intro-sparkles');
-  if (!walker || !anim || !blockAnim || !sparkles) return;
+  const flash = document.getElementById('alex-intro-flash');
+  if (!walker || !anim || !blockAnim || !sparkles || !flash) return;
+  // Find the avatar's body group so we can paint a worn headset onto it
+  const avatarBody = anim.querySelector('.av-body');
   // Reset everything
   anim.style.animation = 'none';
   blockPos.style.opacity = '1';
@@ -594,6 +697,9 @@ function playAlexIntro() {
   blockAnim.style.animation = 'introHeadsetBob 1.6s ease-in-out infinite';
   sparkles.style.opacity = '0';
   sparkles.querySelectorAll('circle').forEach(c => c.style.animation = 'none');
+  flash.style.animation = 'none';
+  flash.style.opacity = '0';
+  avatarBody?.querySelector('.worn-headset')?.remove();
   // Force reflow then start the sequence
   void anim.offsetWidth;
   // 1. Walk in (0–1.2s) — slide the inner group from -180px to 0
@@ -602,17 +708,31 @@ function playAlexIntro() {
   setTimeout(() => {
     anim.style.animation = 'introJump 1s ease-out 0s 1 normal both';
   }, 1200);
-  // 3. Headset "grabbed" — sparkle burst + power-up scale (2.2s+)
+  // 3. HIT — flash, particle burst, power-up SFX, headset shrinks away (2.2s)
   setTimeout(() => {
-    blockAnim.style.animation = 'introHeadsetGrab .6s ease-out forwards';
+    // Screen flash
+    flash.style.animation = 'introFlash .45s ease-out forwards';
+    // Block shrinks to nothing (it was "absorbed")
+    blockAnim.style.animation = 'introHeadsetGrab .5s ease-out forwards';
+    // Particle burst — reads --tx/--ty CSS vars per particle
     sparkles.style.opacity = '1';
-    sparkles.querySelectorAll('circle').forEach(c => {
-      c.style.animation = 'introSparkle 1.2s ease-out forwards';
+    sparkles.querySelectorAll('circle').forEach(p => {
+      const dx = p.getAttribute('data-dx');
+      const dy = p.getAttribute('data-dy');
+      p.style.setProperty('--tx', `${dx}px`);
+      p.style.setProperty('--ty', `${dy}px`);
+      p.style.animation = 'introSparkle 1.1s ease-out forwards';
     });
+    // 8-bit power-up SFX (Mario coin → ascending arpeggio → triumphant blip)
+    playIntroPowerUpSfx();
     // Power up the avatar — keeps the previous translate via the keyframe
     anim.style.transformOrigin = 'center bottom';
     anim.style.animation = 'introPowerUp 1.4s ease-out forwards';
   }, 2200);
+  // 4. Headset appears WORN on the avatar's face just as the power-up settles
+  setTimeout(() => {
+    if (avatarBody) paintWornHeadset(avatarBody);
+  }, 2700);
 }
 
 // ── Slide 3: Agile Lens intro ──
@@ -822,61 +942,71 @@ function buildAvatar(parent, opts = {}) {
 
   // ── Body group (head + torso + legs + DOWN-arms) ──
   const body = svgE('g', { class: 'av-body' });
-  // ── Mad-scientist hair with 3D shading ──
-  // Built in layers from BACK (deep shadow) to FRONT (highlights):
-  // 1. Shadow silhouette behind everything (HAIR_SHADOW)
-  // 2. Mid-tone hair body (HAIR_DARK)
-  // 3. Main hair color (HAIR)
-  // 4. Top highlights catching the light (HAIR_LIGHT)
-  // 5. Chaotic tufts and wisps for the Einstein silhouette
 
-  // Layer 1 — deep shadow silhouette (largest, sits behind everything)
-  px(body, -22, -42, 44, 6, HAIR_SHADOW);
-  px(body, -24, -38, 48, 4, HAIR_SHADOW);
-  px(body, -16, -46, 32, 4, HAIR_SHADOW);
-
-  // Layer 2 — mid-tone fill (slightly smaller than shadow for outline effect)
-  px(body, -20, -42, 40, 5, HAIR_DARK);
-  px(body, -22, -38, 44, 3, HAIR_DARK);
-  px(body, -14, -45, 28, 3, HAIR_DARK);
-
-  // Layer 3 — main hair body
-  px(body, -18, -41, 36, 4, HAIR);
-  px(body, -20, -37, 40, 3, HAIR);
-  px(body, -12, -44, 24, 3, HAIR);
-  // Side wings (Einstein flare)
-  px(body, -22, -35, 4, 4, HAIR);
-  px(body, 18,  -35, 4, 4, HAIR);
-  // Top spikes
-  px(body, -8, -47, 5, 3, HAIR);
-  px(body, 3,  -47, 5, 3, HAIR);
-  px(body, -2, -48, 4, 2, HAIR_DARK);
-
-  // Layer 4 — highlights catching the light (top + crown)
-  px(body, -10, -42, 4, 1, HAIR_LIGHT);  // crown highlight
-  px(body, 6,   -42, 4, 1, HAIR_LIGHT);
-  px(body, -16, -39, 3, 1, HAIR_LIGHT);  // side glints
-  px(body, 13,  -39, 3, 1, HAIR_LIGHT);
-  px(body, -4,  -45, 8, 1, HAIR_LIGHT);  // top sheen
-  px(body, -6,  -47, 2, 1, HAIR_LIGHT);  // spike tips
-  px(body, 4,   -47, 2, 1, HAIR_LIGHT);
-
-  // Random wisps for chaotic feel
-  px(body, -19, -44, 2, 2, HAIR);
-  px(body, 17,  -44, 2, 2, HAIR);
-  px(body, -23, -33, 2, 2, HAIR_DARK);
-  px(body, 21,  -33, 2, 2, HAIR_DARK);
-
-  // Head
+  // Head (drawn first so hair can overlap it naturally on top)
   px(body, -12, -34, 24, 22, SKIN);
   px(body, -12, -16, 24, 4, SKIN_DARK); // chin shadow
-  // Front fringe with shading — overlaps the forehead
-  px(body, -14, -34, 28, 4, HAIR_DARK); // back of fringe
-  px(body, -12, -33, 24, 3, HAIR);      // main fringe
-  px(body, -10, -32, 4, 1, HAIR_LIGHT); // fringe highlight
-  px(body, 6,   -32, 4, 1, HAIR_LIGHT);
-  px(body, -12, -30, 5, 3, HAIR_DARK);
-  px(body, 7,   -30, 5, 3, HAIR_DARK);
+
+  // ── Natural tousled hair with 3D shading ──
+  // Built so the silhouette is uneven/organic, not a flat cap.
+  // Layered: SHADOW (back) → DARK (mid) → HAIR (main) → LIGHT (highlights)
+
+  // Back shadow layer — rounded dome + side bumps (smaller than before,
+  // follows the head contour rather than being a wide cap)
+  px(body, -13, -40, 26, 2, HAIR_SHADOW);   // very top of dome (narrow)
+  px(body, -15, -38, 30, 3, HAIR_SHADOW);   // mid-dome slightly wider
+  px(body, -16, -36, 32, 4, HAIR_SHADOW);   // widest row (around hairline)
+  // Asymmetric bumps so the top isn't a flat line
+  px(body, -9, -42, 5, 2, HAIR_SHADOW);     // left bump up
+  px(body, 3,  -42, 4, 2, HAIR_SHADOW);     // right bump (smaller, offset)
+  px(body, -2, -43, 5, 1, HAIR_SHADOW);     // center cowlick
+
+  // Main hair fill (HAIR_DARK as the darker base)
+  px(body, -12, -40, 24, 2, HAIR_DARK);
+  px(body, -14, -38, 28, 3, HAIR_DARK);
+  px(body, -15, -36, 30, 3, HAIR_DARK);
+  px(body, -8, -42, 4, 2, HAIR_DARK);       // left bump
+  px(body, 4,  -42, 3, 2, HAIR_DARK);       // right bump
+  px(body, -1, -43, 3, 1, HAIR_DARK);       // cowlick
+
+  // Main hair color — main volume
+  px(body, -11, -40, 22, 1, HAIR);
+  px(body, -13, -38, 26, 2, HAIR);
+  px(body, -14, -36, 28, 2, HAIR);
+  px(body, -8, -41, 4, 1, HAIR);            // left bump top
+  px(body, 4,  -41, 3, 1, HAIR);            // right bump top
+
+  // Tousled wisps extending slightly past the head — just a few, asymmetric
+  px(body, -16, -35, 2, 3, HAIR_DARK);      // left wisp
+  px(body, 14,  -35, 2, 3, HAIR_DARK);      // right wisp (symmetric-ish)
+  px(body, -15, -34, 1, 2, HAIR);
+  px(body, 14,  -34, 1, 2, HAIR);
+
+  // Highlights — catches light on top bumps and the left side of the dome
+  px(body, -8, -40, 3, 1, HAIR_LIGHT);      // main crown highlight
+  px(body, 4,  -40, 2, 1, HAIR_LIGHT);
+  px(body, -10, -38, 2, 1, HAIR_LIGHT);     // dome sheen
+  px(body, -2, -42, 2, 1, HAIR_LIGHT);      // cowlick highlight
+  px(body, -7, -41, 2, 1, HAIR_LIGHT);      // bump glint
+
+  // ── Front fringe — UNEVEN lengths so it looks like real bangs ──
+  // Instead of one flat horizontal row, each chunk hangs down by
+  // different amounts.
+  px(body, -12, -34, 5, 3, HAIR_DARK);      // left chunk (drops 3 rows)
+  px(body, -11, -33, 4, 2, HAIR);
+  px(body, -7,  -34, 3, 2, HAIR_DARK);      // shorter chunk (drops 2)
+  px(body, -7,  -33, 2, 1, HAIR);
+  px(body, -4,  -34, 2, 4, HAIR_DARK);      // long wisp (drops 4)
+  px(body, -4,  -33, 1, 3, HAIR);
+  px(body, -1,  -34, 3, 2, HAIR_DARK);      // short chunk
+  px(body, -1,  -33, 2, 1, HAIR);
+  px(body, 3,   -34, 4, 3, HAIR_DARK);      // mid-length chunk
+  px(body, 3,   -33, 3, 2, HAIR);
+  px(body, 7,   -34, 5, 4, HAIR_DARK);      // right chunk (longer)
+  px(body, 8,   -33, 3, 3, HAIR);
+  // A few more highlights on the fringe
+  px(body, -10, -33, 2, 1, HAIR_LIGHT);
+  px(body, 8,   -33, 2, 1, HAIR_LIGHT);
   // ── Eyebrows — distinctive feature, slightly bigger than eyes for emphasis
   px(body, -8, -27, 5, 2, HAIR_DARK);  // left brow
   px(body, 3,  -27, 5, 2, HAIR_DARK);  // right brow

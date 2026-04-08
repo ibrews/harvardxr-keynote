@@ -285,33 +285,37 @@ body.presentation-mode #anno-prompt {
   font-size:clamp(1rem,1.6vw,1.4rem); color:var(--dim); line-height:1.55;
   margin-bottom:32px; max-width:600px;
 }
-.intro-stats { display:flex; gap:14px; flex-wrap:wrap; }
+.intro-stats { display:flex; gap:20px; flex-wrap:wrap; }
 .intro-stat {
   background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);
-  border-radius:12px; padding:14px 20px;
+  border-radius:12px; padding:18px 28px; min-width:170px;
 }
 .intro-stat .num {
   display:block; font-size:clamp(1.4rem,2.2vw,2rem); font-weight:700;
-  color:var(--teal); letter-spacing:-.02em;
+  color:var(--teal); letter-spacing:-.02em; margin-bottom:6px;
 }
 .intro-stat .lbl {
+  display:block;
   font-size:clamp(.62rem,.85vw,.78rem); font-weight:500; letter-spacing:.16em;
-  text-transform:uppercase; color:rgba(255,255,255,.5); margin-top:2px;
+  text-transform:uppercase; color:rgba(255,255,255,.5); white-space:nowrap;
 }
 .intro-purple .intro-eyebrow { color:var(--purple); }
 .intro-purple .intro-stat .num { color:var(--purple); }
 
 /* Mario power-up animation for the Alex intro stage */
 @keyframes introWalk {
-  0%   { transform: translateX(-180px); }
-  100% { transform: translateX(0); }
+  0%   { transform: translate(-180px, 0); }
+  100% { transform: translate(160px, 0); }
 }
-@keyframes introJump {
-  0%   { transform: translate(0, 0)      scale(1, 1); }
-  20%  { transform: translate(40px, -10px)  scale(1, 1); }
-  50%  { transform: translate(80px, -120px) scale(1.05, .95); }
-  80%  { transform: translate(120px, -10px) scale(1, 1); }
-  100% { transform: translate(160px, 0)     scale(1, 1); }
+@keyframes introJumpUp {
+  0%   { transform: translate(160px, 0)    scale(1,1); }
+  30%  { transform: translate(160px, -20px) scale(.95, 1.05); }
+  100% { transform: translate(160px, -95px) scale(1,1); }
+}
+@keyframes introFallDown {
+  0%   { transform: translate(160px, -95px) scale(1.5); }
+  85%  { transform: translate(160px, 0)     scale(1.58, 1.42); }
+  100% { transform: translate(160px, 0)     scale(1.5); }
 }
 @keyframes introHeadsetBob {
   0%, 100% { transform: translateY(0); }
@@ -326,12 +330,10 @@ body.presentation-mode #anno-prompt {
    so the avatar grows in place at the headset block instead of snapping
    back to the origin. */
 @keyframes introPowerUp {
-  0%   { transform: translate(160px, 0) scale(1); }
-  20%  { transform: translate(160px, 0) scale(1.1);  filter: brightness(1.5); }
-  40%  { transform: translate(160px, 0) scale(.95);  filter: brightness(1); }
-  60%  { transform: translate(160px, 0) scale(1.3);  filter: brightness(1.7); }
-  80%  { transform: translate(160px, 0) scale(1.45); filter: brightness(1.2); }
-  100% { transform: translate(160px, 0) scale(1.5);  filter: brightness(1); }
+  0%   { transform: translate(160px, -95px) scale(1);    filter: brightness(1); }
+  30%  { transform: translate(160px, -95px) scale(1.2);  filter: brightness(1.7); }
+  55%  { transform: translate(160px, -95px) scale(.95);  filter: brightness(1.3); }
+  100% { transform: translate(160px, -95px) scale(1.5);  filter: brightness(1); }
 }
 /* Particle burst — flies outward using per-element --tx/--ty CSS vars.
    Pops up to full scale briefly then tapers out as it travels. */
@@ -702,37 +704,39 @@ function playAlexIntro() {
   avatarBody?.querySelector('.worn-headset')?.remove();
   // Force reflow then start the sequence
   void anim.offsetWidth;
-  // 1. Walk in (0–1.2s) — slide the inner group from -180px to 0
-  anim.style.animation = 'introWalk 1.2s ease-out 0s 1 normal both';
-  // 2. Jump to grab the headset (1.2–2.2s)
+  anim.style.transformOrigin = 'center bottom';
+  // Timing:
+  //   0.0–2.0s  walk horizontally from off-stage left to under the block
+  //   2.0–2.4s  jump straight up to the block
+  //   2.4–3.2s  HIT: flash + particles + SFX + power-up grow (held at apex)
+  //   3.2–3.7s  fall back down to ground (now bigger), land with squash
+  //   3.8s      tallies begin counting up (on the intro-stats numbers)
+  anim.style.animation = 'introWalk 2s linear 0s 1 normal both';
+  // Jump up
   setTimeout(() => {
-    anim.style.animation = 'introJump 1s ease-out 0s 1 normal both';
-  }, 1200);
-  // 3. HIT — flash, particle burst, power-up SFX, headset shrinks away (2.2s)
+    anim.style.animation = 'introJumpUp .4s cubic-bezier(.3,.7,.4,1) 0s 1 normal both';
+  }, 2000);
+  // HIT — at apex
   setTimeout(() => {
-    // Screen flash
     flash.style.animation = 'introFlash .45s ease-out forwards';
-    // Block shrinks to nothing (it was "absorbed")
     blockAnim.style.animation = 'introHeadsetGrab .5s ease-out forwards';
-    // Particle burst — reads --tx/--ty CSS vars per particle
     sparkles.style.opacity = '1';
     sparkles.querySelectorAll('circle').forEach(p => {
-      const dx = p.getAttribute('data-dx');
-      const dy = p.getAttribute('data-dy');
-      p.style.setProperty('--tx', `${dx}px`);
-      p.style.setProperty('--ty', `${dy}px`);
+      p.style.setProperty('--tx', `${p.getAttribute('data-dx')}px`);
+      p.style.setProperty('--ty', `${p.getAttribute('data-dy')}px`);
       p.style.animation = 'introSparkle 1.1s ease-out forwards';
     });
-    // 8-bit power-up SFX (Mario coin → ascending arpeggio → triumphant blip)
     playIntroPowerUpSfx();
-    // Power up the avatar — keeps the previous translate via the keyframe
-    anim.style.transformOrigin = 'center bottom';
-    anim.style.animation = 'introPowerUp 1.4s ease-out forwards';
-  }, 2200);
-  // 4. Headset appears WORN on the avatar's face just as the power-up settles
+    anim.style.animation = 'introPowerUp .8s ease-out forwards';
+  }, 2400);
+  // Paint worn headset mid-powerup
+  setTimeout(() => { if (avatarBody) paintWornHeadset(avatarBody); }, 2900);
+  // Fall back down
   setTimeout(() => {
-    if (avatarBody) paintWornHeadset(avatarBody);
-  }, 2700);
+    anim.style.animation = 'introFallDown .5s cubic-bezier(.5,.1,.8,1) forwards';
+  }, 3200);
+  // Kick tallies now that avatar has landed
+  setTimeout(() => { playTallies(introAlex); }, 3800);
 }
 
 // ── Slide 3: Agile Lens intro ──
@@ -863,8 +867,10 @@ function goTo(n){
   const t = allSlides[current].dataset.type;
   if(t==='map') setTimeout(startMap, 400);
   if(t==='intro-alex') setTimeout(playAlexIntro, 500);
-  // Tally count-up for any .num element that's purely numeric
-  setTimeout(()=>playTallies(nx), 400);
+  // Tally count-up for any .num element that's purely numeric.
+  // Skip on intro-alex — the tallies are triggered AFTER the avatar lands
+  // inside playAlexIntro(), so the stats count up as Alex grows.
+  if (t !== 'intro-alex') setTimeout(()=>playTallies(nx), 400);
   // Update URL hash so the slide is shareable / re-navigable
   if(history.replaceState) history.replaceState(null, '', '#' + (current + 1));
   setTimeout(()=>{animating=false},520);
@@ -1690,7 +1696,7 @@ function moveModeToggle(on) {
   document.getElementById('move-hud').classList.toggle('visible', moveMode);
   if (window.scrubShow) window.scrubShow(moveMode);
   if (moveMode) {
-    annoToast('Move mode · drag = move · ⇧drag = scale · ⌥drag = rotate · ⌘Z = undo · scrubber ↓');
+    annoToast('Move mode · drag=move · ⇧scale · ⌥rotate · ⌘click=parent · ⌘Z=undo');
   }
 }
 
@@ -1776,9 +1782,20 @@ document.addEventListener('mousedown', e => {
   if (e.target.closest('#move-toggle') || e.target.closest('#anno-toggle') ||
       e.target.closest('#slide-grid') || e.target.closest('#slide-grid-zone') ||
       e.target.closest('#anno-panel') || e.target.closest('#anno-prompt') ||
-      e.target.closest('#move-hud')) return;
+      e.target.closest('#move-hud') || e.target.closest('#anim-scrub-bar') ||
+      e.target.closest('#anno-toast')) return;
   e.preventDefault(); e.stopPropagation();
-  const el = e.target;
+  // Cmd/Ctrl+click climbs ONE parent level from the clicked target so you
+  // can grab a whole group (e.g. the avatar body + headset) instead of just
+  // the leaf rect you happened to click. Hold Cmd/Ctrl multiple times on
+  // successive clicks to climb further (each click goes up one more level).
+  let el = e.target;
+  if (e.metaKey || e.ctrlKey) {
+    const p = el.parentElement;
+    if (p && p.tagName !== 'BODY' && !p.closest('#move-hud,#anno-panel,#anim-scrub-bar')) {
+      el = p;
+    }
+  }
   const startState = { ...getXform(el) };
   drag = {
     el,

@@ -314,7 +314,7 @@ body.presentation-mode #anno-prompt {
 }
 @keyframes introFallDown {
   0%   { transform: translate(160px, -95px) scale(1.5); }
-  100% { transform: translate(197px, 124px) scale(1.5); }
+  100% { transform: translate(160px, 0)     scale(1.5); }
 }
 @keyframes introHeadsetBob {
   0%, 100% { transform: translateY(0); }
@@ -353,6 +353,7 @@ body.presentation-mode #anno-prompt {
   fill: rgba(0,212,255,.12); stroke: rgba(0,212,255,.3); stroke-width: 1;
 }
 .intro-stage .stage-walker { transform-origin: center bottom; }
+#alex-intro-anim { transform-box: fill-box; transform-origin: center bottom; }
 .intro-stage .headset-block { transform-origin: center; }
 
 /* Avatar arm frame toggle — DOWN visible by default, UP hidden. Adding the
@@ -737,7 +738,7 @@ function playAlexIntro() {
   // After fall, lock the final resting transform so nothing drifts
   setTimeout(() => {
     anim.style.animation = 'none';
-    anim.style.transform = 'translate(197px, 124px) scale(1.5)';
+    anim.style.transform = 'translate(160px, 0) scale(1.5)';
   }, 3780);
   // Kick tallies now that avatar has landed
   setTimeout(() => { playTallies(introAlex); }, 3850);

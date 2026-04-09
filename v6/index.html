@@ -424,6 +424,11 @@ body.presentation-mode #anno-prompt {
 body.annotate-mode *:not(#anno-panel):not(#anno-panel *):not(#anno-toggle):not(#move-toggle):not(#slide-grid):not(#slide-grid *):not(#slide-grid-zone):hover{outline:2px dashed var(--teal)!important;outline-offset:2px;cursor:crosshair!important}
 body.move-mode .slide.active *:not(#anno-toggle):not(#move-toggle):hover{outline:2px dashed var(--amber)!important;outline-offset:2px;cursor:move!important}
 body.move-mode .slide.active *{user-select:none}
+/* Disarm anchor navigation while in move mode so clicks on links don't
+   jump slides — the mousedown handler still catches the drag. */
+body.move-mode .slide.active a{pointer-events:auto}
+body.move-mode .slide.active a[href]{text-decoration:none}
+body.edit-text .slide.active [contenteditable="true"]{outline:2px solid var(--teal)!important;cursor:text!important;user-select:text!important;background:rgba(0,212,255,.08)}
 .dragging{opacity:.85!important;outline:2px solid var(--amber)!important}
 #anno-panel{position:fixed;top:70px;left:24px;z-index:1001;width:320px;max-height:70vh;background:rgba(10,12,24,.96);border:1px solid rgba(0,212,255,.3);border-radius:10px;padding:16px;font-family:var(--font);font-size:.78rem;color:var(--text);backdrop-filter:blur(12px);overflow-y:auto;display:none}
 #anno-panel.visible{display:block}
@@ -1543,7 +1548,10 @@ function annoContext(el){
   if(!slide) return null;
   const type=slide.dataset.type||'?';
   const year=slide.dataset.year||'';
-  return year ? `${type} ${year}` : type;
+  const idx=[...document.querySelectorAll('#deck > .slide')].indexOf(slide);
+  const num=idx>=0 ? `#${idx+1}` : '';
+  const base=year ? `${type} ${year}` : type;
+  return num ? `${base} ${num}` : base;
 }
 
 function annoRender(){
@@ -1777,6 +1785,80 @@ function moveModeToggle(on) {
   window.scrubShow = (on)=>{ bar.style.display = on ? 'flex' : 'none'; if (on) setTimeout(refreshRange,100); };
 })();
 
+// Suppress link navigation while move mode is on — so editing an <a>
+// doesn't jump the browser. Also suppress while editing text.
+document.addEventListener('click', e => {
+  if (!moveMode) return;
+  const a = e.target.closest('a');
+  if (a && !a.closest('#move-hud,#anno-panel,#anim-scrub-bar')) {
+    e.preventDefault(); e.stopPropagation();
+  }
+}, true);
+
+// Double-click in move mode = enter text-edit mode on the clicked element.
+// Click outside or press Escape to exit. Edits are saved as annotations so
+// they survive reloads and can be exported with the rest.
+let editingEl = null;
+function endTextEdit(save){
+  if (!editingEl) return;
+  const el = editingEl;
+  el.removeAttribute('contenteditable');
+  el.blur();
+  if (save) {
+    const txt = el.innerText;
+    if (txt !== (el.dataset.origText||'')) {
+      // Persist as an annotation entry keyed by selector
+      const sel = annoSelector(el);
+      const arr = annoLoad();
+      const existing = arr.find(a=>a.selector===sel && a.text.startsWith('TEXT '));
+      const entry = { selector: sel, text: `TEXT "${txt.replace(/"/g,'\\"')}"`, context: annoContext(el), ts: Date.now() };
+      if (existing) Object.assign(existing, entry); else arr.push(entry);
+      annoSave(arr); annoRender();
+      annoToast('Text saved');
+    }
+  }
+  editingEl = null;
+  document.body.classList.remove('edit-text');
+}
+document.addEventListener('dblclick', e => {
+  if (!moveMode) return;
+  if (e.target.closest('#move-hud,#anno-panel,#anim-scrub-bar,#slide-grid,#move-toggle,#anno-toggle')) return;
+  // Only text-bearing leaf-ish elements. Skip SVG nodes (not editable).
+  const el = e.target;
+  if (el.closest('svg')) { annoToast('SVG text not editable yet'); return; }
+  e.preventDefault(); e.stopPropagation();
+  if (editingEl && editingEl !== el) endTextEdit(true);
+  editingEl = el;
+  el.dataset.origText = el.innerText;
+  el.setAttribute('contenteditable','true');
+  document.body.classList.add('edit-text');
+  el.focus();
+  // Select all text for quick replacement
+  const r = document.createRange(); r.selectNodeContents(el);
+  const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+}, true);
+document.addEventListener('keydown', e => {
+  if (!editingEl) return;
+  if (e.key === 'Escape') { e.preventDefault(); endTextEdit(false); }
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); endTextEdit(true); }
+}, true);
+// Clicking outside the edited element commits the edit
+document.addEventListener('mousedown', e => {
+  if (editingEl && !e.target.closest('[contenteditable="true"]')) endTextEdit(true);
+}, true);
+// Re-apply saved TEXT annotations on slide load so edits persist
+function applyTextAnnotations(){
+  annoLoad().filter(a=>a.text.startsWith('TEXT ')).forEach(a=>{
+    try {
+      const m = a.text.match(/^TEXT "(.*)"$/s);
+      if (!m) return;
+      const el = document.querySelector(a.selector);
+      if (el) el.innerText = m[1].replace(/\\"/g,'"');
+    } catch(_) {}
+  });
+}
+setTimeout(applyTextAnnotations, 300);
+
 document.getElementById('move-toggle').addEventListener('click', () => moveModeToggle());
 document.getElementById('move-undo').addEventListener('click', () => moveUndo());
 document.getElementById('move-redo').addEventListener('click', () => moveRedo());
@@ -1799,6 +1881,8 @@ document.addEventListener('mousedown', e => {
       e.target.closest('#anno-panel') || e.target.closest('#anno-prompt') ||
       e.target.closest('#move-hud') || e.target.closest('#anim-scrub-bar') ||
       e.target.closest('#anno-toast')) return;
+  // Ignore anything inside a contenteditable being edited — let the browser handle text selection.
+  if (e.target.closest('[contenteditable="true"]')) return;
   e.preventDefault(); e.stopPropagation();
   // Cmd/Ctrl+click climbs ONE parent level from the clicked target so you
   // can grab a whole group (e.g. the avatar body + headset) instead of just

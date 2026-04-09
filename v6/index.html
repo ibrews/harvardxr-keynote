@@ -1343,12 +1343,15 @@ function startMap(){
     g.appendChild(svgE('circle',{cx:p.x,cy:p.y,r:'16',fill:'rgba(0,212,255,.02)',stroke:'rgba(0,212,255,.08)','stroke-width':'0.5'}));
     // center star
     g.appendChild(svgE('circle',{cx:p.x,cy:p.y,r:'4.5',fill:'rgba(0,212,255,.15)',stroke:'rgba(0,212,255,.65)','stroke-width':'1.5'}));
+    // Nudge for 2025 (i=9) — its labels crowd the monocle cord otherwise
+    const yrOffX = i===9 ? -24 : 0, yrOffY = i===9 ? 6 : 0;
+    const ttOffX = i===9 ? -47 : 0, ttOffY = i===9 ? 14 : 0;
     // year label
-    const yr=svgE('text',{x:lx,y:ly-(p.y<MY?12:0),'text-anchor':anc,fill:'rgba(0,212,255,.8)',
+    const yr=svgE('text',{x:lx+yrOffX,y:ly-(p.y<MY?12:0)+yrOffY,'text-anchor':anc,fill:'rgba(0,212,255,.8)',
       'font-family':'Space Grotesk,sans-serif','font-size':'10.5','font-weight':'600','letter-spacing':'1.2'});
     yr.textContent=2016+i;g.appendChild(yr);
     // lesson label
-    const tt=svgE('text',{x:lx,y:ly+(p.y<MY?3:14),'text-anchor':anc,fill:'rgba(255,255,255,.38)',
+    const tt=svgE('text',{x:lx+ttOffX,y:ly+(p.y<MY?3:14)+ttOffY,'text-anchor':anc,fill:'rgba(255,255,255,.38)',
       'font-family':'Space Grotesk,sans-serif','font-size':'8','font-weight':'400'});
     tt.textContent=LSHORT[i];g.appendChild(tt);
     g.addEventListener('click',()=>{if(lessonIdxs[i]!==undefined)goTo(lessonIdxs[i])});
@@ -1858,6 +1861,56 @@ function applyTextAnnotations(){
   });
 }
 setTimeout(applyTextAnnotations, 300);
+
+// ── Drag-and-drop image swap (move mode only) ───────────────────
+// Drag an image file from Finder onto any <img> while in move mode.
+// The file is read as a data URI, the <img> src is swapped, and the
+// new src is persisted as an annotation so it survives reloads.
+function applyImageAnnotations(){
+  annoLoad().filter(a=>a.text.startsWith('IMG ')).forEach(a=>{
+    try {
+      const m = a.text.match(/^IMG (data:[^\s]+)$/);
+      if (!m) return;
+      const el = document.querySelector(a.selector);
+      if (el && el.tagName === 'IMG') el.src = m[1];
+    } catch(_) {}
+  });
+}
+setTimeout(applyImageAnnotations, 400);
+
+// Accept the drop globally but only act when move mode is on
+document.addEventListener('dragover', e => {
+  if (!moveMode) return;
+  const img = e.target.closest('img');
+  if (!img) return;
+  e.preventDefault();
+  img.style.outline = '3px dashed var(--teal)';
+  img.style.outlineOffset = '2px';
+});
+document.addEventListener('dragleave', e => {
+  const img = e.target.closest('img'); if (img) img.style.outline = '';
+});
+document.addEventListener('drop', e => {
+  if (!moveMode) return;
+  const img = e.target.closest('img');
+  if (!img) return;
+  e.preventDefault(); e.stopPropagation();
+  img.style.outline = '';
+  const file = e.dataTransfer?.files?.[0];
+  if (!file || !file.type.startsWith('image/')) { annoToast('Drop an image file'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    img.src = reader.result;
+    const sel = annoSelector(img);
+    const arr = annoLoad();
+    const existing = arr.find(a=>a.selector===sel && a.text.startsWith('IMG '));
+    const entry = { selector: sel, text: `IMG ${reader.result}`, context: annoContext(img), ts: Date.now() };
+    if (existing) Object.assign(existing, entry); else arr.push(entry);
+    annoSave(arr); annoRender();
+    annoToast(`Image swapped (${(file.size/1024).toFixed(0)} KB)`);
+  };
+  reader.readAsDataURL(file);
+}, true);
 
 document.getElementById('move-toggle').addEventListener('click', () => moveModeToggle());
 document.getElementById('move-undo').addEventListener('click', () => moveUndo());

@@ -692,12 +692,22 @@ allSlides.push(vennSlide);
   // ── Icon reaction animations ──
   // Each icon shakes + does a unique micro-animation when the sprite arrives.
 
+  // Shake via JS — avoids the SVG transform attribute vs CSS transform
+  // conflict. Directly jiggles the translate in the SVG transform attribute.
   function shakeEl(el) {
-    const base = el.getAttribute('transform') || '';
-    el.style.setProperty('--venn-base', base ? base : 'translate(0,0)');
-    el.style.transformOrigin = 'center';
-    el.style.animation = 'vennShake .4s ease-out';
-    el.addEventListener('animationend', () => { el.style.animation = ''; }, { once: true });
+    const origTf = el.getAttribute('transform') || '';
+    const offsets = [
+      [3,-2],[-4,2],[2,3],[-3,-1],[1,-2],[0,0]
+    ];
+    let i = 0;
+    const step = () => {
+      if (i >= offsets.length) { el.setAttribute('transform', origTf); return; }
+      const [dx, dy] = offsets[i];
+      el.setAttribute('transform', origTf + ` translate(${dx},${dy})`);
+      i++;
+      setTimeout(step, 65);
+    };
+    step();
   }
 
   // Architecture: columns crack briefly (dark lines appear, then vanish)

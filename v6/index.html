@@ -1556,17 +1556,23 @@ try { (function initVoxelMorph(){
     const HAIR_COLORS = new Set(['#3a1c08','#5e2f1a','#8b4a2a','#a8602f']);
     const BEARD_COLORS = new Set(['#6e3a1e','#8a4f2a']);
     const EYE_COLORS = new Set(['#1a1a26','#ffffff','#fff']);
-    const FACE_Y_THR = -20;
+    const SKIN_COLORS = new Set(['#f2c79b','#d9a77a']);
+    const HEAD_Y_MIN = -44, HEAD_Y_MAX = -12; // head zone in SVG coords
 
     function cellRole(color, cy) {
       if (BEARD_COLORS.has(color) || EYE_COLORS.has(color) || color === '#9c5040') return 'face';
-      if (HAIR_COLORS.has(color)) return cy > FACE_Y_THR ? 'face' : 'hair';
+      // Eyebrows: hair-colored but in the face region (y >= -29)
+      if (HAIR_COLORS.has(color)) return cy >= -29 ? 'face' : 'hair';
+      // Skin in the head zone → front-face only (back will be filled with hair)
+      if (SKIN_COLORS.has(color) && cy >= HEAD_Y_MIN && cy <= HEAD_Y_MAX) return 'face';
       return 'body';
     }
-    // Role → extrusion depth (centered on z=0)
-    const ROLE_DEPTH = { hair: 6, body: 5, face: 2.5 };
-    // Role → z offset so face protrudes forward, hair wraps back
-    const ROLE_Z = { hair: -0.5, body: 0, face: 2.5 };
+    // Role depths and Z offsets:
+    //   hair: wraps around behind the head (negative Z = back)
+    //   body: centered (torso, pants, boots)
+    //   face: protrudes forward only (skin, eyes, beard, brows, mouth)
+    const ROLE_DEPTH = { hair: 6, body: 5, face: 3 };
+    const ROLE_Z     = { hair: -1, body: 0, face: 2 };
 
     // Rasterize SVG group into a Map<"x,y" → color>
     function rasterize(svgGroup) {
@@ -1594,12 +1600,22 @@ try { (function initVoxelMorph(){
     const armsGrid = rasterize(armsUp);
     armsGrid.forEach((color, key) => bodyGrid.set(key, color));
 
-    // Convert grid cells to cubes — one per cell, no overlaps
+    // Convert grid cells to cubes — one per cell, no overlaps.
+    // ALSO: for face-role cells in the head zone, add a hair-colored cube
+    // behind them so the back of the head shows hair, not skin.
+    const HAIR_BACK_COLOR = new THREE.Color('#5e2f1a'); // HAIR_DARK
+    const headFaceCells = []; // collect face cells in head zone for back-fill
+
     bodyGrid.forEach((color, key) => {
       const [cx, cy] = key.split(',').map(Number);
       const role = cellRole(color, cy);
       const depth = ROLE_DEPTH[role];
       const zOff = ROLE_Z[role];
+
+      // Track face cells in the head zone for the hair back-fill pass
+      if (role === 'face' && cy >= HEAD_Y_MIN && cy <= HEAD_Y_MAX) {
+        headFaceCells.push({ cx, cy });
+      }
 
       const geo = new THREE.BoxGeometry(1 * SCALE, 1 * SCALE, depth * SCALE);
       const mat = new THREE.MeshStandardMaterial({
@@ -1610,6 +1626,23 @@ try { (function initVoxelMorph(){
         (cx + 0.5) * SCALE,
         -(cy + 0.5) * SCALE,
         zOff * SCALE
+      );
+      group.add(cube);
+    });
+
+    // Back-of-head pass: for every face/skin cell in the head zone,
+    // add a hair-colored cube BEHIND it so the back view shows hair.
+    // These sit at negative Z (behind the face cubes, no overlap).
+    const backMat = new THREE.MeshStandardMaterial({
+      color: HAIR_BACK_COLOR, roughness: 0.6, metalness: 0.1,
+    });
+    headFaceCells.forEach(({ cx, cy }) => {
+      const geo = new THREE.BoxGeometry(1 * SCALE, 1 * SCALE, ROLE_DEPTH.hair * SCALE);
+      const cube = new THREE.Mesh(geo, backMat);
+      cube.position.set(
+        (cx + 0.5) * SCALE,
+        -(cy + 0.5) * SCALE,
+        ROLE_Z.hair * SCALE  // sits behind the face cube
       );
       group.add(cube);
     });

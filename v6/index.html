@@ -1508,7 +1508,7 @@ try { (function initVoxelMorph(){
   const canvas = document.createElement('canvas');
   canvas.id = 'voxel-canvas';
   canvas.width = 400; canvas.height = 400;
-  canvas.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:260px;height:260px;pointer-events:none;opacity:0;transition:opacity 1.2s ease-in;z-index:5';
+  canvas.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;pointer-events:none;opacity:0;transition:opacity 1.2s ease-in;z-index:5';
   mapS.style.position = 'relative';
   mapS.appendChild(canvas);
 
@@ -1518,7 +1518,7 @@ try { (function initVoxelMorph(){
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 200);
-    camera.position.set(0, 5, 55);
+    camera.position.set(0, 2, 48);
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
@@ -1542,95 +1542,77 @@ try { (function initVoxelMorph(){
     if (!avBody) return;
 
     const group = new THREE.Group();
-    const SCALE = 0.35;
+    const SCALE = 0.16;
 
-    // Z-layer map: assigns z-offset AND extrusion depth by color.
-    // IMPORTANT: layers must NOT overlap in Z. Each layer's range is
-    // [z, z+d]. We ensure no two overlapping pixel colors share the
-    // same Z range. "z" is the BACK face, z+d is the FRONT face.
+    // ── Rasterize → Voxelize ─────────────────────────────────────
+    // The 2D avatar is drawn with overlapping rects (hair on skin,
+    // beard on face, etc). Extruding each rect naively creates cubes
+    // that intersect on every axis. Fix: rasterize all rects into a
+    // 1px grid (painter's algo — last rect wins), then create exactly
+    // ONE cube per occupied cell. Zero overlap guaranteed.
     //
-    // Body core (skin/shirt/pants) is centered at z=0 with symmetric depth
-    // so the back looks as clean as the front.
-    const LAYER = {
-      '#f2c79b': { z: -4,   d: 8   },  // SKIN — thick core
-      '#d9a77a': { z: -3.5, d: 7   },  // SKIN_DARK — slightly thinner
-      '#6a8fd6': { z: -4.5, d: 9   },  // SHIRT — widest body
-      '#4a6fb8': { z: -4,   d: 8.5 },  // SHIRT_DARK
-      '#3f3025': { z: -4,   d: 8   },  // PANTS
-      '#2a1f18': { z: -3.5, d: 7   },  // PANTS seam
-      '#1f150c': { z: -4,   d: 8   },  // BOOTS
-      '#3a1c08': { z: -5,   d: 10  },  // HAIR_SHADOW — biggest volume
-      '#5e2f1a': { z: -4.5, d: 9   },  // HAIR_DARK
-      '#8b4a2a': { z: -4,   d: 8   },  // HAIR main
-      '#a8602f': { z: -3,   d: 6.5 },  // HAIR_LIGHT — thinner highlights
-      '#6e3a1e': { z: 2,    d: 3   },  // BEARD — sits on face front
-      '#8a4f2a': { z: 3,    d: 2   },  // BEARD_LIGHT — highlight on top
-      '#1a1a26': { z: 3,    d: 2.5 },  // EYE — protrudes from face
-      '#ffffff': { z: 2.5,  d: 2   },  // eye white
-      '#fff':    { z: 2.5,  d: 2   },  // eye white alt
-      '#9c5040': { z: 2.5,  d: 1.5 },  // MOUTH
-    };
-    const DEFAULT_LAYER = { z: -3, d: 6 };
+    // Depth per cell is determined by the cell's role (hair wraps
+    // around, face features protrude, body is centered).
+    const HAIR_COLORS = new Set(['#3a1c08','#5e2f1a','#8b4a2a','#a8602f']);
+    const BEARD_COLORS = new Set(['#6e3a1e','#8a4f2a']);
+    const EYE_COLORS = new Set(['#1a1a26','#ffffff','#fff']);
+    const FACE_Y_THR = -20;
 
-    function addRectsFromGroup(svgGroup, extraZ) {
-      if (!svgGroup) return;
+    function cellRole(color, cy) {
+      if (BEARD_COLORS.has(color) || EYE_COLORS.has(color) || color === '#9c5040') return 'face';
+      if (HAIR_COLORS.has(color)) return cy > FACE_Y_THR ? 'face' : 'hair';
+      return 'body';
+    }
+    // Role → extrusion depth (centered on z=0)
+    const ROLE_DEPTH = { hair: 6, body: 5, face: 2.5 };
+    // Role → z offset so face protrudes forward, hair wraps back
+    const ROLE_Z = { hair: -0.5, body: 0, face: 2.5 };
+
+    // Rasterize SVG group into a Map<"x,y" → color>
+    function rasterize(svgGroup) {
+      const grid = new Map();
+      if (!svgGroup) return grid;
       svgGroup.querySelectorAll('rect').forEach(r => {
-        const x = parseFloat(r.getAttribute('x')) || 0;
-        const y = parseFloat(r.getAttribute('y')) || 0;
-        const w = parseFloat(r.getAttribute('width')) || 0;
-        const h = parseFloat(r.getAttribute('height')) || 0;
+        const rx = Math.round(parseFloat(r.getAttribute('x')) || 0);
+        const ry = Math.round(parseFloat(r.getAttribute('y')) || 0);
+        const rw = Math.round(parseFloat(r.getAttribute('width')) || 0);
+        const rh = Math.round(parseFloat(r.getAttribute('height')) || 0);
         const fill = (r.getAttribute('fill') || '#888').toLowerCase();
-        if (w < 0.5 || h < 0.5) return;
-
-        const layer = LAYER[fill] || DEFAULT_LAYER;
-        const geo = new THREE.BoxGeometry(w * SCALE, h * SCALE, layer.d * SCALE);
-        const color = new THREE.Color(fill);
-        const mat = new THREE.MeshStandardMaterial({
-          color, roughness: 0.6, metalness: 0.1,
-        });
-        const cube = new THREE.Mesh(geo, mat);
-        cube.position.set(
-          (x + w/2) * SCALE,
-          -(y + h/2) * SCALE,
-          (layer.z + extraZ) * SCALE
-        );
-        group.add(cube);
+        if (rw < 1 || rh < 1) return;
+        // Paint every cell this rect covers (last write wins)
+        for (let py = ry; py < ry + rh; py++) {
+          for (let px = rx; px < rx + rw; px++) {
+            grid.set(`${px},${py}`, fill);
+          }
+        }
       });
+      return grid;
     }
 
-    // Arms need special handling: shirt sleeves use the body SHIRT layer,
-    // but hands (SKIN) need to stick out further. We override SKIN on
-    // arm groups to push hands forward.
-    function addArmsFromGroup(svgGroup, extraZ) {
-      if (!svgGroup) return;
-      svgGroup.querySelectorAll('rect').forEach(r => {
-        const x = parseFloat(r.getAttribute('x')) || 0;
-        const y = parseFloat(r.getAttribute('y')) || 0;
-        const w = parseFloat(r.getAttribute('width')) || 0;
-        const h = parseFloat(r.getAttribute('height')) || 0;
-        const fill = (r.getAttribute('fill') || '#888').toLowerCase();
-        if (w < 0.5 || h < 0.5) return;
-        // Hands (skin on arms) protrude forward; sleeves match body shirt
-        const isHand = fill === '#f2c79b' || fill === '#d9a77a';
-        const layer = isHand
-          ? { z: -3, d: 6.5 }   // hands: slightly thinner than shirt
-          : { z: -5, d: 10 };   // sleeves: wider than body for volume
-        const geo = new THREE.BoxGeometry(w * SCALE, h * SCALE, layer.d * SCALE);
-        const mat = new THREE.MeshStandardMaterial({
-          color: new THREE.Color(fill), roughness: 0.6, metalness: 0.1,
-        });
-        const cube = new THREE.Mesh(geo, mat);
-        cube.position.set(
-          (x + w/2) * SCALE,
-          -(y + h/2) * SCALE,
-          (layer.z + layer.d/2 + extraZ) * SCALE
-        );
-        group.add(cube);
-      });
-    }
+    // Merge body + arms grids (arms painted on top)
+    const bodyGrid = rasterize(avBody);
+    const armsGrid = rasterize(armsUp);
+    armsGrid.forEach((color, key) => bodyGrid.set(key, color));
 
-    addRectsFromGroup(avBody, 0);
-    addArmsFromGroup(armsUp, 0);
+    // Convert grid cells to cubes — one per cell, no overlaps
+    bodyGrid.forEach((color, key) => {
+      const [cx, cy] = key.split(',').map(Number);
+      const role = cellRole(color, cy);
+      const depth = ROLE_DEPTH[role];
+      const zOff = ROLE_Z[role];
+
+      const geo = new THREE.BoxGeometry(1 * SCALE, 1 * SCALE, depth * SCALE);
+      const mat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(color), roughness: 0.6, metalness: 0.1,
+      });
+      const cube = new THREE.Mesh(geo, mat);
+      cube.position.set(
+        (cx + 0.5) * SCALE,
+        -(cy + 0.5) * SCALE,
+        zOff * SCALE
+      );
+      group.add(cube);
+    });
 
     // Center the group
     const box = new THREE.Box3().setFromObject(group);

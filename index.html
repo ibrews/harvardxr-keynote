@@ -1630,19 +1630,33 @@ try { (function initVoxelMorph(){
       group.add(cube);
     });
 
-    // Back-of-head pass: for every face/skin cell in the head zone,
-    // add a hair-colored cube BEHIND it so the back view shows hair.
-    // These sit at negative Z (behind the face cubes, no overlap).
-    const backMat = new THREE.MeshStandardMaterial({
-      color: HAIR_BACK_COLOR, roughness: 0.6, metalness: 0.1,
-    });
+    // Back-of-head pass: for face cells in the head zone, add hair cubes
+    // behind them. Skip cells outside the head X range (those are arms/hands).
+    // Use multiple brown shades based on position for natural look.
+    const HEAD_X_MIN = -13, HEAD_X_MAX = 13;
+    const backColors = [
+      new THREE.Color('#3a1c08'),  // HAIR_SHADOW (edges)
+      new THREE.Color('#5e2f1a'),  // HAIR_DARK
+      new THREE.Color('#8b4a2a'),  // HAIR (center)
+      new THREE.Color('#a8602f'),  // HAIR_LIGHT (highlights)
+    ];
     headFaceCells.forEach(({ cx, cy }) => {
+      // Skip hands/arms — only fill within the head silhouette
+      if (cx < HEAD_X_MIN || cx > HEAD_X_MAX) return;
+      // Pick shade based on distance from center (darker at edges, lighter center)
+      const dx = Math.abs(cx) / HEAD_X_MAX;
+      const dy = Math.abs(cy - HEAD_Y_MIN) / (HEAD_Y_MAX - HEAD_Y_MIN);
+      const center = 1 - Math.max(dx, dy * 0.5); // 0=edge, 1=center
+      const shade = center > 0.7 ? 3 : center > 0.45 ? 2 : center > 0.2 ? 1 : 0;
+      const mat = new THREE.MeshStandardMaterial({
+        color: backColors[shade], roughness: 0.6, metalness: 0.1,
+      });
       const geo = new THREE.BoxGeometry(1 * SCALE, 1 * SCALE, ROLE_DEPTH.hair * SCALE);
-      const cube = new THREE.Mesh(geo, backMat);
+      const cube = new THREE.Mesh(geo, mat);
       cube.position.set(
         (cx + 0.5) * SCALE,
         -(cy + 0.5) * SCALE,
-        ROLE_Z.hair * SCALE  // sits behind the face cube
+        ROLE_Z.hair * SCALE
       );
       group.add(cube);
     });

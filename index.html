@@ -269,6 +269,14 @@ body.presentation-mode #anno-prompt {
 /* ── Intro slides (Alex + Agile Lens) ── */
 .slide-venn { padding:0!important; overflow:hidden; }
 .slide-venn svg { position:absolute; inset:0; width:100%; height:100%; }
+@keyframes vennShake {
+  0%,100% { transform:var(--venn-base); }
+  10% { transform:var(--venn-base) translate(3px,-2px) rotate(1.5deg); }
+  30% { transform:var(--venn-base) translate(-4px,2px) rotate(-2deg); }
+  50% { transform:var(--venn-base) translate(2px,3px) rotate(1deg); }
+  70% { transform:var(--venn-base) translate(-3px,-1px) rotate(-1.5deg); }
+  90% { transform:var(--venn-base) translate(1px,-2px) rotate(.5deg); }
+}
 .slide-intro { padding: clamp(40px,5vw,100px) clamp(60px,8vw,160px); }
 .intro-grid { display:flex; align-items:center; gap:clamp(40px,5vw,90px); width:100%; max-width:1500px; }
 .intro-stage { flex:0 0 42%; max-width:560px; aspect-ratio:1/1; position:relative; }
@@ -580,7 +588,7 @@ allSlides.push(vennSlide);
   const S = 2.2; // pixel scale
 
   // ── Architecture — Greek temple with triangular pediment, 4 columns, steps ──
-  const archG = svgE('g', { transform:`translate(${CX-170},${CY-90})` });
+  const archG = svgE('g', { id:'venn-arch', transform:`translate(${CX-170},${CY-90})` });
   const ap = (x,y,w,h,f) => archG.appendChild(svgE('rect',{x:x*S,y:y*S,width:w*S,height:h*S,fill:f}));
   // Pediment (triangle approximation — stacked rows narrowing upward)
   ap(-1, -20, 2, 2, '#c4b5fd');   // peak
@@ -608,7 +616,7 @@ allSlides.push(vennSlide);
   svg.appendChild(archG);
 
   // ── Theatre — proscenium arch with draped red curtains + spotlight ──
-  const theatG = svgE('g', { transform:`translate(${CX+170},${CY-90})` });
+  const theatG = svgE('g', { id:'venn-theat', transform:`translate(${CX+170},${CY-90})` });
   const tp = (x,y,w,h,f) => theatG.appendChild(svgE('rect',{x:x*S,y:y*S,width:w*S,height:h*S,fill:f}));
   // Proscenium arch frame (gold/amber)
   tp(-16,-18, 32, 3, '#f59e0b');   // top bar
@@ -643,7 +651,7 @@ allSlides.push(vennSlide);
   svg.appendChild(theatG);
 
   // ── Realtime Tech — monitor with game scene (platformer) ──
-  const techG = svgE('g', { transform:`translate(${CX},${CY+110})` });
+  const techG = svgE('g', { id:'venn-tech', transform:`translate(${CX},${CY+110})` });
   const xp = (x,y,w,h,f) => techG.appendChild(svgE('rect',{x:x*S,y:y*S,width:w*S,height:h*S,fill:f}));
   // Monitor frame
   xp(-16,-16, 32, 24, '#1e293b');  // bezel
@@ -681,22 +689,112 @@ allSlides.push(vennSlide);
   buildAvatar(avInner, { withBeard: false });
   svg.appendChild(orbitG);
 
-  // Orbit animation — pinball between the three circle centers
+  // ── Icon reaction animations ──
+  // Each icon shakes + does a unique micro-animation when the sprite arrives.
+
+  function shakeEl(el) {
+    const base = el.getAttribute('transform') || '';
+    el.style.setProperty('--venn-base', base ? base : 'translate(0,0)');
+    el.style.transformOrigin = 'center';
+    el.style.animation = 'vennShake .4s ease-out';
+    el.addEventListener('animationend', () => { el.style.animation = ''; }, { once: true });
+  }
+
+  // Architecture: columns crack briefly (dark lines appear, then vanish)
+  function reactArch() {
+    shakeEl(archG);
+    const cracks = [];
+    const addCrack = (x,y,w,h) => {
+      const c = svgE('rect',{x:x*S,y:y*S,width:w*S,height:h*S,fill:'#2a1a3a',opacity:'0.8'});
+      archG.appendChild(c); cracks.push(c);
+    };
+    addCrack(-10, -2, 1, 6);  // crack on col 1
+    addCrack(-9, 1, 1, 3);
+    addCrack(-4, -4, 1, 8);   // crack on col 2
+    addCrack(3, -1, 1, 5);    // crack on col 3
+    addCrack(9, -3, 1, 7);    // crack on col 4
+    setTimeout(() => cracks.forEach(c => c.remove()), 600);
+  }
+
+  // Theatre: curtains shimmer (brightness pulses on curtain rects)
+  function reactTheat() {
+    shakeEl(theatG);
+    const curtainRects = [...theatG.querySelectorAll('rect')].filter(r => {
+      const f = r.getAttribute('fill') || '';
+      return f.includes('dc2626') || f.includes('ef4444') || f.includes('b91c1c');
+    });
+    // Shimmer: rapidly alternate brightness
+    let frame = 0;
+    const shimmer = setInterval(() => {
+      frame++;
+      curtainRects.forEach((r,i) => {
+        const bright = (frame + i) % 3 === 0;
+        r.setAttribute('fill', bright ? '#ff6b6b' : r.dataset.origFill || r.getAttribute('fill'));
+        if (!r.dataset.origFill) r.dataset.origFill = r.getAttribute('fill');
+      });
+      if (frame > 8) {
+        clearInterval(shimmer);
+        curtainRects.forEach(r => { if (r.dataset.origFill) r.setAttribute('fill', r.dataset.origFill); });
+      }
+    }, 70);
+  }
+
+  // Tech: screen activates — player runs right, coins blink
+  function reactTech() {
+    shakeEl(techG);
+    // Find the player body rect (blue, inside the screen area)
+    const screenRects = [...techG.querySelectorAll('rect')];
+    const player = screenRects.filter(r => {
+      const f = (r.getAttribute('fill')||'').toLowerCase();
+      return f === '#3b82f6' || f === '#60a5fa' || f === '#1e40af';
+    });
+    const coins = screenRects.filter(r => (r.getAttribute('fill')||'').toLowerCase() === '#fbbf24');
+    // Animate player moving right and back
+    let frame = 0;
+    const run = setInterval(() => {
+      frame++;
+      const dx = Math.sin(frame * 0.8) * 4 * S;
+      player.forEach(r => {
+        if (!r.dataset.origX) r.dataset.origX = r.getAttribute('x');
+        r.setAttribute('x', parseFloat(r.dataset.origX) + dx);
+      });
+      // Blink coins
+      coins.forEach((c,i) => {
+        c.setAttribute('opacity', (frame + i) % 3 === 0 ? '0.3' : '1');
+      });
+      if (frame > 12) {
+        clearInterval(run);
+        player.forEach(r => { if (r.dataset.origX) r.setAttribute('x', r.dataset.origX); });
+        coins.forEach(c => c.setAttribute('opacity', '1'));
+      }
+    }, 60);
+  }
+
+  // Map waypoint index → reaction function
+  // waypoints[0]=architecture, [1]=theatre, [2]=realtime tech, [3]=center
+  const reactions = [reactArch, reactTheat, reactTech, null];
+
+  // Orbit animation — pinball between the three circle centers + center
   const waypoints = circles.map(c => ({ x: c.x, y: c.y }));
-  // Add center intersection as bonus waypoint
   waypoints.push({ x: CX, y: CY });
   let wpIdx = 0, orbX = waypoints[0].x, orbY = waypoints[0].y;
   let orbRunning = false;
+  let dwellTimer = 0;
+  const DWELL = 40; // frames to pause at each waypoint
 
   function orbStep() {
     if (!orbRunning) return;
+    if (dwellTimer > 0) { dwellTimer--; requestAnimationFrame(orbStep); return; }
     const target = waypoints[wpIdx];
     const dx = target.x - orbX, dy = target.y - orbY;
     const dist = Math.hypot(dx, dy);
-    if (dist < 3) {
+    if (dist < 4) {
+      // Arrived — trigger reaction and dwell
+      if (reactions[wpIdx]) reactions[wpIdx]();
       wpIdx = (wpIdx + 1) % waypoints.length;
+      dwellTimer = DWELL;
     } else {
-      const speed = 2.5;
+      const speed = 3;
       orbX += (dx / dist) * speed;
       orbY += (dy / dist) * speed;
     }

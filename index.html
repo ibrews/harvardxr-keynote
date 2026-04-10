@@ -1571,8 +1571,8 @@ try { (function initVoxelMorph(){
     //   hair: wraps around behind the head (negative Z = back)
     //   body: centered (torso, pants, boots)
     //   face: protrudes forward only (skin, eyes, beard, brows, mouth)
-    const ROLE_DEPTH = { hair: 6, body: 5, face: 3 };
-    const ROLE_Z     = { hair: -1, body: 0, face: 2 };
+    const ROLE_DEPTH = { hair: 6, body: 5, face: 5 };
+    const ROLE_Z     = { hair: -1, body: 0, face: 3 };
 
     // Rasterize SVG group into a Map<"x,y" → color>
     function rasterize(svgGroup) {
@@ -1643,11 +1643,14 @@ try { (function initVoxelMorph(){
     headFaceCells.forEach(({ cx, cy }) => {
       // Skip hands/arms — only fill within the head silhouette
       if (cx < HEAD_X_MIN || cx > HEAD_X_MAX) return;
-      // Pick shade based on distance from center (darker at edges, lighter center)
-      const dx = Math.abs(cx) / HEAD_X_MAX;
-      const dy = Math.abs(cy - HEAD_Y_MIN) / (HEAD_Y_MAX - HEAD_Y_MIN);
-      const center = 1 - Math.max(dx, dy * 0.5); // 0=edge, 1=center
-      const shade = center > 0.7 ? 3 : center > 0.45 ? 2 : center > 0.2 ? 1 : 0;
+      // Horizontal striations — shade based on Y row (top=dark, mid=main, bottom=dark)
+      // with slight edge darkening on X for roundness
+      const yNorm = (cy - HEAD_Y_MIN) / (HEAD_Y_MAX - HEAD_Y_MIN); // 0=top, 1=bottom
+      const xEdge = Math.abs(cx) > 10 ? -1 : 0; // darken at edges
+      // Repeating band pattern: shadow→dark→main→light→main→dark across rows
+      const band = Math.floor(yNorm * 12) % 4;
+      const baseShade = [0, 1, 2, 3][band]; // cycles through all 4 tones
+      const shade = Math.max(0, Math.min(3, baseShade + xEdge));
       const mat = new THREE.MeshStandardMaterial({
         color: backColors[shade], roughness: 0.6, metalness: 0.1,
       });

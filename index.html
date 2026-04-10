@@ -1542,37 +1542,60 @@ try { (function initVoxelMorph(){
     if (!avBody) return;
 
     const group = new THREE.Group();
-    const DEPTH = 4; // extrusion depth in pixels
-    const SCALE = 0.35; // scale down to fit nicely
+    const SCALE = 0.35;
 
-    function addRectsFromGroup(svgGroup, zOffset) {
+    // Z-layer map: assigns depth (z position) AND extrusion thickness by
+    // color so overlapping pixel layers (hair-on-skin, beard-on-face, etc.)
+    // don't Z-fight. Each layer is fully separated in Z space.
+    const LAYER = {
+      '#f2c79b': { z: 0,   d: 3   },  // SKIN — base layer
+      '#d9a77a': { z: 0,   d: 3   },  // SKIN_DARK
+      '#6a8fd6': { z: 0,   d: 3.5 },  // SHIRT
+      '#4a6fb8': { z: 0.2, d: 3   },  // SHIRT_DARK
+      '#3f3025': { z: 0,   d: 3   },  // PANTS
+      '#2a1f18': { z: 0.1, d: 3   },  // PANTS seam
+      '#1f150c': { z: 0,   d: 3   },  // BOOTS
+      '#3a1c08': { z: 4,   d: 5   },  // HAIR_SHADOW — outermost
+      '#5e2f1a': { z: 5,   d: 4   },  // HAIR_DARK
+      '#8b4a2a': { z: 6,   d: 3   },  // HAIR
+      '#a8602f': { z: 7,   d: 2   },  // HAIR_LIGHT
+      '#6e3a1e': { z: 3.5, d: 2.5 },  // BEARD
+      '#8a4f2a': { z: 4.5, d: 2   },  // BEARD_LIGHT
+      '#1a1a26': { z: 4,   d: 2   },  // EYE
+      '#ffffff': { z: 3.5, d: 2   },  // eye white
+      '#fff':    { z: 3.5, d: 2   },  // eye white alt
+      '#9c5040': { z: 3.5, d: 1.5 },  // MOUTH
+    };
+    const DEFAULT_LAYER = { z: 1, d: 3 };
+
+    function addRectsFromGroup(svgGroup, extraZ) {
       if (!svgGroup) return;
       svgGroup.querySelectorAll('rect').forEach(r => {
         const x = parseFloat(r.getAttribute('x')) || 0;
         const y = parseFloat(r.getAttribute('y')) || 0;
         const w = parseFloat(r.getAttribute('width')) || 0;
         const h = parseFloat(r.getAttribute('height')) || 0;
-        const fill = r.getAttribute('fill') || '#888';
+        const fill = (r.getAttribute('fill') || '#888').toLowerCase();
         if (w < 0.5 || h < 0.5) return;
 
-        const geo = new THREE.BoxGeometry(w * SCALE, h * SCALE, DEPTH * SCALE);
+        const layer = LAYER[fill] || DEFAULT_LAYER;
+        const geo = new THREE.BoxGeometry(w * SCALE, h * SCALE, layer.d * SCALE);
         const color = new THREE.Color(fill);
         const mat = new THREE.MeshStandardMaterial({
           color, roughness: 0.6, metalness: 0.1,
         });
         const cube = new THREE.Mesh(geo, mat);
-        // Position: center the pixel rect, flip Y (SVG y goes down, 3D y goes up)
         cube.position.set(
           (x + w/2) * SCALE,
           -(y + h/2) * SCALE,
-          zOffset * SCALE
+          (layer.z + extraZ) * SCALE
         );
         group.add(cube);
       });
     }
 
     addRectsFromGroup(avBody, 0);
-    addRectsFromGroup(armsUp, 1); // arms slightly in front
+    addRectsFromGroup(armsUp, 2); // arms in front of body
 
     // Center the group
     const box = new THREE.Box3().setFromObject(group);

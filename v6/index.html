@@ -576,41 +576,100 @@ allSlides.push(vennSlide);
     svg.appendChild(lbl);
   });
 
-  // Pixel-art icons for each circle
-  // Architecture — simple column/arch
-  const archG = svgE('g', { transform:`translate(${CX-170},${CY-90}) scale(1.8)` });
-  const archPx = (x,y,w,h,f) => archG.appendChild(svgE('rect',{x,y,width:w,height:h,fill:f}));
-  archPx(-12,-25,24,4,'#a78bfa'); // pediment
-  archPx(-10,-21,3,30,'#a78bfa'); // left column
-  archPx(7,-21,3,30,'#a78bfa');   // right column
-  archPx(-14,9,28,4,'#a78bfa');   // base
-  archPx(-6,-21,12,3,'#c4b5fd');  // lintel
+  // Pixel-art icons — detailed enough to read without labels
+  const S = 2.2; // pixel scale
+
+  // ── Architecture — Greek temple with triangular pediment, 4 columns, steps ──
+  const archG = svgE('g', { transform:`translate(${CX-170},${CY-90})` });
+  const ap = (x,y,w,h,f) => archG.appendChild(svgE('rect',{x:x*S,y:y*S,width:w*S,height:h*S,fill:f}));
+  // Pediment (triangle approximation — stacked rows narrowing upward)
+  ap(-1, -20, 2, 2, '#c4b5fd');   // peak
+  ap(-3, -18, 6, 2, '#c4b5fd');
+  ap(-6, -16, 12, 2, '#a78bfa');
+  ap(-9, -14, 18, 2, '#a78bfa');
+  ap(-12,-12, 24, 2, '#9370db');   // pediment base
+  // Entablature (wide bar under pediment)
+  ap(-13,-10, 26, 2, '#a78bfa');
+  ap(-13, -8, 26, 1, '#7c5cbf');   // shadow line
+  // Four columns with fluting
+  ap(-11, -7, 3, 18, '#c4b5fd');   // col 1
+  ap(-10, -7, 1, 18, '#a78bfa');   // flute
+  ap(-5,  -7, 3, 18, '#c4b5fd');   // col 2
+  ap(-4,  -7, 1, 18, '#a78bfa');
+  ap(2,   -7, 3, 18, '#c4b5fd');   // col 3
+  ap(3,   -7, 1, 18, '#a78bfa');
+  ap(8,   -7, 3, 18, '#c4b5fd');   // col 4
+  ap(9,   -7, 1, 18, '#a78bfa');
+  // Steps (3 tiers)
+  ap(-14, 11, 28, 2, '#a78bfa');
+  ap(-15, 13, 30, 2, '#9370db');
+  ap(-16, 15, 32, 2, '#7c5cbf');
   archG.style.shapeRendering = 'crispEdges';
   svg.appendChild(archG);
 
-  // Theatre — stage curtains
-  const theatG = svgE('g', { transform:`translate(${CX+170},${CY-90}) scale(1.8)` });
-  const theatPx = (x,y,w,h,f) => theatG.appendChild(svgE('rect',{x,y,width:w,height:h,fill:f}));
-  theatPx(-16,-20,32,4,'#f43f5e');  // top bar
-  theatPx(-16,-16,6,28,'#f43f5e');  // left curtain
-  theatPx(10,-16,6,28,'#f43f5e');   // right curtain
-  theatPx(-14,-16,4,20,'#fb7185');  // left highlight
-  theatPx(12,-16,4,20,'#fb7185');   // right highlight
-  theatPx(-8,8,16,4,'#fda4af');     // stage floor
+  // ── Theatre — proscenium arch with draped red curtains + spotlight ──
+  const theatG = svgE('g', { transform:`translate(${CX+170},${CY-90})` });
+  const tp = (x,y,w,h,f) => theatG.appendChild(svgE('rect',{x:x*S,y:y*S,width:w*S,height:h*S,fill:f}));
+  // Proscenium arch frame (gold/amber)
+  tp(-16,-18, 32, 3, '#f59e0b');   // top bar
+  tp(-16,-15, 3, 30, '#f59e0b');   // left pillar
+  tp(13, -15, 3, 30, '#f59e0b');   // right pillar
+  tp(-15,-17, 30, 1, '#fde68a');   // highlight
+  // Stage opening (dark void)
+  tp(-13,-15, 26, 27, '#0a0812');
+  // Left curtain — draped with folds (3 shades)
+  tp(-13,-15, 4, 25, '#dc2626');   // deep red
+  tp(-9, -15, 3, 23, '#ef4444');   // mid red
+  tp(-12,-15, 2, 25, '#b91c1c');   // dark fold
+  tp(-7, -15, 2, 20, '#dc2626');   // inner drape
+  // Right curtain — mirrored
+  tp(9,  -15, 4, 25, '#dc2626');
+  tp(6,  -15, 3, 23, '#ef4444');
+  tp(10, -15, 2, 25, '#b91c1c');
+  tp(5,  -15, 2, 20, '#dc2626');
+  // Curtain swag across the top
+  tp(-9, -15, 18, 3, '#dc2626');
+  tp(-7, -13, 14, 2, '#ef4444');
+  tp(-5, -11, 10, 1, '#dc2626');
+  // Stage floor
+  tp(-13, 12, 26, 3, '#8b6f47');   // wood boards
+  tp(-13, 12, 26, 1, '#a0845c');   // highlight
+  // Spotlight cone (faint triangle from top center)
+  tp(-1, -12, 2, 3, 'rgba(255,255,200,.3)');
+  tp(-2, -9,  4, 4, 'rgba(255,255,200,.15)');
+  tp(-4, -5,  8, 6, 'rgba(255,255,200,.08)');
+  tp(-6,  1, 12, 6, 'rgba(255,255,200,.04)');
   theatG.style.shapeRendering = 'crispEdges';
   svg.appendChild(theatG);
 
-  // Realtime Tech — monitor with game
-  const techG = svgE('g', { transform:`translate(${CX},${CY+110}) scale(1.8)` });
-  const techPx = (x,y,w,h,f) => techG.appendChild(svgE('rect',{x,y,width:w,height:h,fill:f}));
-  techPx(-18,-18,36,26,'#1a1a26');  // screen bezel
-  techPx(-16,-16,32,22,'#0f172a');  // screen
-  techPx(-6,8,12,4,'#374151');      // stand
-  techPx(-10,12,20,3,'#374151');    // base
-  // Little game character on screen
-  techPx(-4,-10,3,6,'#00d4ff');     // player
-  techPx(6,-12,4,4,'#f59e0b');      // enemy
-  techPx(-12,-4,24,1,'#22c55e');    // ground line
+  // ── Realtime Tech — monitor with game scene (platformer) ──
+  const techG = svgE('g', { transform:`translate(${CX},${CY+110})` });
+  const xp = (x,y,w,h,f) => techG.appendChild(svgE('rect',{x:x*S,y:y*S,width:w*S,height:h*S,fill:f}));
+  // Monitor frame
+  xp(-16,-16, 32, 24, '#1e293b');  // bezel
+  xp(-14,-14, 28, 20, '#0f172a');  // screen
+  xp(-14,-14, 28, 1, '#334155');   // top edge highlight
+  // Stand and base
+  xp(-3,  8, 6, 4, '#475569');
+  xp(-8, 12, 16, 2, '#475569');
+  xp(-7, 12, 14, 1, '#64748b');    // base highlight
+  // Game scene on screen — little platformer
+  xp(-12, 2, 24, 2, '#22c55e');    // grass ground
+  xp(-12, 4, 24, 2, '#166534');    // dirt
+  // Player character (tiny pixel person)
+  xp(-6, -4, 2, 2, '#60a5fa');     // head
+  xp(-7, -2, 4, 4, '#3b82f6');     // body
+  xp(-7,  2, 2, 1, '#1e40af');     // left foot
+  xp(-5,  2, 2, 1, '#1e40af');     // right foot
+  // Coins/collectibles
+  xp(2, -6, 2, 2, '#fbbf24');
+  xp(7, -8, 2, 2, '#fbbf24');
+  // Platform
+  xp(4, -2, 8, 2, '#854d0e');
+  xp(4, -2, 8, 1, '#a16207');      // highlight
+  // Clouds
+  xp(-10,-12, 6, 2, 'rgba(255,255,255,.15)');
+  xp(5,  -10, 4, 2, 'rgba(255,255,255,.1)');
   techG.style.shapeRendering = 'crispEdges';
   svg.appendChild(techG);
 

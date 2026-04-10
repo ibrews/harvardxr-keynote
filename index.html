@@ -267,6 +267,8 @@ body.presentation-mode #anno-prompt {
 }
 
 /* ── Intro slides (Alex + Agile Lens) ── */
+.slide-lens { padding:0!important; overflow:hidden; }
+.slide-lens svg { position:absolute; inset:0; width:100%; height:100%; }
 .slide-venn { padding:0!important; overflow:hidden; }
 .slide-venn svg { position:absolute; inset:0; width:100%; height:100%; }
 @keyframes vennShake {
@@ -1062,36 +1064,112 @@ function playAlexIntro() {
   setTimeout(() => { playTallies(introAlex); }, 3850);
 }
 
-// ── Slide 3: Agile Lens intro ──
+// ── Slide 4: Agile Lens intro — monocle + orbiting client names ──
 const introLens = document.createElement('div');
-introLens.className = 'slide slide-intro intro-purple';
+introLens.className = 'slide slide-lens';
 introLens.dataset.type = 'intro-lens';
-introLens.innerHTML = `
-  <div class="intro-grid">
-    <div class="intro-stage">
-      <svg viewBox="0 0 400 400">
-        <!-- Animated monocle outline as the stage centerpiece -->
-        <circle cx="200" cy="190" r="120" fill="none" stroke="rgba(167,139,250,.6)" stroke-width="3"/>
-        <circle cx="200" cy="190" r="120" fill="rgba(167,139,250,.04)"/>
-        <path d="M 305 230 Q 340 280 360 340" fill="none" stroke="rgba(245,158,11,.6)" stroke-width="3" stroke-linecap="round"/>
-        <circle cx="360" cy="340" r="14" fill="none" stroke="rgba(245,158,11,.7)" stroke-width="2"/>
-        <text x="200" y="190" text-anchor="middle" dominant-baseline="middle" fill="rgba(255,255,255,.8)" font-family="Space Grotesk,sans-serif" font-size="22" font-weight="600" letter-spacing="4">AGILE LENS</text>
-        <text x="200" y="216" text-anchor="middle" dominant-baseline="middle" fill="rgba(255,255,255,.4)" font-family="Space Grotesk,sans-serif" font-size="11" font-weight="400" letter-spacing="2">EST. 2016</text>
-      </svg>
-    </div>
-    <div class="intro-content">
-      <div class="intro-eyebrow">The Studio</div>
-      <h1 class="intro-title">Agile<br>Lens</h1>
-      <p class="intro-sub">An immersive design studio at the intersection of architecture, theater, and XR. We craft real and virtual spaces — and the spectacles within them. Bootstrapped, specialist, and stubbornly independent for ten years and counting.</p>
-      <div class="intro-stats">
-        <div class="intro-stat"><span class="num">2016</span><span class="lbl">Founded</span></div>
-        <div class="intro-stat"><span class="num">NYC</span><span class="lbl">Based</span></div>
-        <div class="intro-stat"><span class="num">XR</span><span class="lbl">Specialist</span></div>
-      </div>
-    </div>
-  </div>`;
+introLens.innerHTML = `<svg id="lens-svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet"></svg>`;
 deck.appendChild(introLens);
 allSlides.push(introLens);
+
+(function buildLensSlide(){
+  const svg = introLens.querySelector('#lens-svg');
+  const CX = 800, CY = 420;
+
+  // Black monocle PNG centered
+  const monocleR = 200;
+  const imgW = 852, imgH = 877, ringCX = 407, ringCY = 432, ringR = 374;
+  const mScale = monocleR / ringR;
+  const mW = imgW * mScale, mH = imgH * mScale;
+  const mX = CX - ringCX * mScale, mY = CY - ringCY * mScale;
+  // Draw the monocle as SVG shapes (PNG versions have opaque backgrounds)
+  // Main ring
+  svg.appendChild(svgE('circle', { cx:CX, cy:CY, r:monocleR,
+    fill:'none', stroke:'rgba(255,255,255,.12)', 'stroke-width':'28' }));
+  svg.appendChild(svgE('circle', { cx:CX, cy:CY, r:monocleR,
+    fill:'none', stroke:'rgba(255,255,255,.06)', 'stroke-width':'34' }));
+  // Hinge nub (upper right)
+  const hingeA = -0.4;
+  const hx = CX + (monocleR+14)*Math.cos(hingeA), hy = CY + (monocleR+14)*Math.sin(hingeA);
+  svg.appendChild(svgE('circle', { cx:hx, cy:hy, r:'10',
+    fill:'none', stroke:'rgba(255,255,255,.1)', 'stroke-width':'6' }));
+  // Cord + eyepiece (lower right, like the real logo)
+  const eyeA = 0.9;
+  const ex = CX + (monocleR+60)*Math.cos(eyeA), ey = CY + (monocleR+60)*Math.sin(eyeA);
+  const cordStart = { x: CX + monocleR*Math.cos(eyeA), y: CY + monocleR*Math.sin(eyeA) };
+  svg.appendChild(svgE('path', {
+    d: `M${cordStart.x} ${cordStart.y} Q${(cordStart.x+ex)/2+20} ${(cordStart.y+ey)/2+15} ${ex} ${ey}`,
+    fill:'none', stroke:'rgba(255,255,255,.08)', 'stroke-width':'4', 'stroke-linecap':'round'
+  }));
+  svg.appendChild(svgE('circle', { cx:ex, cy:ey, r:'18',
+    fill:'none', stroke:'rgba(255,255,255,.1)', 'stroke-width':'5' }));
+
+  // "AGILE LENS" text centered in the monocle
+  const t1 = svgE('text', { x:CX, y:CY-12, 'text-anchor':'middle', 'dominant-baseline':'middle',
+    fill:'rgba(255,255,255,.85)', 'font-family':'Space Grotesk,sans-serif',
+    'font-size':'42', 'font-weight':'700', 'letter-spacing':'6' });
+  t1.textContent = 'AGILE LENS';
+  svg.appendChild(t1);
+  const t2 = svgE('text', { x:CX, y:CY+28, 'text-anchor':'middle', 'dominant-baseline':'middle',
+    fill:'rgba(255,255,255,.35)', 'font-family':'Space Grotesk,sans-serif',
+    'font-size':'16', 'font-weight':'400', 'letter-spacing':'4' });
+  t2.textContent = 'IMMERSIVE DESIGN STUDIO · EST. 2016';
+  svg.appendChild(t2);
+
+  // Client names orbiting around the monocle
+  const CLIENTS = ['Disney', 'CBS', 'Kennedy Center', 'Four Seasons', 'RSC', 'Waldorf Astoria', 'Dell'];
+  const orbitR = monocleR + 100; // orbit radius
+  const clientEls = [];
+
+  CLIENTS.forEach((name, i) => {
+    const angle = (i / CLIENTS.length) * Math.PI * 2 - Math.PI / 2; // start from top
+    const x = CX + Math.cos(angle) * orbitR;
+    const y = CY + Math.sin(angle) * orbitR;
+    const txt = svgE('text', {
+      x, y, 'text-anchor':'middle', 'dominant-baseline':'middle',
+      fill:'rgba(255,255,255,.6)', 'font-family':'Space Grotesk,sans-serif',
+      'font-size':'20', 'font-weight':'600', 'letter-spacing':'3',
+    });
+    txt.textContent = name.toUpperCase();
+    txt.dataset.baseAngle = angle;
+    svg.appendChild(txt);
+    clientEls.push(txt);
+  });
+
+  // Faint orbit ring
+  svg.appendChild(svgE('circle', { cx:CX, cy:CY, r:orbitR,
+    fill:'none', stroke:'rgba(167,139,250,.1)', 'stroke-width':'1', 'stroke-dasharray':'4 6' }));
+
+  // Animate: slowly rotate client names around the center
+  let lensRunning = false;
+  let lensAngle = 0;
+  function lensStep() {
+    if (!lensRunning) return;
+    lensAngle += 0.003;
+    clientEls.forEach((el, i) => {
+      const base = parseFloat(el.dataset.baseAngle);
+      const a = base + lensAngle;
+      const x = CX + Math.cos(a) * orbitR;
+      const y = CY + Math.sin(a) * orbitR;
+      el.setAttribute('x', x);
+      el.setAttribute('y', y);
+      // Fade: brighter at top, dimmer at bottom
+      const brightness = 0.35 + 0.45 * (1 - (Math.sin(a) + 1) / 2);
+      el.setAttribute('fill', `rgba(255,255,255,${brightness.toFixed(2)})`);
+    });
+    requestAnimationFrame(lensStep);
+  }
+
+  window.startLensOrbit = () => { lensRunning = true; requestAnimationFrame(lensStep); };
+  window.stopLensOrbit = () => { lensRunning = false; };
+
+  // Sub-text at the bottom
+  const sub = svgE('text', { x:CX, y:820, 'text-anchor':'middle',
+    fill:'rgba(255,255,255,.3)', 'font-family':'Space Grotesk,sans-serif',
+    'font-size':'14', 'letter-spacing':'2' });
+  sub.textContent = 'NYC · BOOTSTRAPPED · SPECIALIST · 10 YEARS';
+  svg.appendChild(sub);
+})();
 
 // ── Build sections ──
 SECTIONS.forEach((sec,si)=>{
@@ -1200,6 +1278,8 @@ function goTo(n){
   const t = allSlides[current].dataset.type;
   if(t==='venn') setTimeout(()=>{ if(window.startVennOrbit) window.startVennOrbit(); }, 400);
   if(t!=='venn' && window.stopVennOrbit) window.stopVennOrbit();
+  if(t==='intro-lens') setTimeout(()=>{ if(window.startLensOrbit) window.startLensOrbit(); }, 400);
+  if(t!=='intro-lens' && window.stopLensOrbit) window.stopLensOrbit();
   // Beard evolution — trigger when entering the 2020 case or lesson slide
   const slideYear = parseInt(nx.dataset.year || 0);
   if (slideYear === 2020 && (t==='case' || t==='lesson')) {

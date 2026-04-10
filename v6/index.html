@@ -267,12 +267,8 @@ body.presentation-mode #anno-prompt {
 }
 
 /* ── Intro slides (Alex + Agile Lens) ── */
-.slide-venn { display:flex; align-items:center; justify-content:center; position:relative; }
-.venn-quote { position:absolute; bottom:clamp(60px,10vh,140px); left:50%; transform:translateX(-50%);
-  text-align:center; font-size:clamp(1rem,1.6vw,1.4rem); font-style:italic; color:rgba(255,255,255,.6);
-  max-width:600px; line-height:1.6; }
-.venn-attr { font-size:clamp(.7rem,1vw,.9rem); font-style:normal; color:rgba(255,255,255,.3);
-  letter-spacing:.12em; text-transform:uppercase; }
+.slide-venn { padding:0!important; overflow:hidden; }
+.slide-venn svg { position:absolute; inset:0; width:100%; height:100%; }
 .slide-intro { padding: clamp(40px,5vw,100px) clamp(60px,8vw,160px); }
 .intro-grid { display:flex; align-items:center; gap:clamp(40px,5vw,90px); width:100%; max-width:1500px; }
 .intro-stage { flex:0 0 42%; max-width:560px; aspect-ratio:1/1; position:relative; }
@@ -524,23 +520,21 @@ deck.appendChild(cov);allSlides.push(cov);
 const vennSlide = document.createElement('div');
 vennSlide.className = 'slide slide-venn';
 vennSlide.dataset.type = 'venn';
-vennSlide.innerHTML = `
-  <svg id="venn-svg" viewBox="0 0 800 600" style="position:absolute;inset:0;width:100%;height:100%"></svg>
-  <div class="venn-quote">"The job I'm going to have in 5 years doesn't exist yet."<br><span class="venn-attr">— Alex, 2010</span></div>`;
+vennSlide.innerHTML = `<svg id="venn-svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet"></svg>`;
 deck.appendChild(vennSlide);
 allSlides.push(vennSlide);
 
 (function buildVennSlide(){
   const svg = vennSlide.querySelector('#venn-svg');
-  const CX = 400, CY = 280;
+  const CX = 800, CY = 380;
 
   // Three overlapping circles — architecture, theatre, realtime tech
   const circles = [
-    { x: CX - 120, y: CY - 60, label: 'Architecture', color: 'rgba(167,139,250,.15)', stroke: 'rgba(167,139,250,.4)' },
-    { x: CX + 120, y: CY - 60, label: 'Theatre',      color: 'rgba(244,63,94,.12)',   stroke: 'rgba(244,63,94,.4)' },
-    { x: CX,       y: CY + 80, label: 'Realtime Tech', color: 'rgba(0,212,255,.12)',   stroke: 'rgba(0,212,255,.4)' },
+    { x: CX - 170, y: CY - 90, label: 'Architecture', color: 'rgba(167,139,250,.15)', stroke: 'rgba(167,139,250,.4)' },
+    { x: CX + 170, y: CY - 90, label: 'Theatre',      color: 'rgba(244,63,94,.12)',   stroke: 'rgba(244,63,94,.4)' },
+    { x: CX,       y: CY + 110,label: 'Realtime Tech', color: 'rgba(0,212,255,.12)',   stroke: 'rgba(0,212,255,.4)' },
   ];
-  const R = 160;
+  const R = 220;
   circles.forEach(c => {
     svg.appendChild(svgE('circle', { cx:c.x, cy:c.y, r:R, fill:c.color, stroke:c.stroke, 'stroke-width':'1.5' }));
     // Label above the circle
@@ -553,7 +547,7 @@ allSlides.push(vennSlide);
 
   // Pixel-art icons for each circle
   // Architecture — simple column/arch
-  const archG = svgE('g', { transform:`translate(${CX-120},${CY-60})` });
+  const archG = svgE('g', { transform:`translate(${CX-170},${CY-90}) scale(1.8)` });
   const archPx = (x,y,w,h,f) => archG.appendChild(svgE('rect',{x,y,width:w,height:h,fill:f}));
   archPx(-12,-25,24,4,'#a78bfa'); // pediment
   archPx(-10,-21,3,30,'#a78bfa'); // left column
@@ -564,7 +558,7 @@ allSlides.push(vennSlide);
   svg.appendChild(archG);
 
   // Theatre — stage curtains
-  const theatG = svgE('g', { transform:`translate(${CX+120},${CY-60})` });
+  const theatG = svgE('g', { transform:`translate(${CX+170},${CY-90}) scale(1.8)` });
   const theatPx = (x,y,w,h,f) => theatG.appendChild(svgE('rect',{x,y,width:w,height:h,fill:f}));
   theatPx(-16,-20,32,4,'#f43f5e');  // top bar
   theatPx(-16,-16,6,28,'#f43f5e');  // left curtain
@@ -576,7 +570,7 @@ allSlides.push(vennSlide);
   svg.appendChild(theatG);
 
   // Realtime Tech — monitor with game
-  const techG = svgE('g', { transform:`translate(${CX},${CY+80})` });
+  const techG = svgE('g', { transform:`translate(${CX},${CY+110}) scale(1.8)` });
   const techPx = (x,y,w,h,f) => techG.appendChild(svgE('rect',{x,y,width:w,height:h,fill:f}));
   techPx(-18,-18,36,26,'#1a1a26');  // screen bezel
   techPx(-16,-16,32,22,'#0f172a');  // screen
@@ -591,7 +585,7 @@ allSlides.push(vennSlide);
 
   // Beardless Alex sprite orbiting the center
   const orbitG = svgE('g', { id:'venn-orbit' });
-  const avScale = 0.7;
+  const avScale = 1.0;
   const avInner = svgE('g', { transform:`scale(${avScale})` });
   orbitG.appendChild(avInner);
   buildAvatar(avInner, { withBeard: false });
@@ -622,6 +616,16 @@ allSlides.push(vennSlide);
 
   window.startVennOrbit = () => { orbRunning = true; requestAnimationFrame(orbStep); };
   window.stopVennOrbit = () => { orbRunning = false; };
+
+  // Quote text at the bottom
+  const q1 = svgE('text', { x: CX, y: 810, 'text-anchor':'middle', fill:'rgba(255,255,255,.55)',
+    'font-family':'Space Grotesk,sans-serif', 'font-size':'24', 'font-style':'italic' });
+  q1.textContent = '"The job I\'m going to have in 5 years doesn\'t exist yet."';
+  svg.appendChild(q1);
+  const q2 = svgE('text', { x: CX, y: 845, 'text-anchor':'middle', fill:'rgba(255,255,255,.25)',
+    'font-family':'Space Grotesk,sans-serif', 'font-size':'15', 'letter-spacing':'2' });
+  q2.textContent = '— ALEX, 2010';
+  svg.appendChild(q2);
 })();
 
 // ── Slide 3: Alex Coulombe intro (with Mario power-up animation) ──

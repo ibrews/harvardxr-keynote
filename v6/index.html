@@ -1104,31 +1104,70 @@ allSlides.push(introLens);
   svg.appendChild(svgE('circle', { cx:ex, cy:ey, r:'18',
     fill:'none', stroke:'rgba(255,255,255,.1)', 'stroke-width':'5' }));
 
-  // "AGILE LENS" text centered in the monocle
-  const t1 = svgE('text', { x:CX, y:CY-12, 'text-anchor':'middle', 'dominant-baseline':'middle',
+  // White monocle PNG overlay — pulsing glow aligned with the SVG ring
+  const pulseImg = svgE('image', {
+    href: 'monocle-white.png', x: mX, y: mY, width: mW, height: mH,
+    opacity: '0', id: 'lens-pulse',
+  });
+  svg.appendChild(pulseImg);
+
+  // "AGILE LENS" + subtitle on separate lines, all centered
+  const t1 = svgE('text', { x:CX, y:CY-18, 'text-anchor':'middle', 'dominant-baseline':'middle',
     fill:'rgba(255,255,255,.85)', 'font-family':'Space Grotesk,sans-serif',
     'font-size':'42', 'font-weight':'700', 'letter-spacing':'6' });
   t1.textContent = 'AGILE LENS';
   svg.appendChild(t1);
-  const t2 = svgE('text', { x:CX, y:CY+28, 'text-anchor':'middle', 'dominant-baseline':'middle',
+  const t2 = svgE('text', { x:CX, y:CY+18, 'text-anchor':'middle', 'dominant-baseline':'middle',
     fill:'rgba(255,255,255,.35)', 'font-family':'Space Grotesk,sans-serif',
     'font-size':'16', 'font-weight':'400', 'letter-spacing':'4' });
-  t2.textContent = 'IMMERSIVE DESIGN STUDIO · EST. 2016';
+  t2.textContent = 'IMMERSIVE DESIGN STUDIO';
   svg.appendChild(t2);
+  const t3 = svgE('text', { x:CX, y:CY+42, 'text-anchor':'middle', 'dominant-baseline':'middle',
+    fill:'rgba(255,255,255,.30)', 'font-family':'Space Grotesk,sans-serif',
+    'font-size':'14', 'font-weight':'400', 'letter-spacing':'5' });
+  t3.textContent = 'EST. 2016';
+  svg.appendChild(t3);
 
   // Client names orbiting around the monocle
-  const CLIENTS = ['Disney', 'CBS', 'Kennedy Center', 'Four Seasons', 'RSC', 'Waldorf Astoria', 'Dell'];
-  const orbitR = monocleR + 100; // orbit radius
+  // Layout: 12 clients placed so specific pairs sit at clock positions.
+  // Clock positions (angle from 12 o'clock, clockwise):
+  //   12 = -π/2, 3 = 0, 6 = π/2, 9 = π
+  // RSC at 12, Royal Caribbean at 6, Kennedy Center at 3, Lincoln Center at 9.
+  // The remaining 8 fill in evenly around the gaps.
+  const FIXED = [
+    { name: 'RSC',              angle: -Math.PI/2 },        // 12 o'clock
+    { name: 'Kennedy Center',   angle: 0 },                 // 3 o'clock
+    { name: 'Royal Caribbean',  angle: Math.PI/2 },         // 6 o'clock
+    { name: 'Lincoln Center',   angle: Math.PI },            // 9 o'clock
+  ];
+  const OTHERS = ['Disney', 'CBS', 'Four Seasons', 'Waldorf Astoria', 'Dell', 'Samsung', 'Google', 'Epic Games'];
+  // Distribute others in the 4 gaps (2 per gap)
+  const gaps = [
+    { from: -Math.PI/2, to: 0 },           // 12→3
+    { from: 0,          to: Math.PI/2 },    // 3→6
+    { from: Math.PI/2,  to: Math.PI },      // 6→9
+    { from: Math.PI,    to: 3*Math.PI/2 },  // 9→12 (wrap)
+  ];
+  const ALL = [...FIXED];
+  OTHERS.forEach((name, i) => {
+    const gap = gaps[i % 4];
+    const slot = (i < 4) ? 1/3 : 2/3; // first 4 fill at 1/3, next 4 at 2/3
+    const angle = gap.from + (gap.to - gap.from) * slot;
+    ALL.push({ name, angle });
+  });
+  // Sort by angle for clean rendering
+  ALL.sort((a,b) => a.angle - b.angle);
+
+  const orbitR = monocleR + 110;
   const clientEls = [];
 
-  CLIENTS.forEach((name, i) => {
-    const angle = (i / CLIENTS.length) * Math.PI * 2 - Math.PI / 2; // start from top
+  ALL.forEach(({ name, angle }) => {
     const x = CX + Math.cos(angle) * orbitR;
     const y = CY + Math.sin(angle) * orbitR;
     const txt = svgE('text', {
       x, y, 'text-anchor':'middle', 'dominant-baseline':'middle',
       fill:'rgba(255,255,255,.6)', 'font-family':'Space Grotesk,sans-serif',
-      'font-size':'20', 'font-weight':'600', 'letter-spacing':'3',
+      'font-size':'18', 'font-weight':'600', 'letter-spacing':'2.5',
     });
     txt.textContent = name.toUpperCase();
     txt.dataset.baseAngle = angle;
@@ -1138,34 +1177,37 @@ allSlides.push(introLens);
 
   // Faint orbit ring
   svg.appendChild(svgE('circle', { cx:CX, cy:CY, r:orbitR,
-    fill:'none', stroke:'rgba(167,139,250,.1)', 'stroke-width':'1', 'stroke-dasharray':'4 6' }));
+    fill:'none', stroke:'rgba(167,139,250,.08)', 'stroke-width':'1', 'stroke-dasharray':'4 6' }));
 
-  // Animate: slowly rotate client names around the center
+  // Animate: slowly rotate client names + pulse the white monocle
   let lensRunning = false;
   let lensAngle = 0;
+  let lensT = 0;
   function lensStep() {
     if (!lensRunning) return;
     lensAngle += 0.003;
-    clientEls.forEach((el, i) => {
+    lensT += 0.02;
+    // Rotate client names
+    clientEls.forEach(el => {
       const base = parseFloat(el.dataset.baseAngle);
       const a = base + lensAngle;
-      const x = CX + Math.cos(a) * orbitR;
-      const y = CY + Math.sin(a) * orbitR;
-      el.setAttribute('x', x);
-      el.setAttribute('y', y);
-      // Fade: brighter at top, dimmer at bottom
-      const brightness = 0.35 + 0.45 * (1 - (Math.sin(a) + 1) / 2);
+      el.setAttribute('x', CX + Math.cos(a) * orbitR);
+      el.setAttribute('y', CY + Math.sin(a) * orbitR);
+      const brightness = 0.3 + 0.5 * (1 - (Math.sin(a) + 1) / 2);
       el.setAttribute('fill', `rgba(255,255,255,${brightness.toFixed(2)})`);
     });
+    // Pulse white monocle PNG
+    const pulse = 0.06 + 0.06 * Math.sin(lensT);
+    pulseImg.setAttribute('opacity', pulse.toFixed(3));
     requestAnimationFrame(lensStep);
   }
 
-  window.startLensOrbit = () => { lensRunning = true; requestAnimationFrame(lensStep); };
+  window.startLensOrbit = () => { lensRunning = true; lensT = 0; requestAnimationFrame(lensStep); };
   window.stopLensOrbit = () => { lensRunning = false; };
 
   // Sub-text at the bottom
-  const sub = svgE('text', { x:CX, y:820, 'text-anchor':'middle',
-    fill:'rgba(255,255,255,.3)', 'font-family':'Space Grotesk,sans-serif',
+  const sub = svgE('text', { x:CX, y:830, 'text-anchor':'middle',
+    fill:'rgba(255,255,255,.25)', 'font-family':'Space Grotesk,sans-serif',
     'font-size':'14', 'letter-spacing':'2' });
   sub.textContent = 'NYC · BOOTSTRAPPED · SPECIALIST · 10 YEARS';
   svg.appendChild(sub);

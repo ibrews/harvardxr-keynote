@@ -145,6 +145,7 @@ const SECTIONS = [
 const BONUS = { year:2026, title:'The Demo Will Break.\nBudget for It.',
   tagline:'In ten years — at Harvard, at SIGGRAPH, at the Kennedy Center — something has gone wrong every single time. A headset dies. The Wi-Fi drops. A character\'s head detaches from their body mid-show. The audience doesn\'t remember the glitch. They remember how the moment made them feel.' };
 </script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -886,6 +887,8 @@ function goTo(n){
   // Per-slide entry hooks
   const t = allSlides[current].dataset.type;
   if(t==='map') setTimeout(startMap, 400);
+  // Clean up voxel renderer when leaving the map slide
+  if (allSlides[n].dataset.type !== 'map' && window._voxelCleanup) { window._voxelCleanup(); window._voxelCleanup = null; }
   if(t==='intro-alex') { primeTallies(nx); setTimeout(playAlexIntro, 500); }
   // Tally count-up for any .num element that's purely numeric.
   // Skip on intro-alex — the tallies are triggered AFTER the avatar lands
@@ -1487,7 +1490,138 @@ function startMap(){
       setTimeout(() => { burst.style.opacity = '0'; }, 1300);
     }, cStart + 2000 + gi * 250);
   });
+
+  // 10. Pixel → Voxel morph — after fireworks settle, the 2D avatar
+  // transforms into a rotating 3D voxel model (conference theme!)
+  setTimeout(() => {
+    if (window.startVoxelMorph) window.startVoxelMorph();
+  }, cStart + 4500);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   VOXEL MORPH — Pixel → Voxel transformation on the map slide
+   Three.js extrudes each pixel rect from the 2D avatar into a 3D cube.
+   Triggered after the heroic jump finishes; crossfades SVG → WebGL canvas.
+   ═══════════════════════════════════════════════════════════════════════ */
+try { (function initVoxelMorph(){
+  // Create the canvas overlay positioned over the avatar area
+  const canvas = document.createElement('canvas');
+  canvas.id = 'voxel-canvas';
+  canvas.width = 400; canvas.height = 400;
+  canvas.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:260px;height:260px;pointer-events:none;opacity:0;transition:opacity 1.2s ease-in;z-index:5';
+  mapS.style.position = 'relative';
+  mapS.appendChild(canvas);
+
+  window.startVoxelMorph = async function() {
+    let THREE;
+    try { THREE = await import('three'); } catch(e) { console.warn('Three.js not available — skipping voxel morph'); return; }
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 200);
+    camera.position.set(0, 5, 55);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(400, 400);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);
+
+    // Lighting
+    const amb = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(amb);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+    dir.position.set(5, 10, 8);
+    scene.add(dir);
+    const rim = new THREE.DirectionalLight(0x00d4ff, 0.3);
+    rim.position.set(-5, -3, -5);
+    scene.add(rim);
+
+    // Read avatar rects from the map SVG
+    const avBody = document.querySelector('#map-av .av-body');
+    const armsUp = document.querySelector('#map-av .av-arms-up');
+    if (!avBody) return;
+
+    const group = new THREE.Group();
+    const DEPTH = 4; // extrusion depth in pixels
+    const SCALE = 0.35; // scale down to fit nicely
+
+    function addRectsFromGroup(svgGroup, zOffset) {
+      if (!svgGroup) return;
+      svgGroup.querySelectorAll('rect').forEach(r => {
+        const x = parseFloat(r.getAttribute('x')) || 0;
+        const y = parseFloat(r.getAttribute('y')) || 0;
+        const w = parseFloat(r.getAttribute('width')) || 0;
+        const h = parseFloat(r.getAttribute('height')) || 0;
+        const fill = r.getAttribute('fill') || '#888';
+        if (w < 0.5 || h < 0.5) return;
+
+        const geo = new THREE.BoxGeometry(w * SCALE, h * SCALE, DEPTH * SCALE);
+        const color = new THREE.Color(fill);
+        const mat = new THREE.MeshStandardMaterial({
+          color, roughness: 0.6, metalness: 0.1,
+        });
+        const cube = new THREE.Mesh(geo, mat);
+        // Position: center the pixel rect, flip Y (SVG y goes down, 3D y goes up)
+        cube.position.set(
+          (x + w/2) * SCALE,
+          -(y + h/2) * SCALE,
+          zOffset * SCALE
+        );
+        group.add(cube);
+      });
+    }
+
+    addRectsFromGroup(avBody, 0);
+    addRectsFromGroup(armsUp, 1); // arms slightly in front
+
+    // Center the group
+    const box = new THREE.Box3().setFromObject(group);
+    const center = box.getCenter(new THREE.Vector3());
+    group.position.sub(center);
+    scene.add(group);
+
+    // Intro animation: voxels start flat (scaleZ=0) and pop to full depth
+    group.scale.z = 0.01;
+
+    // Crossfade: hide SVG avatar, show canvas
+    const avPos = document.getElementById('map-av-pos');
+    if (avPos) {
+      avPos.style.transition = 'opacity 1s ease-out';
+      avPos.style.opacity = '0';
+    }
+    canvas.style.opacity = '1';
+
+    // Animate scaleZ from 0 → 1 over 1.2s
+    const popStart = performance.now();
+    const POP_DUR = 1200;
+    function popIn(now) {
+      const t = Math.min((now - popStart) / POP_DUR, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      group.scale.z = 0.01 + ease * 0.99;
+      if (t < 1) requestAnimationFrame(popIn);
+    }
+    requestAnimationFrame(popIn);
+
+    // Continuous slow rotation
+    let running = true;
+    function animate() {
+      if (!running) return;
+      group.rotation.y += 0.008;
+      group.rotation.x = Math.sin(performance.now() * 0.0003) * 0.15;
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // Clean up when leaving the slide
+    window._voxelCleanup = () => {
+      running = false;
+      renderer.dispose();
+      canvas.style.opacity = '0';
+      if (avPos) { avPos.style.transition = 'none'; avPos.style.opacity = '1'; }
+    };
+  };
+})(); } catch(e) { console.error('VoxelMorph init error:', e); }
 
 /* ═══════════════════════════════════════════════════════════════════════
    ANNOTATION OVERLAY — click elements to leave notes, export as markdown

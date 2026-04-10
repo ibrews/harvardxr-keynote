@@ -1571,8 +1571,11 @@ try { (function initVoxelMorph(){
     //   hair: wraps around behind the head (negative Z = back)
     //   body: centered (torso, pants, boots)
     //   face: protrudes forward only (skin, eyes, beard, brows, mouth)
-    const ROLE_DEPTH = { hair: 6, body: 5, face: 5 };
-    const ROLE_Z     = { hair: -1, body: 0, face: 3 };
+    // hair = thick dome wrapping front+back (the biggest volume)
+    // body = centered torso/pants/boots
+    // face = thin layer on the front surface of the head (skin, eyes, brows, beard)
+    const ROLE_DEPTH = { hair: 10, body: 5, face: 2 };
+    const ROLE_Z     = { hair: -4, body: 0, face: 5 };
 
     // Rasterize SVG group into a Map<"x,y" → color>
     function rasterize(svgGroup) {

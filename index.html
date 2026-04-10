@@ -398,6 +398,37 @@ body.presentation-mode #anno-prompt {
   80%  { transform: translateY(2px)  scale(1.1, .88); }
   100% { transform: translateY(0)    scale(1, 1); }
 }
+/* Pokemon evolution flash — white overlay blinks faster and faster */
+@keyframes evoFlash {
+  0%   { opacity:0 }
+  5%   { opacity:.7 } 8%   { opacity:0 }
+  15%  { opacity:.8 } 19%  { opacity:0 }
+  28%  { opacity:.85 } 32%  { opacity:0 }
+  40%  { opacity:.9 } 43%  { opacity:.1 }
+  50%  { opacity:.95 } 52%  { opacity:.15 }
+  58%  { opacity:1 } 60%  { opacity:.2 }
+  65%  { opacity:1 } 66%  { opacity:.3 }
+  71%  { opacity:1 } 72%  { opacity:.4 }
+  77%  { opacity:1 } 78%  { opacity:.5 }
+  82%  { opacity:1 } 83%  { opacity:.6 }
+  87%  { opacity:1 }
+  100% { opacity:0 }
+}
+/* Evolution silhouette glow — the sprite becomes a white silhouette mid-flash */
+@keyframes evoGlow {
+  0%   { filter:brightness(1) }
+  40%  { filter:brightness(1) }
+  50%  { filter:brightness(8) saturate(0) }
+  85%  { filter:brightness(8) saturate(0) }
+  100% { filter:brightness(1) }
+}
+/* Evolution particle burst */
+@keyframes evoBurst {
+  0%   { opacity:0; transform:translate(0,0) scale(.5) }
+  15%  { opacity:1; transform:translate(calc(var(--tx)*.2),calc(var(--ty)*.2)) scale(1.5) }
+  60%  { opacity:1; transform:translate(calc(var(--tx)*.7),calc(var(--ty)*.7)) scale(1) }
+  100% { opacity:0; transform:translate(var(--tx),var(--ty)) scale(.2) }
+}
 /* Firework particle — radial fly-out with ease, scale up briefly then fade */
 @keyframes fwParticle {
   0%   { transform: translate(0, 0) scale(.4); opacity: 1; }
@@ -1002,6 +1033,11 @@ function goTo(n){
   const t = allSlides[current].dataset.type;
   if(t==='venn') setTimeout(()=>{ if(window.startVennOrbit) window.startVennOrbit(); }, 400);
   if(t!=='venn' && window.stopVennOrbit) window.stopVennOrbit();
+  // Beard evolution — trigger when entering the 2020 case or lesson slide
+  const slideYear = parseInt(nx.dataset.year || 0);
+  if (slideYear === 2020 && (t==='case' || t==='lesson')) {
+    setTimeout(playBeardEvolution, 800);
+  }
   if(t==='map') setTimeout(startMap, 400);
   // Clean up voxel renderer when leaving the map slide
   if (allSlides[n].dataset.type !== 'map' && window._voxelCleanup) { window._voxelCleanup(); window._voxelCleanup = null; }
@@ -1313,11 +1349,131 @@ function updateTracker(){
     tx = p.x; ty = p.y;
   }
   walker.setAttribute('transform', `translate(${tx},${ty})`);
-  // Beard logic — show beard from 2020 onward
+  // Beard logic — show beard from 2020 onward (skip during evolution)
   const yr = parseInt(allSlides[current].dataset.year || 2016);
-  const showBeard = yr >= 2020;
-  document.getElementById('tav-clean').setAttribute('visibility', showBeard ? 'hidden' : 'visible');
-  document.getElementById('tav-beard').setAttribute('visibility', showBeard ? 'visible' : 'hidden');
+  if (!window._evoRunning) {
+    const showBeard = yr >= 2020;
+    document.getElementById('tav-clean').setAttribute('visibility', showBeard ? 'hidden' : 'visible');
+    document.getElementById('tav-beard').setAttribute('visibility', showBeard ? 'visible' : 'hidden');
+  }
+}
+
+// ── Beard Evolution — Pokemon-style transformation on the 2020 slide ──
+// Flashes white faster and faster, sprite becomes a silhouette, then
+// reveals the bearded version with a particle burst + triumphant SFX.
+let _evoPlayed = false;
+let _evoAudioCtx = null;
+
+function playEvoSfx() {
+  try {
+    if (!_evoAudioCtx) _evoAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = _evoAudioCtx;
+    if (ctx.state === 'suspended') ctx.resume();
+    const now = ctx.currentTime;
+    const tone = (freq, start, dur, type='square', vol=0.08) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type; o.frequency.value = freq;
+      o.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(vol, now+start);
+      g.gain.exponentialRampToValueAtTime(0.001, now+start+dur);
+      o.start(now+start); o.stop(now+start+dur);
+    };
+    // Accelerating blips (matching the flash rhythm)
+    const blips = [0,.15,.35,.52,.66,.78,.88,.96,1.02,1.07,1.11,1.14,1.17,1.19];
+    blips.forEach((t,i) => tone(440 + i*40, t, 0.06, 'square', 0.06 + i*0.005));
+    // Hold — sustained high tone during the white-out
+    tone(880, 1.2, 0.8, 'sawtooth', 0.07);
+    tone(1320, 1.2, 0.8, 'square', 0.04);
+    // Resolution — triumphant descending arpeggio
+    tone(1047, 2.1, 0.12, 'square', 0.10); // C6
+    tone(784, 2.22, 0.12, 'square', 0.10);  // G5
+    tone(659, 2.34, 0.12, 'square', 0.10);  // E5
+    tone(523, 2.46, 0.25, 'square', 0.12);  // C5 (held)
+    // Final power chord
+    tone(262, 2.75, 0.4, 'square', 0.10);
+    tone(330, 2.75, 0.4, 'square', 0.08);
+    tone(392, 2.75, 0.4, 'square', 0.08);
+  } catch(e) {}
+}
+
+function playBeardEvolution() {
+  if (_evoPlayed) return;
+  _evoPlayed = true;
+  window._evoRunning = true;
+
+  const tracker = document.getElementById('tracker-svg');
+  if (!tracker) return;
+
+  // Create a flash overlay inside the tracker SVG
+  const flash = svgE('rect', {
+    x:0, y:0, width:120, height:120, fill:'#fff', opacity:'0',
+    'pointer-events':'none'
+  });
+  tracker.appendChild(flash);
+
+  // Create particle burst around the avatar position
+  const walker = document.getElementById('tav');
+  const wtf = walker?.getAttribute('transform') || '';
+  const tm = wtf.match(/translate\(([\d.]+),([\d.]+)\)/);
+  const avX = tm ? parseFloat(tm[1]) : 60;
+  const avY = tm ? parseFloat(tm[2]) : 30;
+  const burstG = svgE('g', { opacity:'0' });
+  const EVO_COLORS = ['#fde68a','#a78bfa','#00d4ff','#f43f5e','#fff','#f59e0b'];
+  for (let i = 0; i < 18; i++) {
+    const angle = (i/18) * Math.PI * 2;
+    const dist = 15 + Math.random() * 15;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+    const p = svgE('circle', {
+      cx: avX, cy: avY, r: (0.8 + Math.random()*1.5).toFixed(1),
+      fill: EVO_COLORS[i % EVO_COLORS.length],
+      'data-tx': dx.toFixed(1), 'data-ty': dy.toFixed(1),
+    });
+    p.style.transformOrigin = `${avX}px ${avY}px`;
+    burstG.appendChild(p);
+  }
+  tracker.appendChild(burstG);
+
+  // Get the clean and beard sprite groups
+  const clean = document.getElementById('tav-clean');
+  const beard = document.getElementById('tav-beard');
+
+  // Start SFX
+  playEvoSfx();
+
+  // Phase 1: Flash overlay accelerates (0–2s)
+  flash.style.animation = 'evoFlash 2.2s ease-in forwards';
+
+  // Phase 2: Clean sprite glows white mid-evolution (0.8–2s)
+  if (clean) clean.style.animation = 'evoGlow 2.2s ease-in forwards';
+
+  // Phase 3: At the peak white-out (1.5s), swap clean→beard
+  setTimeout(() => {
+    if (clean) clean.setAttribute('visibility', 'hidden');
+    if (beard) beard.setAttribute('visibility', 'visible');
+    if (beard) beard.style.animation = 'evoGlow 2.2s ease-in forwards';
+    // Sync the beard glow to the tail end — start from 70%
+    if (beard) beard.style.animationDelay = '-1.54s';
+  }, 1500);
+
+  // Phase 4: Particle burst (2s)
+  setTimeout(() => {
+    burstG.style.opacity = '1';
+    burstG.querySelectorAll('circle').forEach(p => {
+      p.style.setProperty('--tx', `${p.getAttribute('data-tx')}px`);
+      p.style.setProperty('--ty', `${p.getAttribute('data-ty')}px`);
+      p.style.animation = 'evoBurst 1s ease-out forwards';
+    });
+  }, 2000);
+
+  // Phase 5: Clean up (3.5s)
+  setTimeout(() => {
+    flash.remove();
+    burstG.remove();
+    if (clean) clean.style.animation = '';
+    if (beard) { beard.style.animation = ''; beard.style.animationDelay = ''; }
+    window._evoRunning = false;
+  }, 3500);
 }
 updateHUD();
 // On initial load, honor the URL hash if it points at a specific slide

@@ -1009,100 +1009,81 @@ function buildAvatar(parent, opts = {}) {
   const body = svgE('g', { class: 'av-body' });
 
   // Head (drawn first so hair can overlap it naturally on top)
-  px(body, -12, -34, 24, 22, SKIN);
-  px(body, -12, -16, 24, 4, SKIN_DARK); // chin shadow
+  px(body, -12, -34, 24, 22, SKIN);                          // rect 1
+  px(body, -12, -16, 24, 4, SKIN_DARK);                      // rect 2 chin shadow
 
-  // ── Natural tousled hair with 3D shading ──
-  // Built so the silhouette is uneven/organic, not a flat cap.
-  // Layered: SHADOW (back) → DARK (mid) → HAIR (main) → LIGHT (highlights)
-
-  // Back shadow layer — rounded dome + side bumps (smaller than before,
-  // follows the head contour rather than being a wide cap)
-  px(body, -13, -40, 26, 2, HAIR_SHADOW);   // very top of dome (narrow)
-  px(body, -15, -38, 30, 3, HAIR_SHADOW);   // mid-dome slightly wider
-  px(body, -16, -36, 32, 4, HAIR_SHADOW);   // widest row (around hairline)
-  // Asymmetric bumps so the top isn't a flat line
-  px(body, -9, -42, 5, 2, HAIR_SHADOW);     // left bump up
-  px(body, 3,  -42, 4, 2, HAIR_SHADOW);     // right bump (smaller, offset)
-  px(body, -2, -43, 5, 1, HAIR_SHADOW);     // center cowlick
-
-  // Main hair fill (HAIR_DARK as the darker base)
-  px(body, -12, -40, 24, 2, HAIR_DARK);
-  px(body, -14, -38, 28, 3, HAIR_DARK);
-  px(body, -15, -36, 30, 3, HAIR_DARK);
-  px(body, -8, -42, 4, 2, HAIR_DARK);       // left bump
-  px(body, 4,  -42, 3, 2, HAIR_DARK);       // right bump
-  px(body, -1, -43, 3, 1, HAIR_DARK);       // cowlick
-
-  // Main hair color — main volume
-  px(body, -11, -40, 22, 1, HAIR);
-  px(body, -13, -38, 26, 2, HAIR);
-  px(body, -14, -36, 28, 2, HAIR);
-  px(body, -8, -41, 4, 1, HAIR);            // left bump top
-  px(body, 4,  -41, 3, 1, HAIR);            // right bump top
-
-  // Tousled wisps extending slightly past the head — just a few, asymmetric
-  px(body, -16, -35, 2, 3, HAIR_DARK);      // left wisp
-  px(body, 14,  -35, 2, 3, HAIR_DARK);      // right wisp (symmetric-ish)
-  px(body, -15, -34, 1, 2, HAIR);
-  px(body, 14,  -34, 1, 2, HAIR);
-
-  // Highlights — catches light on top bumps and the left side of the dome
-  px(body, -8, -40, 3, 1, HAIR_LIGHT);      // main crown highlight
-  px(body, 4,  -40, 2, 1, HAIR_LIGHT);
-  px(body, -10, -38, 2, 1, HAIR_LIGHT);     // dome sheen
-  px(body, -2, -42, 2, 1, HAIR_LIGHT);      // cowlick highlight
-  px(body, -7, -41, 2, 1, HAIR_LIGHT);      // bump glint
-
-  // ── Front fringe — UNEVEN lengths so it looks like real bangs ──
-  // Instead of one flat horizontal row, each chunk hangs down by
-  // different amounts.
-  px(body, -12, -34, 5, 3, HAIR_DARK);      // left chunk (drops 3 rows)
-  px(body, -11, -33, 4, 2, HAIR);
-  px(body, -7,  -34, 3, 2, HAIR_DARK);      // shorter chunk (drops 2)
-  px(body, -7,  -33, 2, 1, HAIR);
-  px(body, -4,  -34, 2, 4, HAIR_DARK);      // long wisp (drops 4)
-  px(body, -4,  -33, 1, 3, HAIR);
-  px(body, -1,  -34, 3, 2, HAIR_DARK);      // short chunk
-  px(body, -1,  -33, 2, 1, HAIR);
-  px(body, 3,   -34, 4, 3, HAIR_DARK);      // mid-length chunk
-  px(body, 3,   -33, 3, 2, HAIR);
-  px(body, 7,   -34, 5, 4, HAIR_DARK);      // right chunk (longer)
-  px(body, 8,   -33, 3, 3, HAIR);
-  // A few more highlights on the fringe
-  px(body, -10, -33, 2, 1, HAIR_LIGHT);
-  px(body, 8,   -33, 2, 1, HAIR_LIGHT);
-  // ── Eyebrows — distinctive feature, slightly bigger than eyes for emphasis
-  px(body, -8, -27, 5, 2, HAIR_DARK);  // left brow
-  px(body, 3,  -27, 5, 2, HAIR_DARK);  // right brow
+  // ── Hair — tousled dome with 3D shading ──
+  // Shadow layer (outer silhouette)
+  px(body, -13, -40, 26, 2, HAIR_SHADOW);                    // rect 3
+  px(body, -15, -38, 30, 3, HAIR_SHADOW);                    // rect 4
+  px(body, -16, -36, 32, 4, HAIR_SHADOW);                    // rect 5
+  px(body, -9, -42, 5, 2, HAIR_SHADOW);                      // rect 6
+  px(body, 3,  -42, 4, 2, HAIR_SHADOW);                      // rect 7
+  px(body, -2, -43, 5, 1, HAIR_SHADOW);                      // rect 8
+  // Dark base
+  px(body, -12, -40, 24, 2, HAIR_DARK);                      // rect 9
+  px(body, -14, -38, 28, 3, HAIR_DARK);                      // rect 10
+  px(body, -13, -34, 30, 3, HAIR_DARK);                      // rect 11 — baked Δ(+2,+2)
+  px(body, -8, -42, 4, 2, HAIR_DARK);                        // rect 12
+  px(body, 4,  -42, 3, 2, HAIR_DARK);                        // rect 13
+  px(body, -1, -43, 3, 1, HAIR_DARK);                        // rect 14
+  // Main hair color
+  px(body, -11, -41, 22, 1, HAIR);                           // rect 15 — baked Δ(0,-1)
+  px(body, -13, -38, 26, 2, HAIR);                           // rect 16
+  px(body, -14, -36, 28, 2, HAIR);                           // rect 17
+  px(body, -8, -41, 4, 1, HAIR);                             // rect 18
+  px(body, 4,  -41, 3, 1, HAIR);                             // rect 19
+  // Side wisps
+  px(body, -13, -34, 2, 3, HAIR_DARK);                       // rect 20 — baked Δ(+3,+1)
+  px(body, 12,  -33, 2, 3, HAIR_DARK);                       // rect 21 — baked Δ(-2,+2)
+  px(body, -14, -31, 2, 4, HAIR);                            // rect 22 — baked Δ(+1,+3) · scale ×2.03
+  px(body, 10,  -31, 1, 2, HAIR);                            // rect 23 — baked Δ(-4,+3)
+  // Highlights
+  px(body, -8, -40, 3, 1, HAIR_LIGHT);                       // rect 24
+  px(body, 4,  -40, 2, 1, HAIR_LIGHT);                       // rect 25
+  px(body, -10, -38, 2, 1, HAIR_LIGHT);                      // rect 26
+  px(body, -2, -42, 2, 1, HAIR_LIGHT);                       // rect 27
+  px(body, -7, -41, 2, 1, HAIR_LIGHT);                       // rect 28
+  // Front fringe — uneven bangs
+  px(body, -12, -34, 5, 3, HAIR_DARK);                       // rect 29
+  px(body, -11, -33, 4, 2, HAIR);                            // rect 30
+  px(body, -7,  -34, 3, 2, HAIR_DARK);                       // rect 31
+  px(body, -7,  -33, 2, 1, HAIR);                            // rect 32
+  px(body, -4,  -34, 2, 4, HAIR_DARK);                       // rect 33
+  px(body, -4,  -33, 1, 3, HAIR);                            // rect 34
+  px(body, -1,  -34, 3, 2, HAIR_DARK);                       // rect 35
+  px(body, -1,  -33, 2, 1, HAIR);                            // rect 36
+  px(body, 3,   -34, 4, 3, HAIR_DARK);                       // rect 37
+  px(body, 3,   -33, 3, 2, HAIR);                            // rect 38
+  px(body, 7,   -34, 5, 4, HAIR_DARK);                       // rect 39
+  px(body, 10,  -31, 3, 3, HAIR);                            // rect 40 — baked Δ(+2,+2)
+  // Fringe highlights
+  px(body, -12, -31, 2, 1, HAIR_LIGHT);                      // rect 41 — baked Δ(-2,+2)
+  px(body, 8,   -33, 2, 1, HAIR_LIGHT);                      // rect 42
+  // ── Eyebrows — thick, prominent (baked from annotation scales) ──
+  px(body, -8, -27, 8, 3, HAIR_DARK);                        // rect 43 — baked scale ×1.54
+  px(body, 3,  -28, 9, 4, HAIR_DARK);                        // rect 44 — baked Δ(0,-1) · scale ×1.81
   // Eyes
-  px(body, -7, -24, 3, 4, EYE);
-  px(body, 4,  -24, 3, 4, EYE);
-  px(body, -6, -23, 1, 2, '#fff');
-  px(body, 5,  -23, 1, 2, '#fff');
+  px(body, -7, -24, 3, 4, EYE);                              // rect 45
+  px(body, 4,  -24, 3, 4, EYE);                              // rect 46
+  px(body, -6, -23, 1, 2, '#fff');                            // rect 47
+  px(body, 5,  -23, 1, 2, '#fff');                            // rect 48
   // Mouth
-  px(body, -3, -17, 6, 1, '#9c5040');
-  // Beard (only if requested) — full chin coverage that connects sideburns
-  // down to the jawline at full head width. Mouth stays visible.
+  px(body, -3, -17, 6, 1, '#9c5040');                         // rect 49
+  // Beard
   if (withBeard) {
-    // Sideburns running down from the hair into the cheek area
-    px(body, -12, -22, 4, 5, BEARD);   // left sideburn
-    px(body, 8,   -22, 4, 5, BEARD);   // right sideburn
-    // Cheek beard around the eye / upper-face level
-    px(body, -12, -20, 5, 3, BEARD);   // left cheek
-    px(body, 7,   -20, 5, 3, BEARD);   // right cheek
-    // Sides of mouth (mouth at y=-17 stays visible)
+    px(body, -12, -22, 4, 5, BEARD);
+    px(body, 8,   -22, 4, 5, BEARD);
+    px(body, -12, -20, 5, 3, BEARD);
+    px(body, 7,   -20, 5, 3, BEARD);
     px(body, -12, -17, 4, 1, BEARD);
     px(body, 8,   -17, 4, 1, BEARD);
-    // Moustache — 2px tall, full mouth-width, with a lighter highlight
     px(body, -7,  -19, 14, 2, BEARD);
-    px(body, -6,  -19, 12, 1, BEARD_LIGHT);  // highlight on top
-    // Soul patch under the lower lip
+    px(body, -6,  -19, 12, 1, BEARD_LIGHT);
     px(body, -2,  -16, 4,  1, BEARD);
-    // Lower lip / chin band — full head width
-    px(body, -12, -16, 24, 2, BEARD);  // jaw band
-    px(body, -12, -14, 24, 2, BEARD);  // chin band
-    px(body, -10, -12, 20, 1, BEARD);  // chin tip taper
+    px(body, -12, -16, 24, 2, BEARD);
+    px(body, -12, -14, 24, 2, BEARD);
+    px(body, -10, -12, 20, 1, BEARD);
   }
   // Neck
   px(body, -4, -12, 8, 3, SKIN_DARK);

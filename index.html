@@ -2292,7 +2292,7 @@ deck.appendChild(bon);allSlides.push(bon);
 
 // ── Map ──
 const mapS=document.createElement('div');mapS.className='slide slide-map';mapS.dataset.type='map';
-mapS.innerHTML=`<div class="map-label" style="transform:translate(-79px,13px)">The Journey, Mapped</div><svg id="map-svg" viewBox="0 0 1000 600"></svg>`;
+mapS.innerHTML=`<div class="map-label" style="transform:translate(-95px,9px)">The Journey, Mapped</div><svg id="map-svg" viewBox="0 0 1000 600"></svg>`;
 deck.appendChild(mapS);allSlides.push(mapS);
 
 // ── Close ──
@@ -4342,11 +4342,11 @@ function startMap(){
     g.appendChild(svgE('circle',{cx:p.x,cy:p.y,r:'16',fill:'rgba(0,212,255,.02)',stroke:'rgba(0,212,255,.08)','stroke-width':'0.5'}));
     // center star
     g.appendChild(svgE('circle',{cx:p.x,cy:p.y,r:'4.5',fill:'rgba(0,212,255,.15)',stroke:'rgba(0,212,255,.65)','stroke-width':'1.5'}));
-    // Per-node nudges to avoid overlaps with monocle
-    const yrOffX = i===9 ? -34 : i===7 ? 20 : 0;
-    const yrOffY = i===9 ? 6 : 0;
-    const ttOffX = i===9 ? -60 : i===7 ? 20 : i===6 ? 25 : 0;
-    const ttOffY = i===9 ? 14 : i===6 ? 1 : 0;
+    // Per-node nudges (baked from annotation pass)
+    const _yn=[[0,0],[5,-23],[21,-15],[21,16],[13,31],[-9,-2],[27,0],[3,3],[3,0],[-34+(-2),6+8]]; // year: [dx,dy]
+    const _tn=[[0,0],[9,-22],[25,-14],[26,15],[15,28],[-11,-3],[25,1],[0,0],[0,0],[-60,14]]; // title: [dx,dy]
+    const yrOffX=_yn[i][0], yrOffY=_yn[i][1];
+    const ttOffX=_tn[i][0], ttOffY=_tn[i][1];
     // year label
     const yr=svgE('text',{x:lx+yrOffX,y:ly-(p.y<MY?12:0)+yrOffY,'text-anchor':anc,fill:'rgba(0,212,255,.8)',
       'font-family':'Space Grotesk,sans-serif','font-size':'10.5','font-weight':'600','letter-spacing':'1.2'});
@@ -4363,10 +4363,10 @@ function startMap(){
   const bG=svgE('g',{opacity:'0'});bG.style.transition='opacity .5s';
   bG.appendChild(svgE('circle',{cx:CORD_B.x,cy:CORD_B.y,r:'18',fill:'rgba(245,158,11,.02)',stroke:'rgba(245,158,11,.1)','stroke-width':'0.5'}));
   bG.appendChild(svgE('circle',{cx:CORD_B.x,cy:CORD_B.y,r:'6',fill:'rgba(245,158,11,.15)',stroke:'rgba(245,158,11,.65)','stroke-width':'1.5'}));
-  const bYr=svgE('text',{x:CORD_B.x+40,y:CORD_B.y-5,'text-anchor':'start',fill:'rgba(245,158,11,.85)',
+  const bYr=svgE('text',{x:CORD_B.x+40+8,y:CORD_B.y-5,'text-anchor':'start',fill:'rgba(245,158,11,.85)',
     'font-family':'Space Grotesk,sans-serif','font-size':'10.5','font-weight':'600','letter-spacing':'1.2'});
   bYr.textContent='2026';bG.appendChild(bYr);
-  const bTt=svgE('text',{x:CORD_B.x+40,y:CORD_B.y+10,'text-anchor':'start',fill:'rgba(255,255,255,.35)',
+  const bTt=svgE('text',{x:CORD_B.x+40+5,y:CORD_B.y+10-2,'text-anchor':'start',fill:'rgba(255,255,255,.35)',
     'font-family':'Space Grotesk,sans-serif','font-size':'8'});
   bTt.textContent='Everything Changes. Ship Anyway.';bG.appendChild(bTt);
   svg.appendChild(bG);

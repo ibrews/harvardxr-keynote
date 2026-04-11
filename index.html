@@ -83,9 +83,9 @@ const SECTIONS = [
       { title:'OnboardXR', subtitle:'A pandemic pivot that proved WebXR could work',
         img:'MEDIA_CYCLER',
         bullets:['COVID shut down every live venue. We built OnboardXR with Brendan Bradley — a WebXR one act festival that lives in a browser.','No app store. No headset required. Accessible by default. That constraint forced more thoughtful design.','OnboardXR became the proving ground for every live-performance idea we wanted to test quickly with a wide range of devices.'] },
-      { title:'The Unreal Engine Bet', subtitle:'All-in on one engine. No more Unity. No more hedging.',
+      { title:'The Unreal Engine Bet', subtitle:'All-in on an all-in-one engine. No more Unity. No more hedging.',
         img:'MEDIA_CYCLER',
-        bullets:['Going all-in on Unreal Engine — including Gold Authorized Instructor certification — wasn\'t a technical decision. It was a five-year bet on which skills would still be valuable.','Every studio that chased the latest shiny (NFTs, then "the metaverse," then generative AI) lost their XR muscle memory. We didn\'t.','Platform lock-in is real — but so is platform mastery. From bespoke one-offs to a scalable pipeline, UE was the foundation.'] },
+        bullets:['Going all-in on Unreal Engine — including Gold Authorized Instructor certification — wasn\'t a technical decision. It was a five-year bet on which skills would still be valuable.','Studios that chased the latest shiny (NFTs, then "the metaverse," then generative AI) lost their XR muscle memory. We didn\'t.','Platform lock-in is real — but so is platform mastery. From bespoke one-offs to a scalable pipeline, UE became the foundation.'] },
       { title:'Agony × Xsens × Lenovo', subtitle:'Sometimes the hardware just shows up at your door',
         img:'media/xsens-agony/xsens_agony.png',
         bullets:['Xsens sent us a full mocap suit. Lenovo sent workstations. We didn\'t ask — they saw the work and wanted us using their gear.','We used the Xsens suit on "Agony" — a motion-capture dance piece that pushed our real-time pipeline further than any client project.','Free hardware doesn\'t mean free. It means someone believes your R&D is their best marketing. Use it that way.'] },
@@ -2350,9 +2350,9 @@ deck.appendChild(cls);allSlides.push(cls);
     let THREE;
     try { THREE = await import('three'); } catch(e) { return; }
     voxScene = new THREE.Scene();
-    voxCamera = new THREE.PerspectiveCamera(28, 256/360, 1, 500);
+    voxCamera = new THREE.PerspectiveCamera(35, 256/360, 1, 500);
     voxCamera.position.set(0, 10, 120);
-    voxCamera.lookAt(0, 5, 0);
+    voxCamera.lookAt(0, 7, 0);
     voxRenderer = new THREE.WebGLRenderer({ canvas:voxCanvas, alpha:true, antialias:true });
     voxRenderer.setSize(256, 360);
     voxRenderer.setClearColor(0x000000, 0);

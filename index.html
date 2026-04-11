@@ -2769,7 +2769,8 @@ function buildMediaCycler(slideEl, items, opts){
   const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('A Christmas Carol VR — Five Seasons Running'));
   if (!slide) return;
   buildMediaCycler(slide, [
-    {type:'image', src:'media/xmas-carol/xmas-carol.jpg'},
+    {type:'image', src:'media/community/community01_accvr.jpg'},
+    {type:'image', src:'media/community/community02_accvr_peeps.jpg'},
   ], {imageDuration:6000});
 })();
 
@@ -2778,8 +2779,6 @@ function buildMediaCycler(slideEl, items, opts){
   const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Unreal NYC & HalcyonVR'));
   if (!slide) return;
   buildMediaCycler(slide, [
-    {type:'image', src:'media/community/community01_accvr.jpg'},
-    {type:'image', src:'media/community/community02_accvr_peeps.jpg'},
     {type:'image', src:'media/community/community03_unrealnyc.jpg'},
     {type:'image', src:'media/community/community04_unrealnyc_peeps.jpg'},
     {type:'image', src:'media/community/community05_halcyonvr.jpg'},
@@ -4670,7 +4669,7 @@ try { (function initVoxelMorph(){
   const selfLabel = document.createElement('div');
   selfLabel.id = 'self-actualized-label';
   selfLabel.textContent = 'SELF-ACTUALIZED';
-  selfLabel.style.cssText = 'position:absolute;left:50%;top:38%;transform:translate(-50%,-100%);font-family:"Space Grotesk",sans-serif;font-size:clamp(1.4rem,3vw,2.8rem);font-weight:700;letter-spacing:.22em;color:var(--amber);opacity:0;pointer-events:none;z-index:6;white-space:nowrap;text-shadow:0 0 40px rgba(245,158,11,.6)';
+  selfLabel.style.cssText = 'position:absolute;left:50%;top:55%;transform:translate(-50%,0);font-family:"Space Grotesk",sans-serif;font-size:clamp(1.2rem,2.2vw,2rem);font-weight:700;letter-spacing:.22em;color:var(--amber);opacity:0;pointer-events:none;z-index:6;white-space:nowrap;text-shadow:0 0 40px rgba(245,158,11,.6)';
   mapS.appendChild(selfLabel);
 
   // SFX helpers (standalone ctx so they don't stomp other audio)
@@ -4851,7 +4850,7 @@ try { (function initVoxelMorph(){
     const ringScreenY = MY*svgScale + svgOffY + (svgRect.top  - mapRect.top);
 
     // Start size matches the sprite visual size (~36 SVG px × scale), grow to 200%
-    const FINAL_PX = 680;
+    const FINAL_PX = 400;
     const startPx  = Math.round(36 * svgScale);
     canvas.style.left   = `${ringScreenX}px`;
     canvas.style.top    = `${ringScreenY}px`;

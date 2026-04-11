@@ -2614,7 +2614,6 @@ function buildMediaCycler(slideEl, items, opts){
   const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('La Pasion XR'));
   if (!slide) return;
   buildMediaCycler(slide, [
-    {type:'image', src:'media/la-pasion/la-pasion-xr.jpg'},
     {type:'image', src:'media/la-pasion/la-pasion_01.jpg'},
     {type:'image', src:'media/la-pasion/la-pasion_02.jpg'},
   ], {imageDuration:6000});

@@ -26,9 +26,9 @@ const SECTIONS = [
       { title:'The Shed @\nHudson Yards', subtitle:'My first major USA VR architecture project',
         img:'MEDIA_CYCLER',
         bullets:['Custom internal VR design apps for a $500M cultural venue','Parametric design options and solutions for Fisher Dachs','We weren\'t doing film. We weren\'t doing games.\nWe were doing stagecraft and looking for quick wins.'] },
-      { title:'Macbeth at Park Avenue Armory', subtitle:'Shakespeare\'s Scottish Play, reimagined in real-time 3D',
+      { title:'Kenneth Branagh\'s Macbeth\n@ Park Avenue Armory', subtitle:'Shakespeare\'s Scottish Play, previz\'d in 3D and VR',
         img:'MEDIA_CYCLER',
-        bullets:['PLACEHOLDER bullet 1','PLACEHOLDER bullet 2','PLACEHOLDER bullet 3'] },
+        bullets:['Transfer from Manchester, England with tight timeline','Tested & adjusted sightlines, sets, & even actor blocking','Immediately useful to experience human scale'] },
       { title:'Late Show @ Ed Sullivan Theater', subtitle:'A broadcast institution, reimagined in XR',
         img:'MEDIA_CYCLER',
         bullets:['Bravo Media saw the potential of my code for a new purpose','Saved valuable time','Just another sightline!'] },
@@ -2226,11 +2226,12 @@ function buildMediaCycler(slideEl, items, opts){
     const dx = (CW - dw) / 2, dy = (CH - dh) / 2;
     return { dx, dy, dw, dh };
   }
-  function drawPixelated(src, ps){
+  function drawPixelated(src, ps, flipH){
     const sw = src.naturalWidth || src.videoWidth || CW;
     const sh = src.naturalHeight || src.videoHeight || CH;
     const { dx, dy, dw, dh } = coverRect(sw, sh);
     ctx.clearRect(0, 0, CW, CH);
+    if (flipH) { ctx.save(); ctx.scale(-1,1); ctx.translate(-CW,0); }
     if (ps <= 1.2){
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
@@ -2243,6 +2244,7 @@ function buildMediaCycler(slideEl, items, opts){
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(off, dx, dy, dw, dh);
     }
+    if (flipH) ctx.restore();
   }
 
   // Low soft bing — long fade, barely audible
@@ -2270,17 +2272,18 @@ function buildMediaCycler(slideEl, items, opts){
     const src = sources[idx];
     ctx.clearRect(0, 0, CW, CH);
 
+    const _flip = items[idx]?.flipH || false;
     switch(phase){
       case 'entering': {
         const k = Math.min(1, el/enterDur);
         canvas.style.transform = `translateX(${((1-easeOut3(k))*50).toFixed(2)}%)`;
-        drawPixelated(src, 32);
+        drawPixelated(src, 32, _flip);
         if (k >= 1){ canvas.style.transform=''; phase='revealing'; phaseStart=now; pulseAlpha=0; }
         break;
       }
       case 'revealing': {
         const k = Math.min(1, el/revealDur);
-        drawPixelated(src, Math.pow(2, (1-k)*5));
+        drawPixelated(src, Math.pow(2, (1-k)*5), _flip);
         if (k >= 1 && pulseAlpha === 0){
           pulseAlpha = 0.5;
           phase='holding'; phaseStart=now;
@@ -2294,7 +2297,7 @@ function buildMediaCycler(slideEl, items, opts){
         break;
       }
       case 'holding': {
-        drawPixelated(src, 1);
+        drawPixelated(src, 1, _flip);
         if (pulseAlpha > 0){
           ctx.save();
           ctx.globalCompositeOperation='lighter';
@@ -2322,7 +2325,7 @@ function buildMediaCycler(slideEl, items, opts){
       case 'exiting': {
         const k = Math.min(1, el/exitDur);
         canvas.style.transform = `translateX(${(-easeIn2(k)*110).toFixed(2)}%)`;
-        drawPixelated(src, Math.pow(2, k*5));
+        drawPixelated(src, Math.pow(2, k*5), _flip);
         if (k >= 1){
           canvas.style.transform = 'translateX(50%)';
           idx = (idx+1) % sources.length;
@@ -2431,7 +2434,7 @@ function buildMediaCycler(slideEl, items, opts){
   if (!macbethSlide) return;
   buildMediaCycler(macbethSlide, [
     {type:'image', src:'media/macbeth/macbeth01_unity.png'},
-    {type:'image', src:'media/macbeth/macbeth02_photo.jpg'},
+    {type:'image', src:'media/macbeth/macbeth02_photo.jpg', flipH:true},
     {type:'video', src:'media/macbeth/macbeth03_vid.mp4'},
     {type:'image', src:'media/macbeth/macbeth04_parkavenuearmory.png'},
   ], {imageDuration:6000});
@@ -3042,6 +3045,13 @@ function buildMediaCycler(slideEl, items, opts){
   if (tagline) tagline.style.transform = 'translate(1px,-17px)';
   const span = l16.querySelector('.lesson-tags span');
   if (span) { span.style.display='inline-block'; span.style.transform='translate(0px,-14px)'; }
+})();
+// Macbeth — keep "Kenneth Branagh's Macbeth" on one line
+(function(){
+  const s = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Macbeth'));
+  if (!s) return;
+  const t = s.querySelector('.case-title');
+  if (t) t.style.whiteSpace = 'pre-line';
 })();
 
 const total=allSlides.length;let current=allSlides.findIndex(s=>s.classList.contains('active'));if(current<0)current=0;const counterEl=document.getElementById('counter');

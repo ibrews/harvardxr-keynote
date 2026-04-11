@@ -129,7 +129,7 @@ const SECTIONS = [
         img:'media/four-seasons/four-seasons-holodeck.jpg',
         bullets:['We could not have executed this project without the runway to explore what was possible.','Bake off with 9 other studios. Agile Lens finally was able to bring on a full time staff.','The wrong move is pretending you already have the answers. The right move is getting paid to figure them out.'] },
       { title:'Body of Mine', subtitle:'Full-body VR — Producers Guild Innovation Award',
-        img:'media/body-of-mine/body-of-mine.jpg',
+        img:'MEDIA_CYCLER',
         bullets:['Body, face, and eye tracking — inhabit another gender. BAFTA, SXSW, Games for Change recognition.','Try everything. Take the devices companies send you. Body of Mine happened because we said yes to experimental hardware.','Don\'t bet on tech that isn\'t there yet — but when the tech IS there, move fast.'] },
       { title:'Infinite Reality → AI Dickens', subtitle:'Paid client work becomes internal R&D becomes published research',
         img:'MEDIA_CYCLER',
@@ -2572,6 +2572,16 @@ function buildMediaCycler(slideEl, items, opts){
   buildMediaCycler(slide, [
     {type:'image', src:'media/waldorf-astoria-miami/01.jpg'},
     {type:'image', src:'media/waldorf-astoria-miami/02.jpg'},
+  ], {imageDuration:6000});
+})();
+
+// ── Body of Mine ─────────────────────────────────────────────────────────
+(function(){
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Body of Mine'));
+  if (!slide) return;
+  buildMediaCycler(slide, [
+    {type:'image', src:'media/body-of-mine/BodyOfMine01.jpg'},
+    {type:'image', src:'media/body-of-mine/BodyOfMine02.webp'},
   ], {imageDuration:6000});
 })();
 

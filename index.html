@@ -71,9 +71,9 @@ const SECTIONS = [
   {
     year: 2019, accent: 'amber',
     cases: [
-      { title:'JetBlue Terminal 5 — Designed by Rockwell Group', subtitle:'First lesson: architecture is theater at scale (2008)',
+      { title:'JetBlue Terminal 5 — Rockwell Group', subtitle:'First lesson: architecture is theater at scale (but in 2008)',
         img:'media/interdisciplinary/jetblue_terminal.jpg',
-        bullets:['PLACEHOLDER — what JetBlue T5 taught me about designing for experience, not just function','PLACEHOLDER — Rockwell Group\'s approach to blending architecture, theater, and technology','PLACEHOLDER — the takeaway: great spaces are choreographed experiences, not just functional containers'] },
+        bullets:['Rockwell Group also draws from theater and regularly hires non-standard consultants to improve design.'] },
       { title:'Connective Corridor — School of Interdisciplinary Design, Syracuse', subtitle:'Civic technology as public art, and why the ETC at Carnegie Mellon matters',
         img:'media/interdisciplinary/connectivecorridor_ribbon.jpg',
         bullets:['PLACEHOLDER — what the Connective Corridor project was and my role in it','PLACEHOLDER — how this connected to the ETC at Carnegie Mellon — the original interdisciplinary lab for entertainment and technology','PLACEHOLDER — what I took away: the best work happens at the intersections of disciplines'] },
@@ -4893,6 +4893,40 @@ document.addEventListener('keydown', e => {
   if (!editingEl) return;
   if (e.key === 'Escape') { e.preventDefault(); endTextEdit(false); }
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); endTextEdit(true); }
+  // Enter inside a bullet <li> → save current, add new bullet after, edit it
+  if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey && editingEl.tagName === 'LI') {
+    e.preventDefault();
+    endTextEdit(true);
+    const li = document.createElement('li');
+    li.textContent = '';
+    editingEl.after(li);
+    // Start editing the new bullet
+    editingEl = li;
+    li.dataset.origText = '';
+    li.setAttribute('contenteditable','true');
+    document.body.classList.add('edit-text');
+    li.focus();
+  }
+  // Backspace on empty bullet → delete it, edit the previous bullet
+  if (e.key === 'Backspace' && editingEl.tagName === 'LI' && editingEl.innerText.trim() === '') {
+    e.preventDefault();
+    const prev = editingEl.previousElementSibling;
+    const el = editingEl;
+    el.removeAttribute('contenteditable');
+    editingEl = null;
+    el.parentElement.removeChild(el);
+    if (prev) {
+      editingEl = prev;
+      prev.dataset.origText = prev.innerText;
+      prev.setAttribute('contenteditable','true');
+      document.body.classList.add('edit-text');
+      prev.focus();
+      const r = document.createRange(); r.selectNodeContents(prev); r.collapse(false);
+      const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    } else {
+      document.body.classList.remove('edit-text');
+    }
+  }
 }, true);
 // Clicking outside the edited element commits the edit
 document.addEventListener('mousedown', e => {

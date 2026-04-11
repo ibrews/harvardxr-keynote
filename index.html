@@ -3338,6 +3338,7 @@ function buildMediaCycler(slideEl, items, opts){
 })();
 
 const total=allSlides.length;let current=allSlides.findIndex(s=>s.classList.contains('active'));if(current<0)current=0;const counterEl=document.getElementById('counter');
+let mapDone=false;
 
 // ── Nav ──
 function updateHUD(){counterEl.textContent=`${String(current+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;updateTracker()}
@@ -4271,7 +4272,6 @@ const CORD_B = {
 // Constellation line pairs (connecting non-adjacent nodes for star pattern)
 const CONSTELLATION_LINES=[[0,3],[1,5],[2,7],[3,8],[4,9],[5,0],[6,1],[7,2],[8,4],[9,6]];
 
-let mapDone=false;
 function startMap(){
   if(mapDone)return;mapDone=true;
   const svg=document.getElementById('map-svg');svg.innerHTML='';

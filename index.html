@@ -49,9 +49,9 @@ const SECTIONS = [
         bullets:['Jonathan pitched the same brief to 10 different studios. He hired two: Pure Blink for visual fidelity, Agile Lens for our particular method of problem-solving.','Diverse teams don\'t win on what they ship. They win on how they think.','Architects, theater directors, lighting designers, motion capture artists, choreographers — in the same room as engineers.'] },
     ],
     lesson: { title:'The Best XR Teams Look\nNothing Like Tech Teams', tagline:'XR is too new to have native experts, so we build them from everywhere. But don\'t go to zero on traditional engineers either — our early years without dedicated devs cost us in source control, QA, and project discipline. The principle is theater-first, engineering-second. Never engineering-zero.', short:'HIRE UNLIKE TECH', tags:'Stage Presence · High Fidelity 2019 · Fisher Dachs Associates · Fisher Marantz Stone' },
-    altLesson: { badge:'Lesson 02 / 10', title:"It's ok to pivot!\nJust don't forget your calling.", tagline:"Architects don't have any money, and no matter how much they might want to use your tools, some of them can't afford the risk.<br><br>So we pivoted from Unity and design focus to archviz and marketing focus.<br><br>But with some R&D to keep it fresh, it led to attracting valuable eyes, led to a relationship with Epic Games, and then...", short:'PIVOT', tags:'ArchViz · R&D · Speaking Engagements · Press' },
+    altLesson: { badge:'Lesson 02 / 10', title:"It's ok to pivot!\nDon't forget your calling.", tagline:"Architects don't have any money. Some will be game to collaborate, but most can't afford the risk.<br><br>We pivoted from Unity + design focus to UE + archviz focus.<br><br>With R&D to keep it fresh, it led to attracting valuable eyes, led to a relationship with Epic Games, and then...", short:'PIVOT', tags:'ArchViz · R&D · Speaking Engagements · Press' },
     altCases: [
-      { title:'Pivot to ArchViz & R&D', subtitle:'New tools, new clients, new doors',
+      { title:'ArchViz & R&D', subtitle:'One thing leads to another',
         img:'MEDIA_CYCLER',
         bullets:['Trying Archviz with Unreal Engine','R&D with Tilt Brush','Leads to Autodesk University','Leads to Epic Games relationship'] },
     ],
@@ -240,6 +240,8 @@ canvas#stars{position:absolute;inset:0}
 .sg-thumb{flex:0 0 auto;min-width:64px;height:46px;border:1px solid rgba(255,255,255,.12);border-radius:6px;background:rgba(255,255,255,.03);padding:5px 8px;cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;font-family:var(--font);transition:all .15s;position:relative}
 .sg-thumb:hover{background:rgba(0,212,255,.12);border-color:rgba(0,212,255,.4);transform:translateY(-2px)}
 .sg-thumb.active{background:rgba(0,212,255,.18);border-color:var(--teal);box-shadow:0 0 12px rgba(0,212,255,.3)}
+.sg-thumb.slide-hidden{opacity:.3;border-style:dashed}
+.sg-thumb.slide-hidden .sg-num{text-decoration:line-through}
 .sg-num{font-size:.62rem;font-weight:600;color:rgba(255,255,255,.55);letter-spacing:.05em}
 .sg-thumb.active .sg-num{color:var(--teal)}
 .sg-label{font-size:.52rem;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
@@ -1894,13 +1896,14 @@ allSlides.push(introLens);
         }
         // Stop ticks just before fade so last sound finishes before opacity drops
         if (cur <= 1975) ticksActive = false;
-        // Fade zone: 1970 → 1950 — color white→teal, opacity 1→0, scale 1→0.85
+        // Color fade: white (255,255,255) → teal (0,212,255) across 2026 → 2010
+        const colorT = Math.min(1, Math.max(0, (2026 - cur) / 16));
+        const cr = Math.round(255 * (1 - colorT));
+        const cg = Math.round(255 - 43 * colorT);
+        yrEl.setAttribute('fill', `rgb(${cr},${cg},255)`);
+        // Opacity/scale fade: 1970 → 1950
         if (cur <= 1970) {
           const t = Math.min(1, (1970 - cur) / 20);
-          // White (255,255,255) → Teal (0,212,255)
-          const r = Math.round(255 * (1 - t));
-          const g = Math.round(255 - 43 * t);
-          yrEl.setAttribute('fill', `rgb(${r},${g},255)`);
           yrEl.style.opacity = (1 - t).toFixed(3);
           yrEl.style.transform = `scale(${(1 - 0.15 * t).toFixed(3)})`;
         }
@@ -2259,9 +2262,10 @@ function buildMediaCycler(slideEl, items, opts){
 
 // ── Pivot to ArchViz & R&D ────────────────────────────────────────────────
 (function(){
-  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Pivot to ArchViz'));
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('ArchViz & R&D'));
   if (!slide) return;
   buildMediaCycler(slide, [
+    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Statue%20of%20Liberty%20Museum/00_StatueOfLiberty.jpg'},
     {type:'video', src:'media/pivot/pivot01_academy65.mp4'},
     {type:'video', src:'media/pivot/pivot02_avenueMain360.mp4'},
     {type:'video', src:'media/pivot/pivot03_tiltbrush.mp4'},
@@ -2895,8 +2899,14 @@ function goTo(n){
   if(history.replaceState) history.replaceState(null, '', '#' + (current + 1));
   setTimeout(()=>{animating=false},520);
 }
-document.getElementById('btn-prev').addEventListener('click',()=>goTo(current-1));
-document.getElementById('btn-next').addEventListener('click',()=>goTo(current+1));
+// ── Skip hidden slides during navigation ──
+function nextVisible(from,dir){
+  let n=from+dir;
+  while(n>=0&&n<total){if(!allSlides[n].dataset.hidden)return n;n+=dir;}
+  return -1;
+}
+document.getElementById('btn-prev').addEventListener('click',()=>{const n=nextVisible(current,-1);if(n>=0)goTo(n);});
+document.getElementById('btn-next').addEventListener('click',()=>{const n=nextVisible(current,1);if(n>=0)goTo(n);});
 document.addEventListener('keydown',e=>{
   // Don't intercept keys when typing in inputs, annotation textarea, or contenteditable edit-text
   if(['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)||document.activeElement?.isContentEditable)return;
@@ -2906,10 +2916,10 @@ document.addEventListener('keydown',e=>{
   if(e.shiftKey && e.key==='ArrowDown') { e.preventDefault(); window._activeCycler?.setManual(); return; }
   if(e.shiftKey && e.key==='ArrowUp')   { e.preventDefault(); window._activeCycler?.setAuto(); return; }
   // Forward: arrows, space, PageDown, N (most clickers send PageDown)
-  // Try to advance a sub-step first; if none remain, go to next slide.
-  if(['ArrowRight','ArrowDown',' ','PageDown','n','N'].includes(e.key)){e.preventDefault();if(!advanceStep())goTo(current+1)}
+  // Try to advance a sub-step first; if none remain, go to next visible slide.
+  if(['ArrowRight','ArrowDown',' ','PageDown','n','N'].includes(e.key)){e.preventDefault();if(!advanceStep()){const n=nextVisible(current,1);if(n>=0)goTo(n);}}
   // Backward: arrows, PageUp, P
-  if(['ArrowLeft','ArrowUp','PageUp','p','P'].includes(e.key)){e.preventDefault();goTo(current-1)}
+  if(['ArrowLeft','ArrowUp','PageUp','p','P'].includes(e.key)){e.preventDefault();const n=nextVisible(current,-1);if(n>=0)goTo(n);}
   if(e.key==='Home'){e.preventDefault();goTo(0)}
   if(e.key==='End'){e.preventDefault();goTo(total-1)}
   // H = toggle presentation mode (hide all UI chrome for projector display)
@@ -2925,6 +2935,15 @@ function goToFromHash() {
 }
 window.addEventListener('hashchange', goToFromHash);
 
+// ── Park slides at end (user: "I need to decide how to sort them") ──
+(function(){
+  const PARK=[8,9,11,15,16]; // 0-indexed: slides 09,10,12,16,17
+  const parked=PARK.map(i=>allSlides[i]);
+  [...PARK].sort((a,b)=>b-a).forEach(i=>allSlides.splice(i,1));
+  parked.forEach(s=>{s.dataset.parked='1';allSlides.push(s);});
+  allSlides.forEach(s=>deck.appendChild(s)); // moves existing DOM nodes to new order
+})();
+
 // ── Slide jump grid ──
 const sgEl=document.getElementById('slide-grid');
 const sgZone=document.getElementById('slide-grid-zone');
@@ -2932,6 +2951,7 @@ allSlides.forEach((s,i)=>{
   const t=document.createElement('div');
   const type=s.dataset.type;
   t.className='sg-thumb sg-'+type;
+  if(s.dataset.hidden) t.classList.add('slide-hidden');
   t.dataset.idx=i;
   let label='';
   if(type==='cover')label='Cover';
@@ -2941,7 +2961,16 @@ allSlides.forEach((s,i)=>{
   else if(type==='map')label='Map';
   else if(type==='close')label='Thank You';
   t.innerHTML=`<div class="sg-num">${String(i+1).padStart(2,'0')}</div><div class="sg-label">${label}</div>`;
-  t.addEventListener('click',()=>goTo(i));
+  t.addEventListener('click',e=>{
+    if(e.ctrlKey||e.metaKey){
+      e.preventDefault();
+      const hidden=!!s.dataset.hidden;
+      if(hidden){delete s.dataset.hidden;}else{s.dataset.hidden='1';}
+      t.classList.toggle('slide-hidden',!hidden);
+      return;
+    }
+    goTo(i);
+  });
   sgEl.appendChild(t);
 });
 
@@ -3036,6 +3065,7 @@ function rebuildGrid(){
     const t = document.createElement('div');
     const type = s.dataset.type;
     t.className = 'sg-thumb sg-' + type;
+    if(s.dataset.hidden) t.classList.add('slide-hidden');
     t.dataset.idx = i;
     t.setAttribute('draggable', 'true');
     let label = '';
@@ -3050,7 +3080,16 @@ function rebuildGrid(){
     else if(type==='close') label='Thank You';
     else label = type || '?';
     t.innerHTML = `<div class="sg-num">${String(i+1).padStart(2,'0')}</div><div class="sg-label">${label}</div>`;
-    t.addEventListener('click', () => goTo(i));
+    t.addEventListener('click', e => {
+      if(e.ctrlKey||e.metaKey){
+        e.preventDefault();
+        const hidden=!!s.dataset.hidden;
+        if(hidden){delete s.dataset.hidden;}else{s.dataset.hidden='1';}
+        t.classList.toggle('slide-hidden',!hidden);
+        return;
+      }
+      goTo(i);
+    });
     sgEl.appendChild(t);
   });
   // Re-highlight active

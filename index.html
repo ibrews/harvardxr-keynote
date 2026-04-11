@@ -2370,18 +2370,22 @@ deck.appendChild(cls);allSlides.push(cls);
     // Arms up
     const ad2 = tmpAv.querySelector('.av-arms-down'); if(ad2) ad2.style.display='none';
     const au2 = tmpAv.querySelector('.av-arms-up'); if(au2) au2.style.display='block';
-    // Exclude hidden arms-down rects; give each rect a tiny z-offset by paint
-    // order so face details (drawn later) sit in front of the head block.
+    // Exclude hidden arms-down rects.
     const allRects = [...tmpSvg.querySelectorAll('rect')].filter(r => !ad2?.contains(r));
-    allRects.forEach((r, idx) => {
+    allRects.forEach((r) => {
       const x=parseFloat(r.getAttribute('x')), y=parseFloat(r.getAttribute('y'));
       const w=parseFloat(r.getAttribute('width')), h=parseFloat(r.getAttribute('height'));
       const fill = r.getAttribute('fill') || '#888';
       const c = new THREE.Color(fill);
+      const cx = x + w/2, cy = -(y + h/2);
+      const area = w * h;
+      // Face/beard details are small rects in the face region. Push them
+      // forward past the head box's front face (~8.8 units) so they're visible.
+      const isFaceDetail = area < 35 && Math.abs(cx) <= 13 && cy >= 8 && cy <= 34;
       const geo = new THREE.BoxGeometry(w, h, Math.min(w,h)*0.8);
       const mat = new THREE.MeshStandardMaterial({ color:c, roughness:0.7 });
       const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(x+w/2, -(y+h/2), idx * 0.15);
+      mesh.position.set(cx, cy, isFaceDetail ? 13 : 0);
       voxGroup.add(mesh);
     });
     document.body.removeChild(tmpSvg);
@@ -2718,7 +2722,7 @@ function buildMediaCycler(slideEl, items, opts){
     {type:'image', src:'media/ghosted/Ghosted01.jpg'},
     {type:'image', src:'media/ghosted/Ghosted02.jpg'},
     {type:'image', src:'media/ghosted/Ghosted03.jpg'},
-    {type:'image', src:'media/ghosted/Ghosted04.gif'},
+    {type:'video', src:'media/ghosted/Ghosted04.mp4', loop:true},
     {type:'image', src:'media/ghosted/ghosted05.png'},
     {type:'image', src:'media/ghosted/Ghosted06.png'},
     {type:'image', src:'media/ghosted/Ghosted07.jpg'},
@@ -2838,9 +2842,9 @@ function buildMediaCycler(slideEl, items, opts){
   if (!slide) return;
   buildMediaCycler(slide, [
     {type:'image', src:'media/onboardxr/onboard.jpg'},
-    {type:'image', src:'media/onboardxr/OnBoard_Island.gif'},
-    {type:'image', src:'media/onboardxr/OnBoard_Jettison.gif'},
-    {type:'image', src:'media/onboardxr/OnBoard_JettisonScreen.gif'},
+    {type:'video', src:'media/onboardxr/OnBoard_Island.mp4', loop:true},
+    {type:'video', src:'media/onboardxr/OnBoard_Jettison.mp4', loop:true},
+    {type:'video', src:'media/onboardxr/OnBoard_JettisonScreen.mp4', loop:true},
   ], {imageDuration:6000});
 })();
 
@@ -3450,8 +3454,8 @@ function buildMediaCycler(slideEl, items, opts){
   if (span) { span.style.display='inline-block'; span.style.transform='translate(0px,-14px)'; }
 })();
 // Macbeth — keep "Kenneth Branagh's Macbeth" on one line, "@ Park Avenue Armory" on second
-// The Shed, Macbeth, Late Show — respect \n after @
-['The Shed @','Macbeth','The Late Show @'].forEach(keyword => {
+// Titles with \n line breaks — apply pre-line so they render correctly
+['The Shed @','Macbeth','The Late Show @','Equus — Syracuse'].forEach(keyword => {
   const s = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes(keyword));
   if (!s) return;
   const t = s.querySelector('.case-title');

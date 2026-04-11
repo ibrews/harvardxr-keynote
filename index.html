@@ -32,26 +32,17 @@ const SECTIONS = [
       { title:'The Late Show @\nEd Sullivan Theater', subtitle:'"The Church of Stephen Colbert" without damaging an historic dome.',
         img:'MEDIA_CYCLER',
         bullets:['Bravo Media saw the potential of my code for a new purpose','Saved valuable time','Just another sightline !'] },
-      { title:'Four Seasons Lake Austin — The Spike Tape Story', subtitle:'A 5¢ solution to a $5,000 problem',
-        img:'media/four-seasons/four-seasons-holodeck.jpg',
-        bullets:['Mid-experience, guests sit in a physical chair that also exists in VR. Jonathan asked: "If only there was a way to make sure the chair was placed in exactly the right spot every time…"','Kevin Laibson: "Jonathan, I can\'t wait for you to meet our thousand-year-old invention — spike tape."','"It\'s not a VR experience that is similar to theater. It\'s a theater experience that has VR in it." — Kevin'] },
     ],
     lesson: { title:'VR Is Theater.\nNot Film. Not Games.', tagline:'Film hands you cuts, wide shots, and montage to control where the audience looks. Games demand controller literacy and active participation. Theater is spatial, live, and trusts an audience to look anywhere they want — exactly like VR.<br><br>Stop borrowing from cinema. Start borrowing from stagecraft.', short:'VR IS THEATER', tags:'THE SHED · MACBETH · THE LATE SHOW' },
   },
   {
     year: 2017, accent: 'purple',
     cases: [
-      { title:'Four Seasons — The 10-Studio Bake-Off', subtitle:'Pure Blink won on visuals. Agile Lens won on methodology.',
-        img:'media/four-seasons/four-seasons-holodeck.jpg',
-        bullets:['Jonathan pitched the same brief to 10 different studios. He hired two: Pure Blink for visual fidelity, Agile Lens for our particular method of problem-solving.','Diverse teams don\'t win on what they ship. They win on how they think.','Architects, theater directors, lighting designers, motion capture artists, choreographers — in the same room as engineers.'] },
-    ],
-    lesson: { title:'The Best XR Teams Look\nNothing Like Tech Teams', tagline:'XR is too new to have native experts, so we build them from everywhere. But don\'t go to zero on traditional engineers either — our early years without dedicated devs cost us in source control, QA, and project discipline. The principle is theater-first, engineering-second. Never engineering-zero.', short:'HIRE UNLIKE TECH', tags:'Stage Presence · High Fidelity 2019 · Fisher Dachs Associates · Fisher Marantz Stone' },
-    altLesson: { badge:'Lesson 02 / 10', title:"It's OK to Pivot!\nDon't Forget Your Calling.", tagline:"Architects don't have any money. Some will be game to collaborate, but most can't afford the risk.<br><br>We pivoted from Unity + design focus to UE + archviz focus.<br><br>With R&D to keep it fresh, it led to attracting valuable eyes, led to a relationship with Epic Games, and then...", short:"It's OK to Pivot", tags:'ArchViz · R&D · Speaking Engagements · Press' },
-    altCases: [
       { title:'ArchViz & R&D', subtitle:'One thing leads to another',
         img:'MEDIA_CYCLER',
         bullets:['Trying Archviz with Unreal Engine','R&D with Tilt Brush','Leads to Autodesk University','Leads to Epic Games relationship'] },
     ],
+    lesson: { title:"It's OK to Pivot!\nDon't Forget Your Calling.", tagline:"Architects don't have any money. Some will be game to collaborate, but most can't afford the risk.<br><br>We pivoted from Unity + design focus to UE + archviz focus.<br><br>With R&D to keep it fresh, it led to attracting valuable eyes, led to a relationship with Epic Games, and then...", short:"It's OK to Pivot", tags:'ArchViz · R&D · Speaking Engagements · Press' },
   },
   {
     year: 2018, accent: 'teal',
@@ -2328,6 +2319,124 @@ cls.innerHTML=`<img src="monocle-white.png" class="close-monocle-bg" alt=""><div
 </div>`;
 deck.appendChild(cls);allSlides.push(cls);
 
+// ── Close slide: Pixel Alex (left) + Voxel Alex (right) with particle bursts ──
+(function(){
+  // Pixel Alex — SVG avatar with arms up, positioned bottom-left
+  const pixelSvg = document.createElement('div');
+  pixelSvg.style.cssText = 'position:absolute;bottom:clamp(120px,18vh,220px);left:clamp(60px,8vw,160px);z-index:2';
+  pixelSvg.innerHTML = '<svg viewBox="-22 -46 44 76" style="width:140px;height:auto;overflow:visible"></svg>';
+  cls.appendChild(pixelSvg);
+  const pSvg = pixelSvg.querySelector('svg');
+  const pAvatar = buildAvatar(pSvg, { withBeard:true });
+  // Lock arms up
+  const armsDown = pAvatar.querySelector('.av-arms-down');
+  const armsUp = pAvatar.querySelector('.av-arms-up');
+  if(armsDown) armsDown.style.display='none';
+  if(armsUp) armsUp.style.display='block';
+
+  // Voxel Alex — Three.js canvas, positioned bottom-right
+  const voxelDiv = document.createElement('div');
+  voxelDiv.style.cssText = 'position:absolute;bottom:clamp(120px,18vh,220px);right:clamp(60px,8vw,160px);z-index:2;width:140px;height:200px';
+  cls.appendChild(voxelDiv);
+  const voxCanvas = document.createElement('canvas');
+  voxCanvas.width = 256; voxCanvas.height = 360;
+  voxCanvas.style.cssText = 'width:100%;height:100%;display:block';
+  voxelDiv.appendChild(voxCanvas);
+
+  let voxRunning = false, voxGroup = null, voxRenderer = null, voxScene = null, voxCamera = null;
+
+  async function initCloseVoxel(){
+    if(voxRunning) return;
+    let THREE;
+    try { THREE = await import('three'); } catch(e) { return; }
+    voxScene = new THREE.Scene();
+    voxCamera = new THREE.PerspectiveCamera(28, 256/360, 1, 500);
+    voxCamera.position.set(0, 10, 120);
+    voxCamera.lookAt(0, 5, 0);
+    voxRenderer = new THREE.WebGLRenderer({ canvas:voxCanvas, alpha:true, antialias:true });
+    voxRenderer.setSize(256, 360);
+    voxRenderer.setClearColor(0x000000, 0);
+    // Lights
+    const amb = new THREE.AmbientLight(0x8888aa, 0.6);
+    const dir = new THREE.DirectionalLight(0xffffff, 1.2);
+    dir.position.set(3, 8, 5);
+    voxScene.add(amb, dir);
+    // Build voxel body from pixel avatar
+    voxGroup = new THREE.Group();
+    const tmpSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    tmpSvg.setAttribute('viewBox','-22 -46 44 76');
+    document.body.appendChild(tmpSvg);
+    const tmpAv = buildAvatar(tmpSvg, { withBeard:true });
+    // Arms up
+    const ad2 = tmpAv.querySelector('.av-arms-down'); if(ad2) ad2.style.display='none';
+    const au2 = tmpAv.querySelector('.av-arms-up'); if(au2) au2.style.display='block';
+    const rects = tmpSvg.querySelectorAll('rect');
+    rects.forEach(r => {
+      const x=parseFloat(r.getAttribute('x')), y=parseFloat(r.getAttribute('y'));
+      const w=parseFloat(r.getAttribute('width')), h=parseFloat(r.getAttribute('height'));
+      const fill = r.getAttribute('fill') || '#888';
+      const c = new THREE.Color(fill);
+      const geo = new THREE.BoxGeometry(w, h, Math.min(w,h)*0.8);
+      const mat = new THREE.MeshStandardMaterial({ color:c, roughness:0.7 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(x+w/2, -(y+h/2), 0);
+      voxGroup.add(mesh);
+    });
+    document.body.removeChild(tmpSvg);
+    voxScene.add(voxGroup);
+    voxRunning = true;
+    function animate(){
+      if(!voxRunning) return;
+      voxGroup.rotation.y = Math.sin(performance.now()*0.0006)*0.3;
+      voxRenderer.render(voxScene, voxCamera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+  }
+
+  // Particle burst system — random bursts from hands every few seconds
+  const BURST_COLORS = ['#fde68a','#a78bfa','#00d4ff','#f43f5e','#fff','#f59e0b'];
+  function spawnBurst(container, x, y) {
+    for(let i=0;i<8;i++){
+      const p = document.createElement('div');
+      const angle = Math.random()*Math.PI*2;
+      const dist = 30+Math.random()*50;
+      const tx = Math.cos(angle)*dist, ty = Math.sin(angle)*dist - 20;
+      p.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:${3+Math.random()*4}px;height:${3+Math.random()*4}px;border-radius:50%;background:${BURST_COLORS[i%BURST_COLORS.length]};opacity:1;pointer-events:none;z-index:3;transition:all .8s ease-out`;
+      container.appendChild(p);
+      requestAnimationFrame(()=>{
+        p.style.transform=`translate(${tx}px,${ty}px)`;
+        p.style.opacity='0';
+      });
+      setTimeout(()=>p.remove(),900);
+    }
+  }
+
+  let burstInterval = null;
+  function startBursts(){
+    if(burstInterval) return;
+    function doBurst(){
+      // Pixel Alex hands (arms up) — relative to pixelSvg position
+      const pr = pixelSvg.getBoundingClientRect();
+      const cr = cls.getBoundingClientRect();
+      spawnBurst(cls, pr.left-cr.left+20, pr.top-cr.top+30);
+      spawnBurst(cls, pr.left-cr.left+120, pr.top-cr.top+30);
+      // Voxel Alex hands
+      const vr = voxelDiv.getBoundingClientRect();
+      spawnBurst(cls, vr.left-cr.left+20, vr.top-cr.top+30);
+      spawnBurst(cls, vr.left-cr.left+120, vr.top-cr.top+30);
+    }
+    doBurst();
+    burstInterval = setInterval(doBurst, 3000+Math.random()*2000);
+  }
+  function stopBursts(){ if(burstInterval){clearInterval(burstInterval);burstInterval=null;} }
+
+  // Hook into goTo
+  const origType = cls.dataset.type; // 'close'
+  window._closeStart = function(){ initCloseVoxel(); setTimeout(startBursts, 800); };
+  window._closeStop = function(){ stopBursts(); if(voxRunning){voxRunning=false; if(voxRenderer)voxRenderer.dispose();} };
+})();
+
 // ── Reusable cycling media player ─────────────────────────────────────────
 // buildMediaCycler(slideEl, items, opts)
 //   items: [{type:'image'|'video', src:'...'}]
@@ -3496,6 +3605,8 @@ function goTo(n){
   }
   if (slideYear < 2020 && t !== 'intermission') _evoPlayed = false;
   if(t==='recap') { if(window._recapReset) window._recapReset(); setTimeout(()=>{ if(window._recapInit) window._recapInit(); },400); }
+  if(t==='close') setTimeout(()=>{ if(window._closeStart) window._closeStart(); },400);
+  if(t!=='close' && window._closeStop) window._closeStop();
   if(t==='map') setTimeout(startMap, 400);
   // Quote rain — stop when leaving Community slide
   { const isComm = nx.querySelector?.('.case-title')?.textContent.includes('Unreal NYC & HalcyonVR');
@@ -3547,14 +3658,7 @@ function goToFromHash() {
 }
 window.addEventListener('hashchange', goToFromHash);
 
-// ── Park slides at end (user: "I need to decide how to sort them") ──
-(function(){
-  const PARK=[9,10,11]; // 0-indexed: Four Seasons Spike Tape (2016), 2017 Lesson (Best XR Teams), Four Seasons 10-Studio (2017)
-  const parked=PARK.map(i=>allSlides[i]);
-  [...PARK].sort((a,b)=>b-a).forEach(i=>allSlides.splice(i,1));
-  parked.forEach(s=>{s.dataset.parked='1';allSlides.push(s);});
-  allSlides.forEach(s=>deck.appendChild(s)); // moves existing DOM nodes to new order
-})();
+
 
 // ── Slide jump grid ──
 const sgEl=document.getElementById('slide-grid');

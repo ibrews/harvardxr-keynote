@@ -42,14 +42,14 @@ const SECTIONS = [
     year: 2017, accent: 'purple',
     cases: [
       { title:'High Fidelity Live VR — The Improv Test', subtitle:'When the avatar arm breaks, what does an actor do?',
-        img:'',
+        img:'MEDIA_CYCLER',
         bullets:['2019: Philip Rosedale asks Alex to assemble a NYC live-VR super-team. Alex\'s instinct: "I don\'t want CS graduates. I want theater people."','Improv-trained actors yes-and a broken avatar arm into the scene like it was intentional. Shakespeare-trained actors freeze and ask "can we fix my arm?"','In a live VR show there is no "check the gate, let\'s shoot another take." Live is live. Theater people get this in their bones.'] },
       { title:'Four Seasons — The 10-Studio Bake-Off', subtitle:'Pure Blink won on visuals. Agile Lens won on methodology.',
         img:'https://website-ivory-omega-78.vercel.app/portfolio/four-seasons-holodeck.jpg',
         bullets:['Jonathan pitched the same brief to 10 different studios. He hired two: Pure Blink for visual fidelity, Agile Lens for our particular method of problem-solving.','Diverse teams don\'t win on what they ship. They win on how they think.','Architects, theater directors, lighting designers, motion capture artists, choreographers — in the same room as engineers.'] },
     ],
     lesson: { title:'The Best XR Teams Look\nNothing Like Tech Teams', tagline:'XR is too new to have native experts, so we build them from everywhere. But don\'t go to zero on traditional engineers either — our early years without dedicated devs cost us in source control, QA, and project discipline. The principle is theater-first, engineering-second. Never engineering-zero.', short:'HIRE UNLIKE TECH', tags:'Stage Presence · High Fidelity 2019 · Fisher Dachs Associates · Fisher Marantz Stone' },
-    altLesson: { badge:'Lesson 02 / 10', title:"It's ok to pivot!\nDon't forget your calling.", tagline:"Architects don't have any money. Some will be game to collaborate, but most can't afford the risk.<br><br>We pivoted from Unity + design focus to UE + archviz focus.<br><br>With R&D to keep it fresh, it led to attracting valuable eyes, led to a relationship with Epic Games, and then...", short:'PIVOT', tags:'ArchViz · R&D · Speaking Engagements · Press' },
+    altLesson: { badge:'Lesson 02 / 10', title:"It's ok to pivot!\nDon't forget your calling.", tagline:"Architects don't have any money. Some will be game to collaborate, but most can't afford the risk.<br><br>We pivoted from Unity + design focus to UE + archviz focus.<br><br>With R&D to keep it fresh, it led to attracting valuable eyes, led to a relationship with Epic Games, and then...", short:"It's ok to pivot", tags:'ArchViz · R&D · Speaking Engagements · Press' },
     altCases: [
       { title:'ArchViz & R&D', subtitle:'One thing leads to another',
         img:'MEDIA_CYCLER',
@@ -211,6 +211,7 @@ canvas#stars{position:absolute;inset:0}
 .ey-yr{color:rgba(255,255,255,.4)}.ey-sep{color:rgba(255,255,255,.15)}.ey-badge{color:var(--teal)}
 .lesson-title{font-size:clamp(2.4rem,5.8vw,6.2rem);font-weight:700;letter-spacing:-.025em;line-height:1.06;max-width:1300px;margin-bottom:32px;white-space:pre-line}
 .lesson-tagline{font-size:clamp(1rem,1.7vw,1.6rem);color:var(--dim);max-width:880px;line-height:1.7}
+.lesson-tagline br+br{display:none}
 .lesson-rule{width:64px;height:4px;border-radius:2px;background:var(--teal);margin:32px auto 0;opacity:.7}
 .lesson-tags{margin-top:18px;font-size:clamp(.6rem,.9vw,.85rem);font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.18)}
 .accent-purple .ey-badge{color:var(--purple)}.accent-purple .lesson-rule{background:var(--purple)}
@@ -2224,6 +2225,17 @@ function buildMediaCycler(slideEl, items, opts){
   }).observe(slideEl, {attributes:true, attributeFilter:['class']});
   if (slideEl.classList.contains('active')) { window._activeCycler = cyclerAPI; start(); }
 }
+
+// ── High Fidelity Live VR — Alive in Plasticland ──────────────────────────
+(function(){
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('High Fidelity Live VR'));
+  if (!slide) return;
+  buildMediaCycler(slide, [
+    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Alive%20in%20Plasticland/AIP_01.jpg'},
+    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Alive%20in%20Plasticland/AIP_02.jpg'},
+    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Alive%20in%20Plasticland/AIP_03.jpg'},
+  ], {imageDuration:6000});
+})();
 
 // ── The Shed @ Hudson Yards ────────────────────────────────────────────────
 (function(){

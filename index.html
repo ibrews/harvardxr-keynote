@@ -439,21 +439,21 @@ body.presentation-mode #anno-prompt {
   60%  { opacity:1; transform:translate(calc(var(--tx)*.7),calc(var(--ty)*.7)) scale(1) }
   100% { opacity:0; transform:translate(var(--tx),var(--ty)) scale(.2) }
 }
-/* UE5 power-up variants — same as intro but from x=240 position */
+/* UE5 power-up — from x=0 (left side, under UE5 block), grows to 2x */
 @keyframes ue5JumpUp {
-  0%   { transform: translate(240px, 0)    scale(1,1); }
-  30%  { transform: translate(240px, -20px) scale(.95, 1.05); }
-  100% { transform: translate(240px, -95px) scale(1,1); }
+  0%   { transform: translate(0, 0)    scale(1.5); }
+  30%  { transform: translate(0, -20px) scale(1.4, 1.6); }
+  100% { transform: translate(0, -95px) scale(1.5); }
 }
 @keyframes ue5PowerUp {
-  0%   { transform: translate(240px, -95px) scale(1);    filter: brightness(1); }
-  30%  { transform: translate(240px, -95px) scale(1.2);  filter: brightness(1.7); }
-  55%  { transform: translate(240px, -95px) scale(.95);  filter: brightness(1.3); }
-  100% { transform: translate(240px, -95px) scale(1.5);  filter: brightness(1); }
+  0%   { transform: translate(0, -95px) scale(1.5);  filter: brightness(1); }
+  30%  { transform: translate(0, -95px) scale(1.8);  filter: brightness(1.7); }
+  55%  { transform: translate(0, -95px) scale(1.4);  filter: brightness(1.3); }
+  100% { transform: translate(0, -95px) scale(2);    filter: brightness(1); }
 }
 @keyframes ue5FallDown {
-  0%   { transform: translate(240px, -95px) scale(1.5); }
-  100% { transform: translate(240px, 0)     scale(1.5); }
+  0%   { transform: translate(0, -95px) scale(2); }
+  100% { transform: translate(0, 0)     scale(2); }
 }
 /* Firework particle — radial fly-out with ease, scale up briefly then fade */
 @keyframes fwParticle {
@@ -863,7 +863,7 @@ introAlex.innerHTML = `
     <div class="intro-content">
       <div class="intro-eyebrow" id="intro-eyebrow" style="opacity:0;transition:opacity .6s">Your Speaker</div>
       <h1 class="intro-title" id="intro-title" style="opacity:0;transition:opacity .6s">Alex<br>Coulombe</h1>
-      <p class="intro-sub" id="intro-sub" style="opacity:0;transition:opacity .6s">CEO of Agile Lens. Architect turned XR-chitect who has spent the last decade building spatial experiences for the world's most ambitious clients. Gold authorized UE5 instructor. Host of Unreal NYC &amp; The Unofficial Unreal Engine podcast.</p>
+      <p class="intro-sub" id="intro-sub" style="opacity:0;transition:opacity .6s">CEO of Agile Lens. Architect turned XR-chitect who has spent the last decade building spatial experiences for the world's most ambitious clients.<br><br>Gold authorized UE5 instructor. Host of Unreal NYC &amp; The Unofficial Unreal Engine podcast.</p>
       <div class="intro-stats" id="intro-stats-row" style="opacity:0;transition:opacity .6s">
         <div class="intro-stat"><span class="num">16</span><span class="lbl">Years in XR</span></div>
         <div class="intro-stat"><span class="num">10</span><span class="lbl">Years at Agile Lens</span></div>
@@ -1024,43 +1024,56 @@ function paintWornHeadset(parentBody) {
   parentBody.appendChild(hs);
 }
 
-// ── UE5 power-up: second block with Gold Authorized logo ──
-// Added to the intro-alex SVG after the VR power-up completes.
+// ── UE5 power-up: Gold Authorized logo block ──
 function buildUE5Block(svg) {
-  // UE5 block at right side of stage (x=320, y=200)
-  const blockPos = svgE('g', { id:'intro-ue5-pos', transform:'translate(320, 200)', opacity:'0' });
+  // UE5 block at LEFT side of stage (x=80, y=200) so sprite walks left to grab it
+  const blockPos = svgE('g', { id:'intro-ue5-pos', transform:'translate(80, 200)', opacity:'0' });
   const blockG = svgE('g', { id:'intro-ue5-anim' });
   blockPos.appendChild(blockG);
-  // Gold block
-  blockG.appendChild(svgE('rect', { x:-22, y:-22, width:44, height:44, fill:'#d4a017', stroke:'#b8860b', 'stroke-width':'2', rx:'3' }));
-  blockG.appendChild(svgE('rect', { x:-18, y:-18, width:36, height:36, fill:'none', stroke:'#ffd700', 'stroke-width':'1', rx:'1' }));
-  // "U" letter for Unreal (pixel-art style)
-  blockG.appendChild(svgE('rect', { x:-8, y:-10, width:3, height:16, fill:'#1a1a26' })); // left stroke
-  blockG.appendChild(svgE('rect', { x:5, y:-10, width:3, height:16, fill:'#1a1a26' }));  // right stroke
-  blockG.appendChild(svgE('rect', { x:-5, y:4, width:13, height:3, fill:'#1a1a26' }));   // bottom
+  // Use the actual GoldAuthorized.png — 44×44 in viewBox coords
+  blockG.appendChild(svgE('image', {
+    href:'GoldAuthorized.png', x:-22, y:-22, width:44, height:44,
+  }));
   blockG.style.transformOrigin = 'center';
   blockG.style.animation = 'introHeadsetBob 1.6s ease-in-out infinite';
   svg.appendChild(blockPos);
 }
 
-// Fireball projectile animation — small UE5 logo flies across the stage
+// Fireball — spinning GoldAuthorized logo projectile with zap SFX
+let _fbAudioCtx = null;
+function playZapSfx() {
+  try {
+    if (!_fbAudioCtx) _fbAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = _fbAudioCtx; if (ctx.state === 'suspended') ctx.resume();
+    const now = ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(600, now);
+    o.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+    o.connect(g); g.connect(ctx.destination);
+    g.gain.setValueAtTime(0.06, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    o.start(now); o.stop(now + 0.15);
+  } catch(e) {}
+}
+
 function shootFireball(svg, startX, startY, dir) {
   const fb = svgE('g', { transform:`translate(${startX},${startY})` });
-  // Tiny gold square
-  fb.appendChild(svgE('rect', { x:-5, y:-5, width:10, height:10, fill:'#d4a017', rx:'2' }));
-  fb.appendChild(svgE('text', { x:0, y:2, 'text-anchor':'middle', fill:'#1a1a26', 'font-size':'8', 'font-weight':'bold', 'font-family':'sans-serif' })).textContent = 'U';
+  // Spinning GoldAuthorized logo
+  const img = svgE('image', { href:'GoldAuthorized.png', x:-8, y:-8, width:16, height:16 });
+  fb.appendChild(img);
   svg.appendChild(fb);
+  playZapSfx();
   let frame = 0;
-  const speed = dir * 5;
-  const anim = () => {
+  const speed = dir * 6;
+  const spin = () => {
     frame++;
     const cx = startX + speed * frame;
-    const cy = startY + Math.sin(frame * 0.15) * 3; // slight wave
-    fb.setAttribute('transform', `translate(${cx},${cy})`);
-    if (frame < 30) requestAnimationFrame(anim);
+    const cy = startY + Math.sin(frame * 0.2) * 4;
+    fb.setAttribute('transform', `translate(${cx},${cy}) rotate(${frame * 15})`);
+    if (frame < 35 && cx > 10 && cx < 390) requestAnimationFrame(spin);
     else fb.remove();
   };
-  requestAnimationFrame(anim);
+  requestAnimationFrame(spin);
 }
 
 function playAlexIntro() {
@@ -1150,7 +1163,7 @@ function introShowBio() {
   });
 }
 
-// ── Step 2: UE5 power-up ──
+// ── Step 2: UE5 power-up — walk LEFT to Gold block, grow to 2x, run + shoot ──
 function introUE5PowerUp() {
   const svg = document.getElementById('intro-alex-svg');
   const anim = document.getElementById('alex-intro-anim');
@@ -1161,28 +1174,25 @@ function introUE5PowerUp() {
   const ue5Anim = document.getElementById('intro-ue5-anim');
   ue5Pos.style.opacity = '1';
 
-  // Reset avatar to left side, smaller
+  // Avatar is currently at translate(160, 0) scale(1.5) from step 0.
+  // Walk LEFT to the UE5 block at x=80 → translate(0, 0) in anim coords
+  // (since walker outer group is at x=80)
   anim.style.animation = 'none';
-  anim.style.transform = 'translate(-60px, 0) scale(1)';
-  void anim.offsetWidth;
-
-  // Walk right toward the UE5 block
-  anim.style.animation = 'none';
-  void anim.offsetWidth;
-  // Custom walk: from -60 to 240 (under the UE5 block at x=320)
   anim.style.transition = 'transform 1.5s linear';
-  anim.style.transform = 'translate(240px, 0) scale(1)';
+  anim.style.transform = 'translate(0, 0) scale(1.5)';
 
   // Jump up at 1.5s
   setTimeout(() => {
     anim.style.transition = 'none';
+    void anim.offsetWidth;
+    // Jump from x=0 (under the UE5 block)
     anim.style.animation = 'ue5JumpUp .4s cubic-bezier(.3,.7,.4,1) forwards';
   }, 1500);
 
-  // HIT at 1.9s — flash, UE5 block absorbed, grow again
+  // HIT at 1.9s — flash, block absorbed, grow to 2x
   setTimeout(() => {
     const flash = document.getElementById('alex-intro-flash');
-    if (flash) { flash.style.opacity = '0'; flash.style.animation = 'introFlash .45s ease-out forwards'; }
+    if (flash) { flash.style.opacity = '0'; void flash.offsetWidth; flash.style.animation = 'introFlash .45s ease-out forwards'; }
     ue5Anim.style.animation = 'introHeadsetGrab .5s ease-out forwards';
     playIntroPowerUpSfx();
     anim.style.animation = 'ue5PowerUp .8s ease-out forwards';
@@ -1193,19 +1203,33 @@ function introUE5PowerUp() {
     anim.style.animation = 'ue5FallDown .55s cubic-bezier(.55,0,.8,1) forwards';
   }, 2700);
 
-  // Lock + fireballs at 3.3s
+  // Lock at 2x + run back and forth shooting fireballs
   setTimeout(() => {
     anim.style.animation = 'none';
-    anim.style.transform = 'translate(240px, 0) scale(1.5)';
-    // Run back and forth shooting fireballs
-    let fbCount = 0;
-    const fbInterval = setInterval(() => {
-      const dir = fbCount % 2 === 0 ? 1 : -1;
-      const sx = 240 + 80 + (dir > 0 ? 15 : -15); // from avatar position
-      shootFireball(svg, sx, 270, dir);
-      fbCount++;
-      if (fbCount >= 6) clearInterval(fbInterval);
-    }, 350);
+    anim.style.transform = 'translate(0, 0) scale(2)';
+    // Run back and forth on the platform, shooting at random intervals
+    let runDir = 1;
+    let runX = 0;
+    let fbTimer = 0;
+    let runFrame = 0;
+    const runLoop = () => {
+      if (runFrame > 180) return; // ~3s of running
+      runFrame++;
+      runX += runDir * 2.5;
+      // Bounce off platform edges
+      if (runX > 200) { runDir = -1; }
+      if (runX < -20) { runDir = 1; }
+      anim.style.transform = `translate(${runX}px, 0) scale(2)`;
+      // Shoot at random intervals
+      fbTimer++;
+      if (fbTimer > 20 && Math.random() < 0.15) {
+        const sx = 80 + runX + (runDir > 0 ? 20 : -20);
+        shootFireball(svg, sx, 270, runDir);
+        fbTimer = 0;
+      }
+      requestAnimationFrame(runLoop);
+    };
+    requestAnimationFrame(runLoop);
   }, 3300);
 }
 
@@ -1511,6 +1535,10 @@ function goTo(n){
   nx.style.animation=(fwd?'slideInFwd':'slideInBwd')+' .5s cubic-bezier(.4,0,.2,1) forwards';
   nx.classList.add('active');
   current=n;updateHUD();
+  // Reset steps for the slide we're entering
+  resetSteps(nx);
+  // Reset one-shot flags so animations replay on every visit
+  if (nx.dataset.type === 'map') { mapDone = false; }
   // Per-slide entry hooks
   const t = allSlides[current].dataset.type;
   if(t==='venn') setTimeout(()=>{ if(window.startVennOrbit) window.startVennOrbit(); }, 400);
@@ -1520,6 +1548,7 @@ function goTo(n){
   // Beard evolution — trigger when entering the 2020 case or lesson slide
   const slideYear = parseInt(nx.dataset.year || 0);
   if (slideYear === 2020 && (t==='case' || t==='lesson')) {
+    _evoPlayed = false; // reset so it replays on re-visit
     setTimeout(playBeardEvolution, 800);
   }
   if(t==='map') setTimeout(startMap, 400);

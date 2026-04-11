@@ -1088,11 +1088,15 @@ allSlides.push(introLens);
     fill:'none', stroke:'rgba(255,255,255,.12)', 'stroke-width':'28' }));
   svg.appendChild(svgE('circle', { cx:CX, cy:CY, r:monocleR,
     fill:'none', stroke:'rgba(255,255,255,.06)', 'stroke-width':'34' }));
-  // Hinge nub (upper right)
-  const hingeA = -0.4;
-  const hx = CX + (monocleR+14)*Math.cos(hingeA), hy = CY + (monocleR+14)*Math.sin(hingeA);
-  svg.appendChild(svgE('circle', { cx:hx, cy:hy, r:'10',
-    fill:'none', stroke:'rgba(255,255,255,.1)', 'stroke-width':'6' }));
+  // Hinge nubs — two small circles on the upper-right "shoulders" of the monocle
+  const hingeA1 = -0.55, hingeA2 = -0.15; // angles bracketing the bump
+  const hr = monocleR + 16;
+  const h1x = CX + hr*Math.cos(hingeA1), h1y = CY + hr*Math.sin(hingeA1);
+  const h2x = CX + hr*Math.cos(hingeA2), h2y = CY + hr*Math.sin(hingeA2);
+  svg.appendChild(svgE('circle', { cx:h1x, cy:h1y, r:'8',
+    fill:'none', stroke:'rgba(255,255,255,.1)', 'stroke-width':'5' }));
+  svg.appendChild(svgE('circle', { cx:h2x, cy:h2y, r:'8',
+    fill:'none', stroke:'rgba(255,255,255,.1)', 'stroke-width':'5' }));
   // Cord + eyepiece — positioned using actual PNG geometry.
   // In the real logo, eyepiece center is at (775,788) relative to ring center (407,432).
   // That's an offset of (+368, +356) from ring center, at angle ≈ 44° below horizontal.

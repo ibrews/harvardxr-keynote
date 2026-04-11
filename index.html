@@ -82,7 +82,7 @@ const SECTIONS = [
         bullets:['Just like VR -- consider scale and create only what they\'ll see','VR would have been amazing to test more variations'] },
       { title:'Ghosted — With Kevin Laibson & Allyson Morgan', subtitle:'Where all of it came together for the first time',
         img:'MEDIA_CYCLER',
-        bullets:['PLACEHOLDER — what Ghosted was and how it came about','PLACEHOLDER — how Kevin and Allyson brought theater, technology, and design into one room','PLACEHOLDER — this collaboration was the prototype for everything Agile Lens became'] },
+        bullets:['Magic Leap experience that turns bugs into features','Creative-first approach with 90% of team being non-technical','PLACEHOLDER — this collaboration was the prototype for everything Agile Lens became'] },
     ],
     lesson: { title:'Great XR Comes From\nOutside XR', tagline:'XR is too new to have native experts, so you build them from everywhere. The best XR teams look nothing like tech teams — architects, directors, lighting designers, journalists, choreographers, all in the same room as engineers.', short:'OUTSIDE-IN IS THE EDGE', tags:'JetBlue T5 · Connective Corridor · Equus · Ghosted' },
   },
@@ -3037,6 +3037,13 @@ function buildMediaCycler(slideEl, items, opts){
 // Results in: Settings, Cover, introAlex, Venn, introLens, 2016 Lesson...
 {const v=allSlides.splice(2,1)[0];allSlides.splice(3,0,v);}
 
+// Intro-lens — scale down "IMMERSIVE DESIGN STUDIO" text slightly
+(function(){
+  const svg = document.getElementById('lens-svg');
+  if (!svg) return;
+  const texts = svg.querySelectorAll('text');
+  if (texts[1]) { texts[1].setAttribute('transform', `scale(0.96)`); texts[1].setAttribute('transform-origin', `${texts[1].getAttribute('x')}px ${texts[1].getAttribute('y')}px`); }
+})();
 // Lesson 2016 — baked positional transforms
 (function(){
   const l16 = allSlides.find(s => s.dataset.type==='lesson' && s.dataset.year==='2016');

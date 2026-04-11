@@ -2161,19 +2161,29 @@ function buildMediaCycler(slideEl, items, opts){
   const mount = slideEl.querySelector('.media-cycler-mount');
   if (!mount) return;
 
-  const CW = portrait ? 338 : 800, CH = portrait ? 600 : 500;
+  let CW = portrait ? 338 : 800, CH = portrait ? 600 : 500;
   if (portrait) {
     const ci = slideEl.querySelector('.case-image');
     if (ci) ci.classList.add('portrait');
   }
   const canvas = document.createElement('canvas');
   canvas.width = CW; canvas.height = CH;
-  canvas.style.cssText = 'width:100%;height:auto;display:block;transition:none;';
+  canvas.style.cssText = 'width:100%;height:auto;display:block;transition:none;border-radius:18px;';
   mount.appendChild(canvas);
   const ctx = canvas.getContext('2d');
 
   const off = document.createElement('canvas');
   const offCtx = off.getContext('2d');
+
+  // Resize canvas to match source aspect ratio — no cropping, frame adapts
+  function adaptCanvas(src) {
+    const sw = src.naturalWidth || src.videoWidth || CW;
+    const sh = src.naturalHeight || src.videoHeight || CH;
+    if (sw > 0 && sh > 0) {
+      const newCH = Math.round(CW * sh / sw);
+      if (newCH !== CH) { CH = newCH; canvas.width = CW; canvas.height = CH; }
+    }
+  }
 
   // Load all media elements
   const sources = items.map(item => {
@@ -2219,7 +2229,7 @@ function buildMediaCycler(slideEl, items, opts){
   function easeOut3(k){ return 1 - Math.pow(1-k, 3); }
   function easeIn2(k){ return k*k; }
 
-  // Cover-fit: fill canvas fully, slight center-crop if aspect ratios differ
+  // Fill canvas — since canvas adapts to source aspect ratio, this is ~1:1
   function coverRect(sw, sh) {
     const scale = Math.max(CW / sw, CH / sh);
     const dw = sw * scale, dh = sh * scale;
@@ -2275,6 +2285,7 @@ function buildMediaCycler(slideEl, items, opts){
     const _flip = items[idx]?.flipH || false;
     switch(phase){
       case 'entering': {
+        adaptCanvas(src);
         const k = Math.min(1, el/enterDur);
         canvas.style.transform = `translateX(${((1-easeOut3(k))*50).toFixed(2)}%)`;
         drawPixelated(src, 32, _flip);

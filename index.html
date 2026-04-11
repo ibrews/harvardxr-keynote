@@ -2301,16 +2301,6 @@ function buildMediaCycler(slideEl, items, opts){
       if (newCH !== CH) { CH = newCH; canvas.width = CW; canvas.height = CH; }
     }
   }
-  // Pre-adapt canvas once each source loads (handles race condition)
-  sources.forEach((src, i) => {
-    if (src.tagName === 'IMG') {
-      if (src.naturalWidth) { if (i === 0) adaptCanvas(src); }
-      else src.addEventListener('load', () => { if (i === idx) adaptCanvas(src); }, {once:true});
-    } else {
-      src.addEventListener('loadedmetadata', () => { if (i === idx) adaptCanvas(src); }, {once:true});
-    }
-  });
-
   // Load all media elements
   const sources = items.map(item => {
     if (item.type === 'video'){
@@ -2321,6 +2311,15 @@ function buildMediaCycler(slideEl, items, opts){
       return v;
     } else {
       const img = new Image(); img.src = item.src; return img;
+    }
+  });
+  // Pre-adapt canvas once each source loads (handles race condition)
+  sources.forEach((src, i) => {
+    if (src.tagName === 'IMG') {
+      if (src.naturalWidth) { if (i === 0) adaptCanvas(src); }
+      else src.addEventListener('load', () => { if (i === idx) adaptCanvas(src); }, {once:true});
+    } else {
+      src.addEventListener('loadedmetadata', () => { if (i === idx) adaptCanvas(src); }, {once:true});
     }
   });
 
@@ -2698,6 +2697,7 @@ function buildMediaCycler(slideEl, items, opts){
   buildMediaCycler(slide, [
     {type:'image', src:'media/waldorf-astoria-miami/01.jpg'},
     {type:'image', src:'media/waldorf-astoria-miami/02.jpg'},
+    {type:'image', src:'media/waldorf-astoria-miami/waldorf_concierge.png'},
   ], {imageDuration:6000});
 })();
 

@@ -578,8 +578,10 @@ allSlides.push(vennSlide);
   const R = 220;
   circles.forEach(c => {
     svg.appendChild(svgE('circle', { cx:c.x, cy:c.y, r:R, fill:c.color, stroke:c.stroke, 'stroke-width':'1.5' }));
-    // Label above the circle
-    const ly = c.y < CY ? c.y - R - 18 : c.y + R + 24;
+    // Label: above the circle for top two, inside near bottom for bottom one
+    // (below-circle placement collides with the name/quote text)
+    const isBottom = c.y > CY;
+    const ly = isBottom ? c.y + R * 0.65 : c.y - R - 18;
     const lbl = svgE('text', { x:c.x, y:ly, 'text-anchor':'middle', fill:'rgba(255,255,255,.7)',
       'font-family':'Space Grotesk,sans-serif', 'font-size':'18', 'font-weight':'600', 'letter-spacing':'2' });
     lbl.textContent = c.label.toUpperCase();
@@ -817,14 +819,18 @@ allSlides.push(vennSlide);
   window.startVennOrbit = () => { orbRunning = true; requestAnimationFrame(orbStep); };
   window.stopVennOrbit = () => { orbRunning = false; };
 
-  // Quote text at the bottom
-  const q1 = svgE('text', { x: CX, y: 810, 'text-anchor':'middle', fill:'rgba(255,255,255,.55)',
-    'font-family':'Space Grotesk,sans-serif', 'font-size':'24', 'font-style':'italic' });
+  // Name + quote at the bottom
+  const nameT = svgE('text', { x: CX, y: 775, 'text-anchor':'middle', fill:'rgba(255,255,255,.7)',
+    'font-family':'Space Grotesk,sans-serif', 'font-size':'28', 'font-weight':'600', 'letter-spacing':'3' });
+  nameT.textContent = 'ALEX COULOMBE';
+  svg.appendChild(nameT);
+  const q1 = svgE('text', { x: CX, y: 815, 'text-anchor':'middle', fill:'rgba(255,255,255,.45)',
+    'font-family':'Space Grotesk,sans-serif', 'font-size':'20', 'font-style':'italic' });
   q1.textContent = '"The job I\'m going to have in 5 years doesn\'t exist yet."';
   svg.appendChild(q1);
-  const q2 = svgE('text', { x: CX, y: 845, 'text-anchor':'middle', fill:'rgba(255,255,255,.25)',
-    'font-family':'Space Grotesk,sans-serif', 'font-size':'15', 'letter-spacing':'2' });
-  q2.textContent = '— ALEX, 2010';
+  const q2 = svgE('text', { x: CX, y: 845, 'text-anchor':'middle', fill:'rgba(255,255,255,.2)',
+    'font-family':'Space Grotesk,sans-serif', 'font-size':'13', 'letter-spacing':'2' });
+  q2.textContent = '— 2010';
   svg.appendChild(q2);
 })();
 

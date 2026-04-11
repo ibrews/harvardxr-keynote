@@ -439,21 +439,21 @@ body.presentation-mode #anno-prompt {
   60%  { opacity:1; transform:translate(calc(var(--tx)*.7),calc(var(--ty)*.7)) scale(1) }
   100% { opacity:0; transform:translate(var(--tx),var(--ty)) scale(.2) }
 }
-/* UE5 power-up — from x=0 (left side, under UE5 block), grows to 2x */
+/* UE5 power-up — from x=0, block at y=140 so jump goes higher (-130px) */
 @keyframes ue5JumpUp {
-  0%   { transform: translate(0, 0)    scale(1.5); }
-  30%  { transform: translate(0, -20px) scale(1.4, 1.6); }
-  100% { transform: translate(0, -95px) scale(1.5); }
+  0%   { transform: translate(0, 0)     scale(1.5); }
+  25%  { transform: translate(0, -20px) scale(1.4, 1.6); }
+  100% { transform: translate(0, -130px) scale(1.5); }
 }
 @keyframes ue5PowerUp {
-  0%   { transform: translate(0, -95px) scale(1.5);  filter: brightness(1); }
-  30%  { transform: translate(0, -95px) scale(1.8);  filter: brightness(1.7); }
-  55%  { transform: translate(0, -95px) scale(1.4);  filter: brightness(1.3); }
-  100% { transform: translate(0, -95px) scale(2);    filter: brightness(1); }
+  0%   { transform: translate(0, -130px) scale(1.5);  filter: brightness(1); }
+  30%  { transform: translate(0, -130px) scale(1.8);  filter: brightness(1.7); }
+  55%  { transform: translate(0, -130px) scale(1.4);  filter: brightness(1.3); }
+  100% { transform: translate(0, -130px) scale(2);    filter: brightness(1); }
 }
 @keyframes ue5FallDown {
-  0%   { transform: translate(0, -95px) scale(2); }
-  100% { transform: translate(0, 0)     scale(2); }
+  0%   { transform: translate(0, -130px) scale(2); }
+  100% { transform: translate(0, 0)      scale(2); }
 }
 /* Firework particle — radial fly-out with ease, scale up briefly then fade */
 @keyframes fwParticle {
@@ -1026,8 +1026,8 @@ function paintWornHeadset(parentBody) {
 
 // ── UE5 power-up: Gold Authorized logo block ──
 function buildUE5Block(svg) {
-  // UE5 block at LEFT side of stage (x=80, y=200) so sprite walks left to grab it
-  const blockPos = svgE('g', { id:'intro-ue5-pos', transform:'translate(80, 200)', opacity:'0' });
+  // UE5 block at LEFT side of stage, HIGH UP (y=140) so sprite must jump properly
+  const blockPos = svgE('g', { id:'intro-ue5-pos', transform:'translate(80, 140)', opacity:'0' });
   const blockG = svgE('g', { id:'intro-ue5-anim' });
   blockPos.appendChild(blockG);
   // Use the actual GoldAuthorized.png — 44×44 in viewBox coords
@@ -1058,9 +1058,12 @@ function playZapSfx() {
 
 function shootFireball(svg, startX, startY, dir) {
   const fb = svgE('g', { transform:`translate(${startX},${startY})` });
-  // Randomly pick between Gold Authorized and UE5 circle logos
-  const logo = Math.random() < 0.5 ? 'GoldAuthorized.png' : 'ue5logo.png';
-  const img = svgE('image', { href:logo, x:-8, y:-8, width:16, height:16 });
+  // Randomly pick between Gold Authorized (2x = 32px) and UE5 circle (1.5x = 24px)
+  const isGold = Math.random() < 0.5;
+  const logo = isGold ? 'GoldAuthorized.png' : 'ue5logo.png';
+  const sz = isGold ? 32 : 24;
+  const half = sz / 2;
+  const img = svgE('image', { href:logo, x:-half, y:-half, width:sz, height:sz });
   fb.appendChild(img);
   svg.appendChild(fb);
   playZapSfx();

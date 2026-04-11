@@ -2647,9 +2647,7 @@ function buildMediaCycler(slideEl, items, opts){
   const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('DBOX Holodeck'));
   if (!slide) return;
   buildMediaCycler(slide, [
-    {type:'image', src:'media/ny-dbox-holodeck/01.jpg'},
     {type:'image', src:'media/ny-dbox-holodeck/02.jpg'},
-    {type:'image', src:'media/ny-dbox-holodeck/03.jpg'},
     {type:'image', src:'media/ny-dbox-holodeck/04.jpg'},
     {type:'image', src:'media/ny-dbox-holodeck/05.jpg'},
   ], {imageDuration:6000});

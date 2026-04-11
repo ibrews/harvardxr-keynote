@@ -164,6 +164,9 @@ const SECTIONS = [
       { title:'A Christmas Carol VR — Five Seasons Running', subtitle:'The R&D vehicle that keeps on giving',
         img:'MEDIA_CYCLER',
         bullets:['What started as an upsell in 2021 is now in its fifth season. Each year we push the tech: multi-avatar, AI Dickens, new venues.','Christmas Carol proves the model: a funded annual production that doubles as our R&D lab.','Get people excited about what you\'re building. The best marketing is work people can experience firsthand.'] },
+      { title:'Unreal NYC & HalcyonVR', subtitle:'Guerrilla demos and genuine feedback from real humans',
+        img:'MEDIA_CYCLER',
+        bullets:['Co-founded the ACC VR community and helped launch Unreal Engine NYC — bringing developers and artists together around real-time tech.','Do guerrilla demos. Put headsets on people who\'ve never tried VR. Their reactions teach you more than any QA team.','The best XR quality assurance comes from a wide range of people, not a narrow team of experts. Solicit genuine feedback.'] },
     ],
     lesson: { title:'Build a Community!', tagline:'The most underrated business strategy in XR: get people in the room. Not investors, not press — actual humans experiencing actual work. Guerrilla demos, meetups, open studios. Solicit genuine feedback from the widest possible range of people. Your best QA comes from someone who\'s never worn a headset before. Build the community you wish existed, and the pipeline follows.', short:'BUILD A COMMUNITY', tags:'Christmas Carol VR · Unreal NYC · HalcyonVR · ACC VR' },
   },
@@ -288,7 +291,7 @@ canvas#stars{position:absolute;inset:0}
 
 /* Map */
 .slide-map{padding:clamp(20px,2.5vw,48px)}
-.map-label{font-size:clamp(.7rem,1.1vw,1rem);font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:16px}
+.map-label{font-size:clamp(.7rem,1.1vw,1rem);font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:16px;text-align:left;padding-left:clamp(40px,5vw,80px)}
 #map-svg{width:100%;height:100%;max-height:84vh}
 .recap-pill{cursor:pointer}
 .recap-pill:hover circle:first-child{fill:rgba(0,212,255,.12)!important}
@@ -2280,7 +2283,7 @@ deck.appendChild(bon);allSlides.push(bon);
 
 // ── Map ──
 const mapS=document.createElement('div');mapS.className='slide slide-map';mapS.dataset.type='map';
-mapS.innerHTML=`<div class="map-label" style="transform:translate(-120px,9px)">The Journey, Mapped</div><svg id="map-svg" viewBox="0 0 1000 600"></svg>`;
+mapS.innerHTML=`<div class="map-label" style="transform:translate(-144px,15px)">The Journey, Mapped</div><svg id="map-svg" viewBox="0 0 1000 600"></svg>`;
 deck.appendChild(mapS);allSlides.push(mapS);
 
 // ── Close ──
@@ -2764,6 +2767,15 @@ function buildMediaCycler(slideEl, items, opts){
 // ── A Christmas Carol VR — Five Seasons Running ───────────────────────────
 (function(){
   const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('A Christmas Carol VR — Five Seasons Running'));
+  if (!slide) return;
+  buildMediaCycler(slide, [
+    {type:'image', src:'media/xmas-carol/xmas-carol.jpg'},
+  ], {imageDuration:6000});
+})();
+
+// ── Unreal NYC & HalcyonVR ────────────────────────────────────────────────
+(function(){
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Unreal NYC & HalcyonVR'));
   if (!slide) return;
   buildMediaCycler(slide, [
     {type:'image', src:'media/community/community01_accvr.jpg'},
@@ -4658,7 +4670,7 @@ try { (function initVoxelMorph(){
   const selfLabel = document.createElement('div');
   selfLabel.id = 'self-actualized-label';
   selfLabel.textContent = 'SELF-ACTUALIZED';
-  selfLabel.style.cssText = 'position:absolute;left:50%;top:clamp(30px,4vh,60px);transform:translateX(-50%);font-family:"Space Grotesk",sans-serif;font-size:clamp(1.4rem,3vw,2.8rem);font-weight:700;letter-spacing:.22em;color:var(--amber);opacity:0;pointer-events:none;z-index:6;white-space:nowrap;text-shadow:0 0 40px rgba(245,158,11,.6)';
+  selfLabel.style.cssText = 'position:absolute;left:50%;top:38%;transform:translate(-50%,-100%);font-family:"Space Grotesk",sans-serif;font-size:clamp(1.4rem,3vw,2.8rem);font-weight:700;letter-spacing:.22em;color:var(--amber);opacity:0;pointer-events:none;z-index:6;white-space:nowrap;text-shadow:0 0 40px rgba(245,158,11,.6)';
   mapS.appendChild(selfLabel);
 
   // SFX helpers (standalone ctx so they don't stomp other audio)

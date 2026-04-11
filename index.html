@@ -1465,55 +1465,98 @@ allSlides.push(introLens);
     setTimeout(() => { avRoot.classList.remove('arm-up'); }, 1500);
   }
 
-  // Step 3: Avatar shrinks and moves from center to the monocle ring edge (top)
+  // Step 3: Avatar shrinks from center to the eyepiece (~5 o'clock) — the starting box
+  const FIVE_OCLOCK = eyeAngle; // ~0.77 rad, matches the real monocle eyepiece
+  const SIX_OCLOCK = Math.PI / 2; // bottom of the ring, where 2016 goes
+
   function lensStep3() {
     if (!lensAvG) return;
-    lensAvG.style.transition = 'transform 1.5s cubic-bezier(.4,0,.2,1)';
-    // Move to top of monocle ring (12 o'clock = -π/2)
-    const startAngle = -Math.PI / 2;
-    const rx = CX + monocleR * Math.cos(startAngle);
-    const ry = CY + monocleR * Math.sin(startAngle);
-    lensAvG.setAttribute('transform', `translate(${CX},${CY}) scale(1)`);
-    // Force reflow
-    void lensAvG.getBBox();
-    setTimeout(() => {
-      lensAvG.style.transition = 'transform 1.5s cubic-bezier(.4,0,.2,1)';
-      lensAvG.setAttribute('transform', `translate(${rx},${ry}) scale(0.5)`);
-      // CSS transition doesn't work on SVG transform attribute — use JS animation
-      const startTf = { x: CX, y: CY, s: 1 };
-      const endTf = { x: rx, y: ry, s: 0.5 };
-      const dur = 1500;
-      const t0 = performance.now();
-      function shrinkStep(now) {
-        const k = Math.min(1, (now - t0) / dur);
-        const ease = k < 0.5 ? 2*k*k : 1 - Math.pow(-2*k+2, 2)/2;
-        const cx = startTf.x + (endTf.x - startTf.x) * ease;
-        const cy = startTf.y + (endTf.y - startTf.y) * ease;
-        const cs = startTf.s + (endTf.s - startTf.s) * ease;
-        lensAvG.setAttribute('transform', `translate(${cx.toFixed(1)},${cy.toFixed(1)}) scale(${cs.toFixed(3)})`);
-        if (k < 1) requestAnimationFrame(shrinkStep);
-      }
-      requestAnimationFrame(shrinkStep);
-    }, 50);
+    const rx = CX + monocleR * Math.cos(FIVE_OCLOCK);
+    const ry = CY + monocleR * Math.sin(FIVE_OCLOCK);
+    const startTf = { x: CX, y: CY, s: 1.2 };
+    const endTf = { x: rx, y: ry, s: 0.4 };
+    const dur = 1500;
+    const t0 = performance.now();
+    function shrinkStep(now) {
+      const k = Math.min(1, (now - t0) / dur);
+      const ease = k < 0.5 ? 2*k*k : 1 - Math.pow(-2*k+2, 2)/2;
+      const cx = startTf.x + (endTf.x - startTf.x) * ease;
+      const cy = startTf.y + (endTf.y - startTf.y) * ease;
+      const cs = startTf.s + (endTf.s - startTf.s) * ease;
+      lensAvG.setAttribute('transform', `translate(${cx.toFixed(1)},${cy.toFixed(1)}) scale(${cs.toFixed(3)})`);
+      if (k < 1) requestAnimationFrame(shrinkStep);
+    }
+    requestAnimationFrame(shrinkStep);
   }
 
-  // Step 4: Avatar moves around the ring to 6 o'clock (π/2 = bottom,
-  // where 2016 will be on the constellation). Speed matches the client
-  // orbit rotation so it feels continuous.
+  // Step 4: Chiptune plays, avatar walks from 5 o'clock → 6 o'clock along
+  // the ring with a dashed trail behind it. "2016" label appears at 6 o'clock.
+  let _chiptuneCtx = null;
+  function playChiptune() {
+    try {
+      if (!_chiptuneCtx) _chiptuneCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = _chiptuneCtx; if (ctx.state === 'suspended') ctx.resume();
+      const now = ctx.currentTime;
+      const tone = (freq, start, dur, type='square', vol=0.05) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = type; o.frequency.value = freq;
+        o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(vol, now+start);
+        g.gain.exponentialRampToValueAtTime(0.001, now+start+dur);
+        o.start(now+start); o.stop(now+start+dur);
+      };
+      // Simple adventurous melody — walking theme
+      const notes = [262,294,330,349,392,349,330,294,262,330,392,440];
+      notes.forEach((f,i) => tone(f, i*0.22, 0.2, 'square', 0.04));
+    } catch(e) {}
+  }
+
   function lensStep4() {
     if (!lensAvG) return;
-    const startAngle = -Math.PI / 2;  // 12 o'clock
-    const endAngle = Math.PI / 2;     // 6 o'clock (clockwise = +π)
-    const dur = 3000; // ~3s to travel halfway around
+    playChiptune();
+
+    // Build dashed trail path element
+    const trail = svgE('path', {
+      d: '', fill:'none', stroke:'rgba(0,212,255,.4)',
+      'stroke-width':'2', 'stroke-dasharray':'6 4', 'stroke-linecap':'round',
+    });
+    svg.insertBefore(trail, lensAvG); // behind the avatar
+
+    // Animate from 5 o'clock to 6 o'clock (short clockwise arc)
+    const dur = 2800;
     const t0 = performance.now();
+    const trailPts = [];
+
     function orbitStep(now) {
       const k = Math.min(1, (now - t0) / dur);
       const ease = k < 0.5 ? 2*k*k : 1 - Math.pow(-2*k+2, 2)/2;
-      const a = startAngle + (endAngle - startAngle) * ease;
+      const a = FIVE_OCLOCK + (SIX_OCLOCK - FIVE_OCLOCK) * ease;
       const x = CX + monocleR * Math.cos(a);
       const y = CY + monocleR * Math.sin(a);
-      lensAvG.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(0.5)`);
-      if (k < 1) requestAnimationFrame(orbitStep);
+      lensAvG.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(0.4)`);
+
+      // Grow trail
+      trailPts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+      if (trailPts.length > 1) {
+        trail.setAttribute('d', 'M' + trailPts.join(' L'));
+      }
+
+      if (k < 1) {
+        requestAnimationFrame(orbitStep);
+      } else {
+        // Arrived at 6 o'clock — show "2016" label
+        const lbl = svgE('text', {
+          x: CX + monocleR * Math.cos(SIX_OCLOCK),
+          y: CY + monocleR * Math.sin(SIX_OCLOCK) + 28,
+          'text-anchor':'middle', fill:'rgba(0,212,255,.8)',
+          'font-family':'Space Grotesk,sans-serif', 'font-size':'18',
+          'font-weight':'600', 'letter-spacing':'2', id:'lens-2016-lbl',
+        });
+        lbl.textContent = '2016';
+        lbl.style.opacity = '0';
+        svg.appendChild(lbl);
+        setTimeout(() => { lbl.style.transition = 'opacity .5s'; lbl.style.opacity = '1'; }, 50);
+      }
     }
     requestAnimationFrame(orbitStep);
   }
@@ -1530,12 +1573,22 @@ allSlides.push(introLens);
   window._lensReset = () => {
     lensTexts.forEach(el => { el.style.transition = 'none'; el.style.opacity = ''; });
     if (lensAvG) { lensAvG.remove(); lensAvG = null; }
+    document.getElementById('lens-2016-lbl')?.remove();
+    svg.querySelectorAll('path[stroke-dasharray]').forEach(p => p.remove());
   };
 })();
 
-// ── Build sections ──
+// ── Build sections — lesson slide FIRST, then case studies ──
 SECTIONS.forEach((sec,si)=>{
   const ac=sec.accent!=='teal'?` accent-${sec.accent}`:'';
+  // Lesson slide comes first (per reorder annotation)
+  const ls=document.createElement('div');ls.className=`slide slide-lesson${ac}`;ls.dataset.type='lesson';ls.dataset.year=sec.year;ls.dataset.section=si;ls.dataset.ln=si+1;
+  ls.innerHTML=`<div class="year-ghost">${sec.year}</div>
+    <div class="lesson-ey"><span class="ey-yr">${sec.year}</span><span class="ey-sep">·</span><span class="ey-badge">Lesson ${String(si+1).padStart(2,'0')} / 10</span></div>
+    <h2 class="lesson-title">${sec.lesson.title}</h2><p class="lesson-tagline">${sec.lesson.tagline}</p>
+    ${sec.lesson.tags?`<div class="lesson-tags">${sec.lesson.tags}</div>`:''}<div class="lesson-rule"></div>`;
+  deck.appendChild(ls);allSlides.push(ls);lessonIdxs.push(allSlides.length-1);
+  // Case study slides follow the lesson
   sec.cases.forEach((c,ci)=>{
     const s=document.createElement('div');s.className=`slide case-slide${ac}`;s.dataset.type='case';s.dataset.year=sec.year;s.dataset.section=si;
     const img=c.img?`<img src="${c.img}" alt="${c.title}" loading="lazy">`:`<div class="ph">Image TBD</div>`;
@@ -1545,12 +1598,6 @@ SECTIONS.forEach((sec,si)=>{
       <ul class="case-bl">${c.bullets.map(b=>`<li>${b}</li>`).join('')}</ul></div>`;
     deck.appendChild(s);allSlides.push(s);
   });
-  const ls=document.createElement('div');ls.className=`slide slide-lesson${ac}`;ls.dataset.type='lesson';ls.dataset.year=sec.year;ls.dataset.section=si;ls.dataset.ln=si+1;
-  ls.innerHTML=`<div class="year-ghost">${sec.year}</div>
-    <div class="lesson-ey"><span class="ey-yr">${sec.year}</span><span class="ey-sep">·</span><span class="ey-badge">Lesson ${String(si+1).padStart(2,'0')} / 10</span></div>
-    <h2 class="lesson-title">${sec.lesson.title}</h2><p class="lesson-tagline">${sec.lesson.tagline}</p>
-    ${sec.lesson.tags?`<div class="lesson-tags">${sec.lesson.tags}</div>`:''}<div class="lesson-rule"></div>`;
-  deck.appendChild(ls);allSlides.push(ls);lessonIdxs.push(allSlides.length-1);
 });
 
 // ── Bonus ──

@@ -2177,13 +2177,22 @@ function buildMediaCycler(slideEl, items, opts){
 
   // Resize canvas to match source aspect ratio — no cropping, frame adapts
   function adaptCanvas(src) {
-    const sw = src.naturalWidth || src.videoWidth || CW;
-    const sh = src.naturalHeight || src.videoHeight || CH;
+    const sw = src.naturalWidth || src.videoWidth || 0;
+    const sh = src.naturalHeight || src.videoHeight || 0;
     if (sw > 0 && sh > 0) {
       const newCH = Math.round(CW * sh / sw);
       if (newCH !== CH) { CH = newCH; canvas.width = CW; canvas.height = CH; }
     }
   }
+  // Pre-adapt canvas once each source loads (handles race condition)
+  sources.forEach((src, i) => {
+    if (src.tagName === 'IMG') {
+      if (src.naturalWidth) { if (i === 0) adaptCanvas(src); }
+      else src.addEventListener('load', () => { if (i === idx) adaptCanvas(src); }, {once:true});
+    } else {
+      src.addEventListener('loadedmetadata', () => { if (i === idx) adaptCanvas(src); }, {once:true});
+    }
+  });
 
   // Load all media elements
   const sources = items.map(item => {

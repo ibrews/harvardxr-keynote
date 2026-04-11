@@ -1058,8 +1058,9 @@ function playZapSfx() {
 
 function shootFireball(svg, startX, startY, dir) {
   const fb = svgE('g', { transform:`translate(${startX},${startY})` });
-  // Spinning GoldAuthorized logo
-  const img = svgE('image', { href:'GoldAuthorized.png', x:-8, y:-8, width:16, height:16 });
+  // Randomly pick between Gold Authorized and UE5 circle logos
+  const logo = Math.random() < 0.5 ? 'GoldAuthorized.png' : 'ue5logo.png';
+  const img = svgE('image', { href:logo, x:-8, y:-8, width:16, height:16 });
   fb.appendChild(img);
   svg.appendChild(fb);
   playZapSfx();

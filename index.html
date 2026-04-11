@@ -2941,8 +2941,10 @@ function buildMediaCycler(slideEl, items, opts){
   const slide = allSlides.find(s => s.dataset.year==='2023' && s.querySelector?.('.case-title')?.textContent.includes('Four Seasons Lake Austin'));
   if (!slide) return;
   buildMediaCycler(slide, [
-    {type:'image', src:'media/four-seasons/four-seasons-holodeck.jpg'},
-  ], {imageDuration:999999});
+    {type:'image', src:'media/fsla/fsla_01.jpg'},
+    {type:'image', src:'media/fsla/fsla_02.jpg'},
+    {type:'image', src:'media/fsla/fsla_03.jpg'},
+  ], {imageDuration:6000});
 })();
 
 // ── La Pasion XR ─────────────────────────────────────────────────────────

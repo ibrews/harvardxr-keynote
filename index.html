@@ -164,7 +164,7 @@ const BONUS = { year:2026, title:'The Demo Will Break.\nBudget for It.',
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#060810;--teal:#00d4ff;--purple:#a78bfa;--amber:#f59e0b;--rose:#f43f5e;--text:#f0f4ff;--dim:rgba(240,244,255,.45);--font:'Space Grotesk',system-ui,sans-serif}
+:root{--bg:#060810;--teal:#00d4ff;--purple:#a78bfa;--amber:#f59e0b;--rose:#f43f5e;--text:#f0f4ff;--dim:rgba(240,244,255,.45);--font:'Space Grotesk',system-ui,sans-serif;--para-gap:.55em;--tagline-scale:1;--title-scale:1}
 html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font)}
 
 .bg{position:fixed;inset:0;z-index:0;overflow:hidden}
@@ -209,9 +209,24 @@ canvas#stars{position:absolute;inset:0}
 .year-ghost{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:clamp(10rem,24vw,26rem);font-weight:700;letter-spacing:-.06em;line-height:1;color:rgba(255,255,255,.028);pointer-events:none;user-select:none}
 .lesson-ey{display:flex;align-items:center;justify-content:center;gap:14px;font-size:clamp(.7rem,1.1vw,1rem);font-weight:600;letter-spacing:.26em;text-transform:uppercase;margin-bottom:30px}
 .ey-yr{color:rgba(255,255,255,.4)}.ey-sep{color:rgba(255,255,255,.15)}.ey-badge{color:var(--teal)}
-.lesson-title{font-size:clamp(2.4rem,5.8vw,6.2rem);font-weight:700;letter-spacing:-.025em;line-height:1.06;max-width:1300px;margin-bottom:32px;white-space:pre-line}
-.lesson-tagline{font-size:clamp(1rem,1.7vw,1.6rem);color:var(--dim);max-width:880px;line-height:1.7}
-.lesson-tagline .para-gap{display:block;height:.55em}
+.lesson-title{font-size:calc(clamp(2.4rem,5.8vw,6.2rem)*var(--title-scale));font-weight:700;letter-spacing:-.025em;line-height:1.06;max-width:1300px;margin-bottom:32px;white-space:pre-line}
+.lesson-tagline{font-size:calc(clamp(1rem,1.7vw,1.6rem)*var(--tagline-scale));color:var(--dim);max-width:880px;line-height:1.7}
+.lesson-tagline .para-gap{display:block;height:var(--para-gap)}
+/* Settings slide */
+.slide-settings{background:rgba(3,5,12,.98)}
+.cfg-panel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:52px 64px;max-width:860px;width:90%;backdrop-filter:blur(20px)}
+.cfg-title{font-size:1.6rem;font-weight:700;letter-spacing:-.02em;color:#fff;margin-bottom:6px}
+.cfg-subtitle{font-size:.75rem;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:44px;opacity:.7}
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px 56px;margin-bottom:36px}
+.cfg-row{display:flex;flex-direction:column;gap:10px}
+.cfg-label{font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.cfg-control{display:flex;align-items:center;gap:14px}
+.cfg-control input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:3px;background:rgba(255,255,255,.14);border-radius:2px;outline:none;cursor:pointer}
+.cfg-control input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--teal);cursor:pointer;box-shadow:0 0 10px rgba(0,212,255,.5);transition:transform .1s}
+.cfg-control input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.3)}
+.cfg-val{min-width:3.8em;font-size:.82rem;color:var(--teal);font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.cfg-hint{font-size:.65rem;color:rgba(255,255,255,.2);letter-spacing:.06em;text-align:center;border-top:1px solid rgba(255,255,255,.06);padding-top:20px;line-height:1.8}
+.sg-thumb.sg-settings{background:rgba(0,212,255,.06);border-color:rgba(0,212,255,.2)}
 .lesson-rule{width:64px;height:4px;border-radius:2px;background:var(--teal);margin:32px auto 0;opacity:.7}
 .lesson-tags{margin-top:18px;font-size:clamp(.6rem,.9vw,.85rem);font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.18)}
 .accent-purple .ey-badge{color:var(--purple)}.accent-purple .lesson-rule{background:var(--purple)}
@@ -653,6 +668,55 @@ function drawS(){sc.clearRect(0,0,cv.width,cv.height);st.forEach(s=>{sc.beginPat
 initS();drawS();addEventListener('resize',initS);
 
 const deck=document.getElementById('deck'),allSlides=[],lessonIdxs=[];
+
+// ── Settings slide (slot 0, hidden by default — UI mode only) ──
+(function(){
+  const DEFAULTS={paraGap:.55,taglineScale:1,titleScale:1,imgDur:6};
+  const saved=JSON.parse(localStorage.getItem('keynote-cfg')||'{}');
+  const C={...DEFAULTS,...saved};
+  function applyAll(){
+    document.documentElement.style.setProperty('--para-gap',C.paraGap+'em');
+    document.documentElement.style.setProperty('--tagline-scale',C.taglineScale);
+    document.documentElement.style.setProperty('--title-scale',C.titleScale);
+    window._globalImageDuration=C.imgDur*1000;
+  }
+  applyAll();
+  const s=document.createElement('div');
+  s.className='slide slide-settings';s.dataset.type='settings';s.dataset.hidden='1';
+  s.innerHTML=`<div class="cfg-panel">
+    <div class="cfg-title">⚙ Presentation Settings</div>
+    <div class="cfg-subtitle">Changes apply live · hidden from presentation mode</div>
+    <div class="cfg-grid">
+      <div class="cfg-row">
+        <label class="cfg-label">Paragraph gap</label>
+        <div class="cfg-control"><input type="range" id="cfg-para-gap" min="0" max="1.2" step="0.05" value="${C.paraGap}"><span class="cfg-val" id="v-para-gap">${C.paraGap.toFixed(2)}em</span></div>
+      </div>
+      <div class="cfg-row">
+        <label class="cfg-label">Image hold time</label>
+        <div class="cfg-control"><input type="range" id="cfg-img-dur" min="2" max="15" step="0.5" value="${C.imgDur}"><span class="cfg-val" id="v-img-dur">${C.imgDur.toFixed(1)}s</span></div>
+      </div>
+      <div class="cfg-row">
+        <label class="cfg-label">Tagline size</label>
+        <div class="cfg-control"><input type="range" id="cfg-tagline-scale" min="0.6" max="1.5" step="0.05" value="${C.taglineScale}"><span class="cfg-val" id="v-tagline-scale">${Math.round(C.taglineScale*100)}%</span></div>
+      </div>
+      <div class="cfg-row">
+        <label class="cfg-label">Title size</label>
+        <div class="cfg-control"><input type="range" id="cfg-title-scale" min="0.6" max="1.3" step="0.05" value="${C.titleScale}"><span class="cfg-val" id="v-title-scale">${Math.round(C.titleScale*100)}%</span></div>
+      </div>
+    </div>
+    <div class="cfg-hint">Ctrl/⌘-click any carousel thumbnail to hide · H = toggle presentation mode · changes saved to localStorage</div>
+  </div>`;
+  deck.appendChild(s);allSlides.push(s);
+  // Wire sliders
+  const wire=(id,valId,get,set,fmt)=>{
+    const el=s.querySelector('#'+id),vl=s.querySelector('#'+valId);
+    el.addEventListener('input',()=>{set(parseFloat(el.value));applyAll();vl.textContent=fmt(parseFloat(el.value));localStorage.setItem('keynote-cfg',JSON.stringify(C));});
+  };
+  wire('cfg-para-gap','v-para-gap',()=>C.paraGap,v=>{C.paraGap=v;},v=>v.toFixed(2)+'em');
+  wire('cfg-img-dur','v-img-dur',()=>C.imgDur,v=>{C.imgDur=v;},v=>v.toFixed(1)+'s');
+  wire('cfg-tagline-scale','v-tagline-scale',()=>C.taglineScale,v=>{C.taglineScale=v;},v=>Math.round(v*100)+'%');
+  wire('cfg-title-scale','v-title-scale',()=>C.titleScale,v=>{C.titleScale=v;},v=>Math.round(v*100)+'%');
+})();
 
 // ── Build cover ──
 const cov=document.createElement('div');cov.className='slide active';cov.dataset.type='cover';
@@ -2181,7 +2245,7 @@ function buildMediaCycler(slideEl, items, opts){
           src.play().catch(()=>{});
           src.addEventListener('ended', ()=>{ videoEnded=true; }, {once:true});
         }
-        const done = !manualMode && (isVid ? videoEnded : el >= imageDuration);
+        const done = !manualMode && (isVid ? videoEnded : el >= (window._globalImageDuration||imageDuration));
         if (done){
           if (isVid){ src.pause(); src.currentTime=0; }
           playBing();
@@ -2741,7 +2805,7 @@ deck.insertBefore(allSlides[2], allSlides[1]);
   if (span) { span.style.display='inline-block'; span.style.transform='translate(0px,-14px)'; }
 })();
 
-const total=allSlides.length;let current=0;const counterEl=document.getElementById('counter');
+const total=allSlides.length;let current=allSlides.findIndex(s=>s.classList.contains('active'));if(current<0)current=0;const counterEl=document.getElementById('counter');
 
 // ── Nav ──
 function updateHUD(){counterEl.textContent=`${String(current+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;updateTracker()}
@@ -2949,7 +3013,7 @@ window.addEventListener('hashchange', goToFromHash);
 
 // ── Park slides at end (user: "I need to decide how to sort them") ──
 (function(){
-  const PARK=[8,9,11,15,16]; // 0-indexed: slides 09,10,12,16,17
+  const PARK=[9,10,12,16,17]; // 0-indexed after settings slide at slot 0: slides 09,10,12,16,17
   const parked=PARK.map(i=>allSlides[i]);
   [...PARK].sort((a,b)=>b-a).forEach(i=>allSlides.splice(i,1));
   parked.forEach(s=>{s.dataset.parked='1';allSlides.push(s);});
@@ -2966,7 +3030,8 @@ allSlides.forEach((s,i)=>{
   if(s.dataset.hidden) t.classList.add('slide-hidden');
   t.dataset.idx=i;
   let label='';
-  if(type==='cover')label='Cover';
+  if(type==='settings')label='⚙ Config';
+  else if(type==='cover')label='Cover';
   else if(type==='case')label=s.dataset.year+' ▸';
   else if(type==='lesson')label='L'+s.dataset.ln+' '+s.dataset.year;
   else if(type==='bonus')label='★ Bonus';
@@ -3081,7 +3146,8 @@ function rebuildGrid(){
     t.dataset.idx = i;
     t.setAttribute('draggable', 'true');
     let label = '';
-    if(type==='cover') label='Cover';
+    if(type==='settings') label='⚙ Config';
+    else if(type==='cover') label='Cover';
     else if(type==='venn') label='Venn';
     else if(type==='intro-alex') label='Alex';
     else if(type==='intro-lens') label='Lens';

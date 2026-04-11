@@ -2598,7 +2598,8 @@ function buildMediaCycler(slideEl, items, opts){
 
 // ── Four Seasons Lake Austin ─────────────────────────────────────────────
 (function(){
-  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Four Seasons Lake Austin'));
+  // Match the 2023 FSLA (scope creep section), not the 2022 one (R&D section)
+  const slide = allSlides.find(s => s.dataset.year==='2023' && s.querySelector?.('.case-title')?.textContent.includes('Four Seasons Lake Austin'));
   if (!slide) return;
   buildMediaCycler(slide, [
     {type:'image', src:'media/fsla/fsla_01.jpg'},

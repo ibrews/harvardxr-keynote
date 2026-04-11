@@ -281,6 +281,16 @@ canvas#stars{position:absolute;inset:0}
 .accent-amber .ey-badge{color:var(--amber)}.accent-amber .lesson-rule{background:var(--amber)}
 .accent-rose .ey-badge{color:var(--rose)}.accent-rose .lesson-rule{background:var(--rose)}
 .slide-bonus .ey-badge{color:var(--amber)}.slide-bonus .lesson-rule{background:var(--amber)}.slide-bonus .year-ghost{color:rgba(245,158,11,.04)}
+/* Recap slide — "That's it! 10 Lessons from 10 Years" */
+.slide-recap{justify-content:center;align-items:center;text-align:center}
+.recap-title{font-size:clamp(2.4rem,5.8vw,5.5rem);font-weight:700;letter-spacing:-.02em;line-height:1.1;opacity:0;transition:opacity .8s}
+.recap-sub{font-size:clamp(1rem,2vw,1.8rem);color:var(--dim);margin-top:12px;opacity:0;transition:opacity .8s .4s}
+.recap-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 48px;margin-top:clamp(28px,4vh,52px);max-width:1000px;text-align:left}
+.recap-item{display:flex;align-items:baseline;gap:14px;opacity:0;transform:translateY(-18px);transition:opacity .4s,transform .4s cubic-bezier(.2,0,.4,1.15)}
+.recap-item.visible{opacity:1;transform:none}
+.recap-num{font-size:clamp(.8rem,1.1vw,1rem);font-weight:700;letter-spacing:.15em;color:var(--teal);min-width:28px}
+.recap-label{font-size:clamp(.85rem,1.3vw,1.2rem);font-weight:600;color:rgba(240,244,255,.8);letter-spacing:.08em}
+.recap-wait{font-size:clamp(1.1rem,1.8vw,1.6rem);color:var(--amber);margin-top:clamp(20px,3vh,40px);opacity:0;transition:opacity .6s;font-style:italic}
 
 /* Monocle tracker */
 #tracker-year{text-align:center;font-size:clamp(.5rem,.65vw,.68rem);font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);opacity:.9;line-height:1;margin-bottom:3px}
@@ -2107,6 +2117,113 @@ SECTIONS.forEach((sec,si)=>{
   }
 });
 
+// ── Recap — "That's it! 10 Lessons from 10 Years" ──
+const recapS=document.createElement('div');recapS.className='slide slide-recap';recapS.dataset.type='recap';recapS.dataset.year=2025;
+{
+  const lessons=[
+    {n:'01',label:'VR IS THEATER',accent:'teal'},
+    {n:'02',label:"IT'S OK TO PIVOT",accent:'purple'},
+    {n:'03',label:'INBOUND IS TRICKY',accent:'teal'},
+    {n:'04',label:'OUTSIDE-IN IS THE EDGE',accent:'amber'},
+    {n:'05',label:'TOOLS ARE STRATEGY',accent:'rose'},
+    {n:'06',label:'REQUIRE A DEPOSIT',accent:'purple'},
+    {n:'07',label:'PROTECT R&D TIME',accent:'amber'},
+    {n:'08',label:'SCOPE CREEP WILL FIND YOU',accent:'teal'},
+    {n:'09',label:'98% IS ENOUGH',accent:'purple'},
+    {n:'10',label:'BUILD A COMMUNITY',accent:'rose'},
+  ];
+  const itemsHTML=lessons.map(l=>`<div class="recap-item" data-accent="${l.accent}"><span class="recap-num" style="color:var(--${l.accent})">${l.n}</span><span class="recap-label">${l.label}</span></div>`).join('');
+  recapS.innerHTML=`<h2 class="recap-title">That's it!</h2><p class="recap-sub">10 Lessons from 10 Years</p><div class="recap-grid">${itemsHTML}</div><p class="recap-wait">But wait… have I learned anything from 2026?</p>`;
+}
+deck.appendChild(recapS);allSlides.push(recapS);
+
+// Recap slide steps + walker hop
+(function(){
+  const items=recapS.querySelectorAll('.recap-item');
+  const titleEl=recapS.querySelector('.recap-title');
+  const subEl=recapS.querySelector('.recap-sub');
+  const waitEl=recapS.querySelector('.recap-wait');
+
+  function recapReset(){
+    titleEl.style.opacity='0';subEl.style.opacity='0';waitEl.style.opacity='0';
+    items.forEach(it=>it.classList.remove('visible'));
+  }
+
+  function playDropSfx(){
+    try{
+      const ctx=new(window.AudioContext||window.webkitAudioContext)();
+      const now=ctx.currentTime;
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sine';o.frequency.value=660+Math.random()*200;
+      o.connect(g);g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.06,now);
+      g.gain.exponentialRampToValueAtTime(0.001,now+0.08);
+      o.start(now);o.stop(now+0.09);
+    }catch(e){}
+  }
+
+  function playTaDaSfx(){
+    try{
+      const ctx=new(window.AudioContext||window.webkitAudioContext)();
+      const now=ctx.currentTime;
+      [[523,0],[659,0.06],[784,0.12],[1047,0.18],[1319,0.24],[1568,0.30]].forEach(([freq,t])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type='triangle';o.frequency.value=freq;
+        o.connect(g);g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.07,now+t);
+        g.gain.exponentialRampToValueAtTime(0.001,now+t+0.2);
+        o.start(now+t);o.stop(now+t+0.22);
+      });
+    }catch(e){}
+  }
+
+  function walkerHopAndTease(){
+    playTaDaSfx();
+    const walker=document.getElementById('tav');
+    if(walker){
+      let hopFrame=0;
+      const inner=walker.querySelector('g');
+      const wScale=0.22;
+      function hop(){
+        hopFrame++;
+        const bounceY=-Math.abs(Math.sin(hopFrame*0.18))*12*Math.max(0,1-hopFrame/50);
+        if(inner)inner.setAttribute('transform',`scale(${wScale}) translate(0,${(bounceY/wScale).toFixed(1)})`);
+        if(hopFrame<50) requestAnimationFrame(hop);
+        else{
+          if(inner)inner.setAttribute('transform',`scale(${wScale})`);
+          const tsvg=document.getElementById('tracker-svg');
+          if(tsvg){
+            const epx=parseFloat(tsvg.dataset.epx)||60;
+            const epy=parseFloat(tsvg.dataset.epy)||60;
+            walker.style.transition='transform 0.8s cubic-bezier(.4,0,.2,1)';
+            walker.setAttribute('transform',`translate(${epx},${epy})`);
+            setTimeout(()=>{walker.style.transition='';},900);
+          }
+          const yrEl=document.getElementById('tracker-year');
+          if(yrEl) yrEl.textContent='2026';
+        }
+      }
+      requestAnimationFrame(hop);
+    }
+    setTimeout(()=>{waitEl.style.opacity='1';},600);
+  }
+
+  const steps=[];
+  for(let i=0;i<items.length;i++){
+    steps.push(()=>{playDropSfx();items[i].classList.add('visible');});
+  }
+  steps.push(walkerHopAndTease);
+
+  window._recapReset=recapReset;
+  window._recapInit=function(){
+    recapReset();
+    setTimeout(()=>{titleEl.style.opacity='1';},200);
+    setTimeout(()=>{subEl.style.opacity='1';},600);
+  };
+
+  setTimeout(()=>{slideSteps.set(recapS,{current:0,steps:steps});},0);
+})();
+
 // ── Bonus ──
 const bon=document.createElement('div');bon.className='slide slide-lesson slide-bonus';bon.dataset.type='bonus';bon.dataset.year=2026;
 bon.innerHTML=`<div class="year-ghost">2026</div><div class="lesson-ey"><span class="ey-yr">2026</span><span class="ey-sep">·</span><span class="ey-badge" style="color:var(--amber)">BONUS LESSON</span></div>
@@ -3317,6 +3434,7 @@ function goTo(n){
     setTimeout(playBeardEvolution, 800);
   }
   if (slideYear < 2020 && t !== 'intermission') _evoPlayed = false;
+  if(t==='recap') { if(window._recapReset) window._recapReset(); setTimeout(()=>{ if(window._recapInit) window._recapInit(); },400); }
   if(t==='map') setTimeout(startMap, 400);
   // Quote rain — stop when leaving Community slide
   { const isComm = nx.querySelector?.('.case-title')?.textContent.includes('Unreal NYC & HalcyonVR');
@@ -3536,7 +3654,7 @@ let _searchIndex=[];
 function buildSearchIndex(){
   _searchIndex=allSlides.map((s,i)=>{
     const type=s.dataset.type;
-    if(type==='settings'||type==='intermission'||type==='map')return null;
+    if(type==='settings'||type==='intermission'||type==='map'||type==='recap')return null;
     let title='',label='',bodyParts=[];
     if(type==='lesson'){
       title=(s.querySelector('.lesson-title')?.textContent||'').replace(/\s+/g,' ').trim();
@@ -3868,7 +3986,7 @@ function tPos(i){
 
 function updateTracker(){
   const type=allSlides[current].dataset.type;
-  const show=type==='case'||type==='lesson'||type==='bonus'||type==='intermission';
+  const show=type==='case'||type==='lesson'||type==='bonus'||type==='intermission'||type==='recap';
   trackerEl.classList.toggle('visible',show);if(!show)return;
   if(type==='intermission'){
     const yrEl=document.getElementById('tracker-year');
@@ -4282,17 +4400,14 @@ function startMap(){
   },cStart+1100);
 
   // 7. White monocle PNG ghost — fades in behind everything for the brand reveal.
-  // Notes from chasing a Chrome bug here:
-  //   - The SVG `opacity` attribute and CSS opacity property fight each other
-  //     in weird ways when the property is animated, so we removeAttribute
-  //     before touching the style.
-  //   - The CSS `transition: opacity ...` we initially set on the element gets
-  //     repeatedly re-triggered somehow (the computed value drifts up by less
-  //     than 0.001 per second instead of completing in 1.6s). We sidestep that
-  //     by setting transition:none and snap-setting the final opacity.
+  // Force a reflow between removing the SVG attribute and starting the CSS
+  // transition so the browser commits opacity:0 before animating to 0.22.
   if (logoImg) setTimeout(() => {
     logoImg.removeAttribute('opacity');
     logoImg.style.transition = 'none';
+    logoImg.style.opacity = '0';
+    void logoImg.getBoundingClientRect(); // flush — commit opacity:0 before transition
+    logoImg.style.transition = 'opacity 1.6s ease-in';
     logoImg.style.opacity = '0.22';
   }, cStart + 1500);
 

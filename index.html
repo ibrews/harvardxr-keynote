@@ -111,7 +111,7 @@ const SECTIONS = [
         img:'media/xmas-carol/xmas-carol.jpg',
         bullets:['Actors Theatre Louisville asked us for production assets — metahumans and some good videos. Not a VR project.','We did the R&D, then flipped the brief: "As long as we\'re building sets and characters and costumes for you — how about we just do a full VR production?"','That upsell became our annual production, our R&D vehicle, the SIGGRAPH multi-avatar paper, and the AI Dickens lineage.'] },
       { title:'The Orchard — Off-Broadway', subtitle:'Protect your IP — not just deliverables, but the knowledge they generate',
-        img:'media/the-orchard/the-orchard.jpg',
+        img:'MEDIA_CYCLER',
         bullets:['An Off-Broadway production where we brought our real-time pipeline to live theater — not as a tech demo, but as craft.','The pandemic cash crunch taught us: protect your IP. If the only asset is a client\'s build, you own nothing when the project ends.','Find common ground among clients to productize bespoke services. The Orchard proved our tools had a life beyond one engagement.'] },
     ],
     lesson: { title:'Require a Deposit.\nBefore You Build.', tagline:'The single best operational decision we ever made.<br>The first check separates the curious from the committed, gives you runway to actually staff the work, and buys you the right to say "we\'re not sure yet" instead of pretending you have all the answers.<br><br>It filters out tire-kickers, protects the team from scope creep, and means your R&D never happens on your own dime.<br><br>Your services are valuable — sort out the serious clients from those seeking free consulting.', short:'REQUIRE A DEPOSIT', tags:'Christmas Carol VR · The Orchard · Payment Terms' },
@@ -2552,6 +2552,16 @@ function buildMediaCycler(slideEl, items, opts){
     {type:'image', src:'media/dgh/DavidGeffenHall01.jpg'},
     {type:'image', src:'media/dgh/DavidGeffenHall02.jpg'},
     {type:'image', src:'media/dgh/DavidGeffenHall03.jpeg'},
+  ], {imageDuration:6000});
+})();
+
+// ── The Orchard — Off-Broadway ────────────────────────────────────────────
+(function(){
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('The Orchard'));
+  if (!slide) return;
+  buildMediaCycler(slide, [
+    {type:'image', src:'media/the-orchard/orchard_image.jpg'},
+    {type:'video', src:'media/the-orchard/orchard_trailer.mp4'},
   ], {imageDuration:6000});
 })();
 

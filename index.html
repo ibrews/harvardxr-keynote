@@ -1686,7 +1686,19 @@ allSlides.forEach((s,i)=>{
     }
     updateHUD();
 
-    // Toast the reorder
+    // Save as annotation so the user can export it
+    const orderStr = allSlides.map((s,i) => {
+      const type = s.dataset.type || '?';
+      const yr = s.dataset.year || '';
+      const ln = s.dataset.ln ? 'L'+s.dataset.ln : '';
+      return `${i+1}:${[type,yr,ln].filter(Boolean).join(' ')}`;
+    }).join(', ');
+    const arr = annoLoad();
+    // Replace any existing REORDER annotation
+    const existing = arr.findIndex(a => a.text.startsWith('REORDER '));
+    const entry = { selector: '#deck', text: `REORDER [${orderStr}]`, context: 'deck', ts: Date.now() };
+    if (existing >= 0) arr[existing] = entry; else arr.push(entry);
+    annoSave(arr); annoRender();
     if (typeof annoToast === 'function') annoToast(`Swapped slides ${dragIdx+1} ↔ ${dropIdx+1}`);
   });
 

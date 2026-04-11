@@ -1089,7 +1089,7 @@ allSlides.push(introLens);
   svg.appendChild(svgE('circle', { cx:CX, cy:CY, r:monocleR,
     fill:'none', stroke:'rgba(255,255,255,.06)', 'stroke-width':'34' }));
   // Hinge nubs — two small circles on the upper-right "shoulders" of the monocle
-  const hingeA1 = -0.55, hingeA2 = -0.15; // angles bracketing the bump
+  const hingeA1 = -1.5, hingeA2 = -0.2; // top shoulder ~12:05, bottom shoulder ~2 o'clock
   const hr = monocleR + 16;
   const h1x = CX + hr*Math.cos(hingeA1), h1y = CY + hr*Math.sin(hingeA1);
   const h2x = CX + hr*Math.cos(hingeA2), h2y = CY + hr*Math.sin(hingeA2);

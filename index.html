@@ -26,6 +26,12 @@ const SECTIONS = [
       { title:'The Shed @ Hudson Yards', subtitle:'Our first major VR architecture project',
         img:'MEDIA_CYCLER',
         bullets:['Custom AR & VR walkthroughs for a $475M cultural venue','Parametric design options explored in real-time VR','We weren\'t doing film. We weren\'t doing games. We were doing stagecraft.'] },
+      { title:'Macbeth at Park Avenue Armory', subtitle:'Shakespeare\'s Scottish Play, reimagined in real-time 3D',
+        img:'MEDIA_CYCLER',
+        bullets:['PLACEHOLDER bullet 1','PLACEHOLDER bullet 2','PLACEHOLDER bullet 3'] },
+      { title:'Late Show @ Ed Sullivan Theater', subtitle:'A broadcast institution, reimagined in XR',
+        img:'MEDIA_CYCLER',
+        bullets:['Bravo Media saw the potential of my code for a new purpose','Saved valuable time','Just another sightline!'] },
       { title:'Four Seasons Lake Austin — The Spike Tape Story', subtitle:'A 5¢ solution to a $5,000 problem',
         img:'https://website-ivory-omega-78.vercel.app/portfolio/four-seasons-holodeck.jpg',
         bullets:['Mid-experience, guests sit in a physical chair that also exists in VR. Jonathan asked: "If only there was a way to make sure the chair was placed in exactly the right spot every time…"','Kevin Laibson: "Jonathan, I can\'t wait for you to meet our thousand-year-old invention — spike tape."','"It\'s not a VR experience that is similar to theater. It\'s a theater experience that has VR in it." — Kevin'] },
@@ -131,6 +137,9 @@ const SECTIONS = [
   {
     year: 2025, accent: 'rose',
     cases: [
+      { title:'Build a Community', subtitle:'Growing NYC\'s XR scene from the ground up',
+        img:'MEDIA_CYCLER',
+        bullets:['Co-founded the ACC VR community — a meetup series for New York\'s immersive creators','Helped launch Unreal Engine NYC, bringing developers and artists together around real-time tech','Organized sessions at Halcyon Arts Lab, bringing in new audiences to experience XR firsthand'] },
       { title:'Your Mind, Girls — The Scope Creep Story', subtitle:'How $0 of revenue funded a genuinely excellent piece',
         img:'',
         bullets:['Hope Hutman approached us asking for a small blueprint script. We said yes, planning to hand it off and take a small credit.','Each yes spawned 5 new problems. Sony Mocopi was the new shiny in the room. We thought we were killing two birds. Kevin: "We were just being sat on by a giant bird."','We ended up as full co-producers. 30 people in headsets watching a real actor in a virtual space. Beautiful work. Zero dollars.'] },
@@ -245,7 +254,7 @@ canvas#stars{position:absolute;inset:0}
 .contact-pill{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:48px;padding:14px 28px;font-size:clamp(.95rem,1.3vw,1.2rem)}
 .contact-pill .lbl{opacity:.4;font-size:clamp(.65rem,.9vw,.85rem);text-transform:uppercase;letter-spacing:.1em}
 .close-qr-row{display:flex;gap:24px;justify-content:center;align-items:flex-start;margin-top:36px;flex-wrap:wrap}
-.qr-card{display:flex;flex-direction:column;align-items:center;gap:8px}
+.qr-card{display:flex;flex-direction:column;align-items:center;gap:8px;width:176px}
 .qr-card canvas{border-radius:10px;background:#fff;padding:8px;display:block}
 .qr-label{font-size:clamp(.72rem,1vw,.9rem);color:rgba(255,255,255,.6);letter-spacing:.1em;font-weight:500;text-align:center}
 .qr-badge{font-size:clamp(.58rem,.78vw,.76rem);font-weight:600;letter-spacing:.08em;text-align:center;line-height:1.35}
@@ -262,6 +271,7 @@ canvas#stars{position:absolute;inset:0}
 #counter{position:fixed;top:32px;right:48px;z-index:20;font-size:clamp(.72rem,1vw,.95rem);font-weight:500;letter-spacing:.12em;color:rgba(255,255,255,.25)}
 #brand{position:fixed;bottom:28px;left:48px;z-index:20;font-size:clamp(.68rem,.95vw,.9rem);font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.18)}
 .nav-arrows{position:fixed;bottom:24px;right:160px;z-index:20;display:flex;gap:10px}
+#step-indicator{position:fixed;bottom:82px;right:160px;z-index:20;font-size:.6rem;font-weight:600;letter-spacing:.14em;color:rgba(255,255,255,.3);text-align:center;width:102px;pointer-events:none}
 .nav-btn{width:46px;height:46px;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:rgba(255,255,255,.03);color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;backdrop-filter:blur(8px)}
 .nav-btn:hover{background:rgba(0,212,255,.12);border-color:rgba(0,212,255,.3);color:var(--teal)}
 
@@ -269,8 +279,8 @@ canvas#stars{position:absolute;inset:0}
    shows only the slide content. Toggle off again to restore. ── */
 body.presentation-mode #counter,
 body.presentation-mode #brand,
+body.presentation-mode #step-indicator,
 body.presentation-mode .nav-arrows,
-body.presentation-mode #tracker,
 body.presentation-mode #slide-grid,
 body.presentation-mode #slide-grid-zone,
 body.presentation-mode #anno-toggle,
@@ -447,6 +457,11 @@ body.presentation-mode #anno-prompt {
   85%  { filter:brightness(8) saturate(0) }
   100% { filter:brightness(1) }
 }
+/* Intermission title pulse */
+@keyframes intermissionFlash {
+  0%,100%{ opacity:1 }
+  50%    { opacity:.12 }
+}
 /* Evolution particle burst */
 @keyframes evoBurst {
   0%   { opacity:0; transform:translate(0,0) scale(.5) }
@@ -584,6 +599,7 @@ body.edit-text .slide.active [contenteditable="true"]{outline:2px solid var(--te
 <div id="tracker"><div id="tracker-year"></div><svg id="tracker-svg" viewBox="0 0 120 120"></svg></div>
 <div id="counter"></div>
 <div id="brand">Agile Lens · HXR 2026</div>
+<div id="step-indicator"></div>
 <div class="nav-arrows"><button class="nav-btn" id="btn-prev">←</button><button class="nav-btn" id="btn-next">→</button></div>
 
 <!-- Slide jump grid (hover bottom of screen to reveal) -->
@@ -982,8 +998,8 @@ introAlex.innerHTML = `
       <div class="intro-stats" id="intro-stats-row" style="opacity:0;transition:opacity .6s">
         <div class="intro-stat"><span class="num">16</span><span class="lbl">Years in XR</span></div>
         <div class="intro-stat"><span class="num">10</span><span class="lbl">Years at Agile Lens</span></div>
-        <div class="intro-stat"><span class="num">100+</span><span class="lbl">Projects Shipped</span></div>
         <div class="intro-stat"><span class="num">8</span><span class="lbl">Years in Unreal</span></div>
+        <div class="intro-stat"><span class="num">100+</span><span class="lbl">Projects Shipped</span></div>
       </div>
     </div>
   </div>`;
@@ -1494,6 +1510,11 @@ allSlides.push(introLens);
     'font-size':'14', 'font-weight':'400', 'letter-spacing':'5' });
   t3.textContent = 'EST. 2016';
   svg.appendChild(t3);
+  const t4 = svgE('text', { x:CX, y:CY+64, 'text-anchor':'middle', 'dominant-baseline':'middle',
+    fill:'rgba(255,255,255,.20)', 'font-family':'Space Grotesk,sans-serif',
+    'font-size':'13', 'font-weight':'400', 'letter-spacing':'6' });
+  t4.textContent = 'NYC';
+  svg.appendChild(t4);
 
   // Client names orbiting around the monocle
   // Layout: 12 clients placed so specific pairs sit at clock positions.
@@ -1616,12 +1637,12 @@ allSlides.push(introLens);
   const sub = svgE('text', { x:CX, y:830, 'text-anchor':'middle',
     fill:'rgba(255,255,255,.25)', 'font-family':'Space Grotesk,sans-serif',
     'font-size':'14', 'letter-spacing':'2' });
-  sub.textContent = 'NYC · BOOTSTRAPPED · XR SPECIALISTS · 10 YEARS';
+  sub.textContent = 'BOOTSTRAPPED · XR SPECIALISTS · 10 YEARS';
   svg.appendChild(sub);
 
   // ── Sub-slide steps for the Agile Lens intro ──
   // Collect all text elements so we can fade them out in step 1
-  const lensTexts = [t1, t2, t3, sub, ...clientEls];
+  const lensTexts = [t1, t2, t3, t4, sub, ...clientEls];
 
   // Step 1: Fade all text away — just the pulsing monocle remains
   function lensStep1() {
@@ -1712,6 +1733,7 @@ allSlides.push(introLens);
       });
     } catch(e) {}
   }
+  window._playShrinkSfx = playShrinkSfx;
 
   function lensStep3() {
     if (!lensAvG) return;
@@ -1820,11 +1842,75 @@ allSlides.push(introLens);
     requestAnimationFrame(phaseA);
   }
 
+  // Step 2 (countdown): 2026 fades in center, counts back with ticks,
+  // white→teal color + scale-down + opacity fade ending ~1950. Sounds stop before fade ends.
+  function lensCountdown() {
+    const yrEl = svgE('text', {
+      x: CX, y: CY, 'text-anchor':'middle', 'dominant-baseline':'middle',
+      fill:'rgba(255,255,255,.85)', 'font-family':'Space Grotesk,sans-serif',
+      'font-size':'72', 'font-weight':'700', 'letter-spacing':'4',
+      id: 'lens-year-counter',
+    });
+    yrEl.style.transformBox = 'fill-box';
+    yrEl.style.transformOrigin = 'center';
+    yrEl.textContent = '2026';
+    yrEl.style.opacity = '0';
+    svg.appendChild(yrEl);
+    // Fade in 2026
+    setTimeout(() => { yrEl.style.transition = 'opacity .4s'; yrEl.style.opacity = '1'; }, 50);
+    // Start countdown after fade-in settles
+    setTimeout(() => {
+      yrEl.style.transition = '';
+      const countDur = 3000;
+      const t0 = performance.now();
+      let lastYear = -1;
+      let ticksActive = true;
+      function tickSound() {
+        try {
+          if (!_humCtx) _humCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (_humCtx.state === 'suspended') _humCtx.resume();
+          const ctx = _humCtx, now = ctx.currentTime;
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.type = 'square'; o.frequency.value = 1200 + Math.random() * 200;
+          o.connect(g); g.connect(ctx.destination);
+          g.gain.setValueAtTime(0.04, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+          o.start(now); o.stop(now + 0.04);
+        } catch(e) {}
+      }
+      function countFrame(now) {
+        const k = Math.min(1, (now - t0) / countDur);
+        const cur = Math.round(2026 - k * 126); // 2026 → 1900
+        yrEl.textContent = String(cur);
+        if (cur !== lastYear) {
+          if (ticksActive) tickSound();
+          lastYear = cur;
+        }
+        // Stop ticks just before fade so last sound finishes before opacity drops
+        if (cur <= 1975) ticksActive = false;
+        // Fade zone: 1970 → 1950 — color white→teal, opacity 1→0, scale 1→0.85
+        if (cur <= 1970) {
+          const t = Math.min(1, (1970 - cur) / 20);
+          // White (255,255,255) → Teal (0,212,255)
+          const r = Math.round(255 * (1 - t));
+          const g = Math.round(255 - 43 * t);
+          yrEl.setAttribute('fill', `rgb(${r},${g},255)`);
+          yrEl.style.opacity = (1 - t).toFixed(3);
+          yrEl.style.transform = `scale(${(1 - 0.15 * t).toFixed(3)})`;
+        }
+        if (k < 1) requestAnimationFrame(countFrame);
+        else yrEl.style.opacity = '0';
+      }
+      requestAnimationFrame(countFrame);
+    }, 500);
+  }
+
   // Register steps (runs after slideSteps is available)
+  // Order: fade text → countdown → avatar → shrink → chiptune+2016
   setTimeout(() => {
     slideSteps.set(introLens, {
       current: 0,
-      steps: [lensStep1, lensStep2, lensStep3, lensStep4],
+      steps: [lensStep1, lensCountdown, lensStep2, lensStep3, lensStep4],
     });
   }, 0);
 
@@ -1833,6 +1919,7 @@ allSlides.push(introLens);
     lensTexts.forEach(el => { el.style.transition = 'none'; el.style.opacity = ''; });
     if (lensAvG) { lensAvG.remove(); lensAvG = null; }
     document.getElementById('lens-2016-lbl')?.remove();
+    document.getElementById('lens-year-counter')?.remove();
     svg.querySelectorAll('path[stroke-dasharray]').forEach(p => p.remove());
   };
 })();
@@ -1840,6 +1927,13 @@ allSlides.push(introLens);
 // ── Build sections — lesson slide FIRST, then case studies ──
 SECTIONS.forEach((sec,si)=>{
   const ac=sec.accent!=='teal'?` accent-${sec.accent}`:'';
+  // Before 2020: insert beard-evolution intermission slide
+  if (sec.year === 2020) {
+    const im=document.createElement('div');
+    im.className='slide slide-intermission';im.dataset.type='intermission';im.dataset.year=2020;
+    im.innerHTML='<svg id="intermission-svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%"></svg>';
+    deck.appendChild(im);allSlides.push(im);
+  }
   // Lesson slide comes first (per reorder annotation)
   const ls=document.createElement('div');ls.className=`slide slide-lesson${ac}`;ls.dataset.type='lesson';ls.dataset.year=sec.year;ls.dataset.section=si;ls.dataset.ln=si+1;
   ls.innerHTML=`<div class="year-ghost">${sec.year}</div>
@@ -1872,7 +1966,7 @@ deck.appendChild(mapS);allSlides.push(mapS);
 
 // ── Close ──
 const cls=document.createElement('div');cls.className='slide';cls.dataset.type='close';
-cls.innerHTML=`<img src="monocle-white.png" class="close-monocle-bg" alt=""><div class="close-ey">Thank You · From Pixel to Voxel · HXR 2026</div><h2 class="close-title">Let's Keep<br>Building</h2><p class="close-sub">Ten years in.<br>And the industry is just getting started.<br>What can we build with <em>YOU</em>&nbsp;&nbsp;?</p>
+cls.innerHTML=`<img src="monocle-white.png" class="close-monocle-bg" alt=""><div class="close-ey">Thank You · From Pixel to Voxel · HXR 2026</div><h2 class="close-title">Let's Keep<br>Building</h2><p class="close-sub">Agile Lens is ten years in.<br>Yet XR is still just getting started.<br>What can we build with <em>YOU</em>&nbsp;&nbsp;?</p>
 <div class="contact-row">
   <div class="contact-pill"><span class="lbl">Studio</span>Agile Lens</div>
   <div class="contact-pill"><span class="lbl">Web</span>agilelens.com</div>
@@ -1883,7 +1977,7 @@ cls.innerHTML=`<img src="monocle-white.png" class="close-monocle-bg" alt=""><div
   <div class="qr-card">
     <canvas id="qr-agilelens" width="160" height="160"></canvas>
     <div class="qr-label">agilelens.com</div>
-    <div class="qr-badge b-amber">Newly upgraded!</div>
+    <div class="qr-badge b-amber">Newly upgraded!<br>Spiffy newsletter!</div>
   </div>
   <div class="qr-card">
     <canvas id="qr-slides" width="160" height="160"></canvas>
@@ -1898,7 +1992,7 @@ cls.innerHTML=`<img src="monocle-white.png" class="close-monocle-bg" alt=""><div
   <div class="qr-card">
     <canvas id="qr-training" width="160" height="160"></canvas>
     <div class="qr-label">UE5 Training</div>
-    <div class="qr-badge b-rose">Learn from Manhattan's best<br>(&amp; only!) authorized training center!</div>
+    <div class="qr-badge b-rose">Manhattan's best (only!)<br>authorized training center</div>
   </div>
 </div>`;
 deck.appendChild(cls);allSlides.push(cls);
@@ -1966,12 +2060,13 @@ function buildMediaCycler(slideEl, items, opts){
       const c=_bingCtx, t=c.currentTime;
       const o=c.createOscillator(), g=c.createGain();
       o.type='sine';
-      o.frequency.setValueAtTime(330, t);
-      o.frequency.exponentialRampToValueAtTime(440, t+0.12);
+      // Deep sub-bass thud — mostly felt, barely heard
+      o.frequency.setValueAtTime(72, t);
+      o.frequency.exponentialRampToValueAtTime(38, t+0.18);
       o.connect(g); g.connect(c.destination);
-      g.gain.setValueAtTime(0.03, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t+2.2);
-      o.start(t); o.stop(t+2.21);
+      g.gain.setValueAtTime(0.007, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t+0.22);
+      o.start(t); o.stop(t+0.23);
     } catch(e){}
   }
 
@@ -2062,6 +2157,210 @@ function buildMediaCycler(slideEl, items, opts){
     {type:'video', src:'media/shed/Shed_Video.mp4'},
     {type:'image', src:'media/shed/Shed_Photo.jpg'},
   ], {imageDuration:6000});
+})();
+
+// ── Late Show @ Ed Sullivan Theater ───────────────────────────────────────
+(function(){
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Late Show'));
+  if (!slide) return;
+  buildMediaCycler(slide, [
+    {type:'image', src:'media/lateshow/lateshow01_early-oculus-rift_orig.jpg'},
+    {type:'image', src:'media/lateshow/lateshow02_unity.png'},
+    {type:'image', src:'media/lateshow/lateshow03_mag.png'},
+    {type:'video', src:'media/lateshow/lateshow04_vid.mp4'},
+  ], {imageDuration:6000});
+})();
+
+// ── Macbeth at Park Avenue Armory ──────────────────────────────────────────
+(function(){
+  const macbethSlide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Macbeth'));
+  if (!macbethSlide) return;
+  buildMediaCycler(macbethSlide, [
+    {type:'image', src:'media/macbeth/macbeth01_unity.png'},
+    {type:'image', src:'media/macbeth/macbeth02_photo.jpg'},
+    {type:'video', src:'media/macbeth/macbeth03_vid.mp4'},
+    {type:'image', src:'media/macbeth/macbeth04_parkavenuearmory.png'},
+  ], {imageDuration:6000});
+})();
+
+// ── Build a Community ─────────────────────────────────────────────────────
+(function(){
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Build a Community'));
+  if (!slide) return;
+  buildMediaCycler(slide, [
+    {type:'image', src:'media/community/community01_accvr.jpg'},
+    {type:'image', src:'media/community/community02_accvr_peeps.jpg'},
+    {type:'image', src:'media/community/community03_unrealnyc.jpg'},
+    {type:'image', src:'media/community/community04_unrealnyc_peeps.jpg'},
+    {type:'image', src:'media/community/community05_halcyonvr.jpg'},
+    {type:'image', src:'media/community/community06_halcyon_collage.jpg'},
+  ], {imageDuration:6000});
+})();
+
+// ── Intermission: Beard Evolution ─────────────────────────────────────────
+(function buildIntermission(){
+  const slide = allSlides.find(s => s.dataset.type === 'intermission');
+  if (!slide) return;
+  const svg = slide.querySelector('#intermission-svg');
+  const CX = 800, CY = 460;
+  const BRX = 1490, BRY = 810; // bottom-right minimap corner
+  const HOLD_SCALE = 2.8;
+
+  // ── Full Agile Lens monocle (same geometry as slide 4, monocleR=300) ──
+  const monocleR = 300;
+  const imgW=852, imgH=877, ringCX=407, ringCY=432, ringR=374;
+  const mScale=monocleR/ringR;
+  const mW=imgW*mScale, mH=imgH*mScale;
+  const mX=CX-ringCX*mScale, mY=CY-ringCY*mScale;
+
+  const imMonocleG = svgE('g',{ opacity:'0' });
+  imMonocleG.appendChild(svgE('circle',{ cx:CX,cy:CY,r:monocleR,
+    fill:'none',stroke:'rgba(255,255,255,.12)','stroke-width':'28' }));
+  imMonocleG.appendChild(svgE('circle',{ cx:CX,cy:CY,r:monocleR,
+    fill:'none',stroke:'rgba(255,255,255,.06)','stroke-width':'34' }));
+  const hingeA1=-1.41, hingeA2=-0.2, hr=monocleR+16;
+  [hingeA1,hingeA2].forEach(a=>imMonocleG.appendChild(svgE('circle',{
+    cx:CX+hr*Math.cos(a), cy:CY+hr*Math.sin(a), r:'8',
+    fill:'none',stroke:'rgba(255,255,255,.1)','stroke-width':'5' })));
+  const eyeDx=(775-407)*mScale, eyeDy=(788-432)*mScale;
+  const ex=CX+eyeDx, ey=CY+eyeDy;
+  const eyeAngle=Math.atan2(eyeDy,eyeDx);
+  const csx=CX+monocleR*Math.cos(eyeAngle), csy=CY+monocleR*Math.sin(eyeAngle);
+  const ctrlx=(csx+ex)/2+15*Math.cos(eyeAngle+Math.PI/2);
+  const ctrly=(csy+ey)/2+15*Math.sin(eyeAngle+Math.PI/2);
+  imMonocleG.appendChild(svgE('path',{
+    d:`M${csx} ${csy} Q${ctrlx} ${ctrly} ${ex} ${ey}`,
+    fill:'none',stroke:'rgba(255,255,255,.08)','stroke-width':'4','stroke-linecap':'round' }));
+  imMonocleG.appendChild(svgE('circle',{ cx:ex,cy:ey,r:'18',
+    fill:'none',stroke:'rgba(255,255,255,.1)','stroke-width':'5' }));
+  const imPulseImg = svgE('image',{
+    href:'monocle-white.png', x:mX+1, y:mY-4, width:mW, height:mH, opacity:'0' });
+  imMonocleG.appendChild(imPulseImg);
+  svg.appendChild(imMonocleG);
+
+  // INTERMISSION title
+  const imTitle = svgE('text',{ x:CX, y:100, 'text-anchor':'middle',
+    'dominant-baseline':'middle', fill:'var(--amber)',
+    'font-family':'Space Grotesk,sans-serif',
+    'font-size':'52','font-weight':'700','letter-spacing':'14', opacity:'0' });
+  imTitle.textContent = 'INTERMISSION';
+  svg.appendChild(imTitle);
+
+  // Avatar — clean + bearded, starts at BR corner
+  const avG = svgE('g',{ transform:`translate(${BRX},${BRY})` });
+  const avInner = svgE('g',{ transform:'scale(0.22)' });
+  avG.appendChild(avInner);
+  const avClean = svgE('g'); avInner.appendChild(avClean);
+  buildAvatar(avClean,{ withBeard:false });
+  const avBeard = svgE('g',{ visibility:'hidden' }); avInner.appendChild(avBeard);
+  buildAvatar(avBeard,{ withBeard:true });
+  avG.style.opacity = '0';
+  svg.appendChild(avG);
+
+  // Particles — 32 radiating from center
+  const EVO_COLORS=['#fde68a','#a78bfa','#00d4ff','#f43f5e','#fff','#f59e0b'];
+  const burstG = svgE('g',{ opacity:'0' });
+  for(let i=0;i<32;i++){
+    const a=(i/32)*Math.PI*2, d=100+Math.random()*160;
+    const p=svgE('circle',{ cx:CX, cy:CY, r:(2+Math.random()*4).toFixed(1),
+      fill:EVO_COLORS[i%EVO_COLORS.length],
+      'data-tx':(Math.cos(a)*d).toFixed(1), 'data-ty':(Math.sin(a)*d).toFixed(1) });
+    p.style.transformOrigin=`${CX}px ${CY}px`;
+    burstG.appendChild(p);
+  }
+  svg.appendChild(burstG);
+
+  // Pulse loop — monocle glow + subtle avatar breathe while holding
+  let pulseT=0, pulseRaf=null;
+  function runPulse(){
+    pulseT+=0.022;
+    imPulseImg.setAttribute('opacity',(0.05+0.05*Math.sin(pulseT)).toFixed(3));
+    const s=HOLD_SCALE+0.04*Math.sin(pulseT*0.8);
+    avInner.setAttribute('transform',`scale(${s.toFixed(3)})`);
+    pulseRaf=requestAnimationFrame(runPulse);
+  }
+  function stopPulse(){ if(pulseRaf){ cancelAnimationFrame(pulseRaf); pulseRaf=null; } }
+
+  function imReset(){
+    stopPulse();
+    avG.style.opacity='0'; avG.style.transition='';
+    avG.setAttribute('transform',`translate(${BRX},${BRY})`);
+    avInner.setAttribute('transform','scale(0.22)');
+    avClean.setAttribute('visibility','visible');
+    avBeard.setAttribute('visibility','hidden');
+    imTitle.style.animation=''; imTitle.setAttribute('opacity','0');
+    imMonocleG.setAttribute('opacity','0'); imPulseImg.setAttribute('opacity','0');
+    burstG.style.opacity='0';
+    burstG.querySelectorAll('circle').forEach(p=>p.style.animation='');
+  }
+
+  // Step 1 — send him back to the minimap with shrink SFX
+  function imStep1(){
+    stopPulse(); imPulseImg.setAttribute('opacity','0');
+    if(window._playShrinkSfx) window._playShrinkSfx();
+    const dur=1800, t0=performance.now();
+    function shrinkFrame(now){
+      const k=Math.min(1,(now-t0)/dur);
+      const ease=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+      const s=HOLD_SCALE+(0.22-HOLD_SCALE)*ease;
+      const x=CX+(BRX-CX)*ease, y=CY+(BRY-CY)*ease;
+      avG.setAttribute('transform',`translate(${x.toFixed(1)},${y.toFixed(1)})`);
+      avInner.setAttribute('transform',`scale(${s.toFixed(3)})`);
+      if(k<1){ requestAnimationFrame(shrinkFrame); return; }
+      avG.style.transition='opacity .5s'; avG.style.opacity='0';
+      imTitle.style.animation='';
+      imTitle.style.transition='opacity .6s'; imTitle.setAttribute('opacity','0');
+      imMonocleG.style.transition='opacity .6s'; imMonocleG.setAttribute('opacity','0');
+    }
+    requestAnimationFrame(shrinkFrame);
+  }
+
+  function startBeardFlash(){
+    playBeardEvolution(); // minimap walker swap + SFX
+    [{b:true,t:0},{b:false,t:210},{b:true,t:420},{b:false,t:660},
+     {b:true,t:940},{b:false,t:1250},{b:true,t:1560}].forEach(({b,t})=>
+      setTimeout(()=>{
+        avClean.setAttribute('visibility',b?'hidden':'visible');
+        avBeard.setAttribute('visibility',b?'visible':'hidden');
+      },t));
+    // Particles at 1s
+    setTimeout(()=>{
+      burstG.style.opacity='1';
+      burstG.querySelectorAll('circle').forEach(p=>{
+        p.style.setProperty('--tx',`${p.getAttribute('data-tx')}px`);
+        p.style.setProperty('--ty',`${p.getAttribute('data-ty')}px`);
+        p.style.animation='evoBurst 1.4s ease-out forwards';
+      });
+    },1000);
+    // At 1.8s lock bearded at HOLD_SCALE and start pulse — waits for click
+    setTimeout(()=>{ avInner.setAttribute('transform',`scale(${HOLD_SCALE})`); runPulse(); },1800);
+  }
+
+  window._playIntermission = function(){
+    imReset();
+    setTimeout(()=>{
+      imTitle.style.transition='opacity .5s'; imTitle.setAttribute('opacity','1');
+      setTimeout(()=>{ imTitle.style.transition=''; imTitle.style.animation='intermissionFlash .7s ease-in-out infinite'; },600);
+    },200);
+    setTimeout(()=>{ imMonocleG.style.transition='opacity 1.2s'; imMonocleG.setAttribute('opacity','1'); },400);
+    setTimeout(()=>{
+      avG.style.opacity='1';
+      const dur=2000, t0=performance.now();
+      function growFrame(now){
+        const k=Math.min(1,(now-t0)/dur);
+        const ease=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+        const s=0.22+(HOLD_SCALE-0.22)*ease;
+        const x=BRX+(CX-BRX)*ease, y=BRY+(CY-BRY)*ease;
+        avG.setAttribute('transform',`translate(${x.toFixed(1)},${y.toFixed(1)})`);
+        avInner.setAttribute('transform',`scale(${s.toFixed(3)})`);
+        if(k<1) requestAnimationFrame(growFrame); else startBeardFlash();
+      }
+      requestAnimationFrame(growFrame);
+    },600);
+  };
+
+  window._imReset = imReset;
+  setTimeout(()=>{ slideSteps.set(slide,{ current:0, steps:[imStep1] }); },0);
 })();
 
 // ── Bake annotations ─────────────────────────────────────────────────────
@@ -2174,6 +2473,16 @@ function primeTallies(slide){
 const slideSteps = new Map(); // slideEl → { steps: [fn,...], current: 0 }
 let currentStepState = null;
 
+function updateStepIndicator() {
+  const el = document.getElementById('step-indicator');
+  if (!el) return;
+  const ss = slideSteps.get(allSlides[current]);
+  if (ss && ss.steps.length > 0 && ss.current > 0) {
+    el.textContent = `STEP ${ss.current} / ${ss.steps.length}`;
+  } else {
+    el.textContent = '';
+  }
+}
 function advanceStep() {
   // Returns true if a step was consumed, false if slide should advance
   const slide = allSlides[current];
@@ -2181,6 +2490,7 @@ function advanceStep() {
   if (!ss || ss.current >= ss.steps.length) return false;
   ss.steps[ss.current]();
   ss.current++;
+  updateStepIndicator();
   return true;
 }
 function resetSteps(slide) {
@@ -2206,6 +2516,7 @@ function goTo(n){
   current=n;updateHUD();
   // Reset steps for the slide we're entering
   resetSteps(nx);
+  updateStepIndicator();
   // Reset one-shot flags so animations replay on every visit
   if (nx.dataset.type === 'map') { mapDone = false; }
   // Per-slide entry hooks
@@ -2214,6 +2525,8 @@ function goTo(n){
   if(t!=='venn' && window.stopVennOrbit) window.stopVennOrbit();
   if(t==='intro-lens') { if(window._lensReset) window._lensReset(); setTimeout(()=>{ if(window.startLensOrbit) window.startLensOrbit(); }, 400); }
   if(t!=='intro-lens' && window.stopLensOrbit) window.stopLensOrbit();
+  if(t==='intermission') { if(window._imReset) window._imReset(); _evoPlayed=false; setTimeout(()=>{ if(window._playIntermission) window._playIntermission(); },400); }
+  if(t!=='intermission' && window._imReset && fwd===false) window._imReset();
   // Beard evolution — trigger when entering the 2020 case or lesson slide
   const slideYear = parseInt(nx.dataset.year || 0);
   if (slideYear === 2020 && (t==='case' || t==='lesson')) {
@@ -3047,42 +3360,38 @@ function startMap(){
     logoImg.style.opacity = '0.22';
   }, cStart + 1500);
 
-  // 8. Avatar appears (centered) and starts the heroic jump + 2-frame fist pump
-  setTimeout(()=>{
+  // Steps 8-10 are now registered as click-triggered steps
+  // Step 1: avatar + fireworks
+  function mapStep1() {
     avPos.style.opacity = '1';
-    // Toggle the arm-up frames on a fast cycle for the duration of the jumps
     avG.querySelector('.avatar')?.classList.add('pumping');
-    // Run the jump twice in sequence (1s each)
     avG.style.animation = 'mapHeroJump 1s ease-out 0s 2 normal both';
-    // Stop the pumping cycle once the jumps finish, leave arm-up as the rest pose
     setTimeout(() => {
       const a = avG.querySelector('.avatar');
       if (a) { a.classList.remove('pumping'); a.classList.add('arm-up'); }
     }, 2100);
-  }, cStart + 1800);
+    // Fireworks cascade
+    fwGroups.forEach((burst, gi) => {
+      setTimeout(() => {
+        burst.style.opacity = '1';
+        burst.querySelectorAll('circle').forEach(p => {
+          p.style.setProperty('--tx', `${p.getAttribute('data-tx')}px`);
+          p.style.setProperty('--ty', `${p.getAttribute('data-ty')}px`);
+          p.style.animation = 'fwParticle 1.2s ease-out forwards';
+        });
+        setTimeout(() => { burst.style.opacity = '0'; }, 1300);
+      }, 500 + gi * 250);
+    });
+  }
 
-  // 9. Fireworks cascade — staggered bursts around the avatar
-  fwGroups.forEach((burst, gi) => {
-    setTimeout(() => {
-      burst.style.opacity = '1';
-      // Animate each particle: fly outward + fade
-      burst.querySelectorAll('circle').forEach(p => {
-        const tx = p.getAttribute('data-tx');
-        const ty = p.getAttribute('data-ty');
-        p.style.setProperty('--tx', `${tx}px`);
-        p.style.setProperty('--ty', `${ty}px`);
-        p.style.animation = 'fwParticle 1.2s ease-out forwards';
-      });
-      // Clear opacity after burst so it can fire again on re-entry
-      setTimeout(() => { burst.style.opacity = '0'; }, 1300);
-    }, cStart + 2000 + gi * 250);
-  });
-
-  // 10. Pixel → Voxel morph — after fireworks settle, the 2D avatar
-  // transforms into a rotating 3D voxel model (conference theme!)
-  setTimeout(() => {
+  // Step 2: Pixel → Voxel morph
+  function mapStep2() {
     if (window.startVoxelMorph) window.startVoxelMorph();
-  }, cStart + 4500);
+  }
+
+  setTimeout(() => {
+    slideSteps.set(mapS, { current: 0, steps: [mapStep1, mapStep2] });
+  }, 0);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -3122,17 +3431,75 @@ function startMap(){
    Triggered after the heroic jump finishes; crossfades SVG → WebGL canvas.
    ═══════════════════════════════════════════════════════════════════════ */
 try { (function initVoxelMorph(){
-  // Create the canvas overlay positioned over the avatar area
+  // Canvas overlay — positioned dynamically at ring center when triggered
   const canvas = document.createElement('canvas');
   canvas.id = 'voxel-canvas';
-  canvas.width = 400; canvas.height = 400;
-  canvas.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;pointer-events:none;opacity:0;transition:opacity 1.2s ease-in;z-index:5';
+  canvas.width = 512; canvas.height = 512;
+  canvas.style.cssText = 'position:absolute;pointer-events:none;opacity:0;z-index:5;transition:opacity .8s ease-in';
   mapS.style.position = 'relative';
   mapS.appendChild(canvas);
 
+  // SELF-ACTUALIZED label — styled like INTERMISSION, appears after voxel pops in
+  const selfLabel = document.createElement('div');
+  selfLabel.id = 'self-actualized-label';
+  selfLabel.textContent = 'SELF-ACTUALIZED';
+  selfLabel.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);font-family:"Space Grotesk",sans-serif;font-size:clamp(1.4rem,3vw,2.8rem);font-weight:700;letter-spacing:.22em;color:var(--amber);opacity:0;pointer-events:none;z-index:6;white-space:nowrap;text-shadow:0 0 40px rgba(245,158,11,.6)';
+  mapS.appendChild(selfLabel);
+
+  // SFX helpers (standalone ctx so they don't stomp other audio)
+  function voxelSfx(fn) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      fn(ctx); setTimeout(() => ctx.close(), 4000);
+    } catch(e) {}
+  }
+  function playVoxelSpawn() {
+    voxelSfx(ctx => {
+      const now = ctx.currentTime;
+      // Rising shimmer — materializing sound
+      [[220,0],[330,.06],[440,.12],[587,.19],[784,.27],[1047,.36]].forEach(([f,t]) => {
+        const o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='sine'; o.frequency.value=f;
+        o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.06,now+t);
+        g.gain.exponentialRampToValueAtTime(0.001,now+t+0.25);
+        o.start(now+t); o.stop(now+t+0.26);
+      });
+    });
+  }
+  function playVoxelPop() {
+    voxelSfx(ctx => {
+      const now = ctx.currentTime;
+      // Deep thud + metallic ting
+      [[80,0,'sine',0.15],[160,0,'sine',0.08],[1200,.05,'square',0.04],[2400,.05,'square',0.02]].forEach(([f,t,type,vol]) => {
+        const o=ctx.createOscillator(), g=ctx.createGain();
+        o.type=type; o.frequency.value=f;
+        o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(vol,now+t);
+        g.gain.exponentialRampToValueAtTime(0.001,now+t+0.5);
+        o.start(now+t); o.stop(now+t+0.51);
+      });
+    });
+  }
+  function playSelfActualized() {
+    voxelSfx(ctx => {
+      const now = ctx.currentTime;
+      // Triumphant fanfare — four rising notes + power chord
+      [[523,.0,'square',0.08],[659,.12,'square',0.08],[784,.24,'square',0.09],[1047,.38,'square',0.10],
+       [523,.55,'square',0.07],[659,.55,'square',0.06],[784,.55,'square',0.06]].forEach(([f,t,type,vol]) => {
+        const o=ctx.createOscillator(), g=ctx.createGain();
+        o.type=type; o.frequency.value=f;
+        o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(vol,now+t);
+        g.gain.exponentialRampToValueAtTime(0.001,now+t+0.35);
+        o.start(now+t); o.stop(now+t+0.36);
+      });
+    });
+  }
+
   window.startVoxelMorph = async function() {
     let THREE;
-    try { THREE = await import('three'); } catch(e) { console.warn('Three.js not available — skipping voxel morph'); return; }
+    try { THREE = await import('three'); } catch(e) { console.warn('Three.js not available'); return; }
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 200);
@@ -3140,196 +3507,215 @@ try { (function initVoxelMorph(){
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setSize(400, 400);
+    renderer.setSize(512, 512);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x000000, 0);
 
     // Lighting
-    const amb = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(amb);
-    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-    dir.position.set(5, 10, 8);
-    scene.add(dir);
-    const rim = new THREE.DirectionalLight(0x00d4ff, 0.3);
-    rim.position.set(-5, -3, -5);
-    scene.add(rim);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const dir = new THREE.DirectionalLight(0xffffff, 0.9); dir.position.set(5,10,8); scene.add(dir);
+    const rim = new THREE.DirectionalLight(0x00d4ff, 0.35); rim.position.set(-5,-3,-5); scene.add(rim);
+    const fill = new THREE.DirectionalLight(0xffa060, 0.2); fill.position.set(0,-8,4); scene.add(fill);
 
-    // Read avatar rects from the map SVG
-    const avBody = document.querySelector('#map-av .av-body');
-    const armsUp = document.querySelector('#map-av .av-arms-up');
-    if (!avBody) return;
-
-    const group = new THREE.Group();
-    const SCALE = 0.16;
-
-    // ── Rasterize → Voxelize ─────────────────────────────────────
-    // The 2D avatar is drawn with overlapping rects (hair on skin,
-    // beard on face, etc). Extruding each rect naively creates cubes
-    // that intersect on every axis. Fix: rasterize all rects into a
-    // 1px grid (painter's algo — last rect wins), then create exactly
-    // ONE cube per occupied cell. Zero overlap guaranteed.
-    //
-    // Depth per cell is determined by the cell's role (hair wraps
-    // around, face features protrude, body is centered).
-    const HAIR_COLORS = new Set(['#3a1c08','#5e2f1a','#8b4a2a','#a8602f']);
+    // ── Color sets ──
+    const HAIR_COLORS  = new Set(['#3a1c08','#5e2f1a','#8b4a2a','#a8602f']);
     const BEARD_COLORS = new Set(['#6e3a1e','#8a4f2a']);
-    const EYE_COLORS = new Set(['#1a1a26','#ffffff','#fff']);
-    const SKIN_COLORS = new Set(['#f2c79b','#d9a77a']);
-    const HEAD_Y_MIN = -44, HEAD_Y_MAX = -12; // head zone in SVG coords
+    const EYE_COLORS   = new Set(['#1a1a26','#ffffff','#fff']);
+    const SKIN_COLORS  = new Set(['#f2c79b','#d9a77a']);
+    const HEAD_Y_MIN=-44, HEAD_Y_MAX=-12;
+    const HEAD_X_MIN=-12, HEAD_X_MAX=11; // strict: excludes hand pixels at x≤-13 and x≥12
 
-    function cellRole(color, cy) {
-      if (BEARD_COLORS.has(color) || EYE_COLORS.has(color) || color === '#9c5040') return 'face';
-      // Eyebrows: hair-colored but in the face region (y >= -29)
-      if (HAIR_COLORS.has(color)) return cy >= -29 ? 'face' : 'hair';
-      // Skin in the head zone → front-face only (back will be filled with hair)
-      if (SKIN_COLORS.has(color) && cy >= HEAD_Y_MIN && cy <= HEAD_Y_MAX) return 'face';
+    // Role → (depth, Z-center) in SVG-pixel units (×SCALE for 3D)
+    // head:    skin in head zone — thick volume connecting to hair
+    //          Z -5→+3 (front of skin at +3)
+    // hair:    full dome wrapping back+top
+    //          Z -9→+1 (hair front at +1, behind skin front at +3 ✓)
+    // feature: eyes, brows, beard, mouth — protrude from skin surface
+    //          Z +3→+5 (attach at skin front ✓, protrude forward)
+    // body:    torso/legs/hands — centered at Z=0
+    const ROLE_DEPTH = { hair:10, head:8, feature:2, body:5 };
+    const ROLE_Z     = { hair:-4, head:-1, feature:4, body:0 };
+
+    function cellRole(color, cx, cy) {
+      const inHead  = cy >= HEAD_Y_MIN && cy <= HEAD_Y_MAX;
+      const inHeadX = cx >= HEAD_X_MIN && cx <= HEAD_X_MAX;
+      if (BEARD_COLORS.has(color)) return 'feature';
+      if (EYE_COLORS.has(color) || color === '#9c5040') return 'feature';
+      // Hair-colored cells: eyebrows when inside head zone and below brow line
+      if (HAIR_COLORS.has(color) && inHead && inHeadX) return 'feature';
+      // Skin in head silhouette → head volume (NOT hands, which are outside HEAD_X)
+      if (SKIN_COLORS.has(color) && inHead && inHeadX) return 'head';
       return 'body';
     }
-    // Role depths and Z offsets:
-    //   hair: wraps around behind the head (negative Z = back)
-    //   body: centered (torso, pants, boots)
-    //   face: protrudes forward only (skin, eyes, beard, brows, mouth)
-    // hair = thick dome wrapping front+back (the biggest volume)
-    // body = centered torso/pants/boots
-    // face = thin layer on the front surface of the head (skin, eyes, brows, beard)
-    const ROLE_DEPTH = { hair: 10, body: 5, face: 2 };
-    const ROLE_Z     = { hair: -4, body: 0, face: 5 };
 
-    // Rasterize SVG group into a Map<"x,y" → color>
+    // Rasterize SVG group → Map<"x,y" → color> (painter's algo, last rect wins)
     function rasterize(svgGroup) {
       const grid = new Map();
       if (!svgGroup) return grid;
       svgGroup.querySelectorAll('rect').forEach(r => {
-        const rx = Math.round(parseFloat(r.getAttribute('x')) || 0);
-        const ry = Math.round(parseFloat(r.getAttribute('y')) || 0);
-        const rw = Math.round(parseFloat(r.getAttribute('width')) || 0);
-        const rh = Math.round(parseFloat(r.getAttribute('height')) || 0);
-        const fill = (r.getAttribute('fill') || '#888').toLowerCase();
-        if (rw < 1 || rh < 1) return;
-        // Paint every cell this rect covers (last write wins)
-        for (let py = ry; py < ry + rh; py++) {
-          for (let px = rx; px < rx + rw; px++) {
-            grid.set(`${px},${py}`, fill);
-          }
-        }
+        const rx=Math.round(parseFloat(r.getAttribute('x'))||0);
+        const ry=Math.round(parseFloat(r.getAttribute('y'))||0);
+        const rw=Math.round(parseFloat(r.getAttribute('width'))||0);
+        const rh=Math.round(parseFloat(r.getAttribute('height'))||0);
+        const fill=(r.getAttribute('fill')||'#888').toLowerCase();
+        if(rw<1||rh<1) return;
+        for(let py=ry;py<ry+rh;py++) for(let px=rx;px<rx+rw;px++) grid.set(`${px},${py}`,fill);
       });
       return grid;
     }
 
-    // Merge body + arms grids (arms painted on top)
+    const avBody = document.querySelector('#map-av .av-body');
+    const armsUpG = document.querySelector('#map-av .av-arms-up');
+    if (!avBody) return;
     const bodyGrid = rasterize(avBody);
-    const armsGrid = rasterize(armsUp);
-    armsGrid.forEach((color, key) => bodyGrid.set(key, color));
+    rasterize(armsUpG).forEach((c,k) => bodyGrid.set(k,c));
 
-    // Convert grid cells to cubes — one per cell, no overlaps.
-    // ALSO: for face-role cells in the head zone, add a hair-colored cube
-    // behind them so the back of the head shows hair, not skin.
-    const HAIR_BACK_COLOR = new THREE.Color('#5e2f1a'); // HAIR_DARK
-    const headFaceCells = []; // collect face cells in head zone for back-fill
+    const SCALE = 0.16;
+    const group = new THREE.Group();
+    const headZoneCells = []; // ALL cells in head XY zone → used for back-fill dome
 
     bodyGrid.forEach((color, key) => {
       const [cx, cy] = key.split(',').map(Number);
-      const role = cellRole(color, cy);
+      const role  = cellRole(color, cx, cy);
       const depth = ROLE_DEPTH[role];
-      const zOff = ROLE_Z[role];
-
-      // Track face cells in the head zone for the hair back-fill pass
-      if (role === 'face' && cy >= HEAD_Y_MIN && cy <= HEAD_Y_MAX) {
-        headFaceCells.push({ cx, cy });
-      }
-
-      const geo = new THREE.BoxGeometry(1 * SCALE, 1 * SCALE, depth * SCALE);
-      const mat = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(color), roughness: 0.6, metalness: 0.1,
-      });
+      const zOff  = ROLE_Z[role];
+      // Track every cell in the head zone for back-fill (hair + skin)
+      const inHeadZone = cy >= HEAD_Y_MIN && cy <= HEAD_Y_MAX && cx >= HEAD_X_MIN && cx <= HEAD_X_MAX;
+      if (inHeadZone) headZoneCells.push({ cx, cy });
+      const geo = new THREE.BoxGeometry(SCALE, SCALE, depth * SCALE);
+      const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(color), roughness:0.6, metalness:0.1 });
       const cube = new THREE.Mesh(geo, mat);
-      cube.position.set(
-        (cx + 0.5) * SCALE,
-        -(cy + 0.5) * SCALE,
-        zOff * SCALE
-      );
+      cube.position.set((cx+0.5)*SCALE, -(cy+0.5)*SCALE, zOff*SCALE);
       group.add(cube);
     });
 
-    // Back-of-head pass: for face cells in the head zone, add hair cubes
-    // behind them. Skip cells outside the head X range (those are arms/hands).
-    // Use multiple brown shades based on position for natural look.
-    const HEAD_X_MIN = -13, HEAD_X_MAX = 13;
-    const backColors = [
-      new THREE.Color('#3a1c08'),  // HAIR_SHADOW (edges)
-      new THREE.Color('#5e2f1a'),  // HAIR_DARK
-      new THREE.Color('#8b4a2a'),  // HAIR (center)
-      new THREE.Color('#a8602f'),  // HAIR_LIGHT (highlights)
-    ];
-    headFaceCells.forEach(({ cx, cy }) => {
-      // Skip hands/arms — only fill within the head silhouette
-      if (cx < HEAD_X_MIN || cx > HEAD_X_MAX) return;
-      // Horizontal striations — shade based on Y row (top=dark, mid=main, bottom=dark)
-      // with slight edge darkening on X for roundness
-      const yNorm = (cy - HEAD_Y_MIN) / (HEAD_Y_MAX - HEAD_Y_MIN); // 0=top, 1=bottom
-      const xEdge = Math.abs(cx) > 10 ? -1 : 0; // darken at edges
-      // Repeating band pattern: shadow→dark→main→light→main→dark across rows
-      const band = Math.floor(yNorm * 12) % 4;
-      const baseShade = [0, 1, 2, 3][band]; // cycles through all 4 tones
-      const shade = Math.max(0, Math.min(3, baseShade + xEdge));
-      const mat = new THREE.MeshStandardMaterial({
-        color: backColors[shade], roughness: 0.6, metalness: 0.1,
-      });
-      const geo = new THREE.BoxGeometry(1 * SCALE, 1 * SCALE, ROLE_DEPTH.hair * SCALE);
+    // Back-of-head hair fill — adds hair volume BEHIND each skin cell so the
+    // head reads as a full dome when rotated (not hollow on the back side)
+    const backColors = ['#3a1c08','#5e2f1a','#8b4a2a','#a8602f'].map(c=>new THREE.Color(c));
+    headZoneCells.forEach(({ cx, cy }) => {
+      const yNorm = (cy - HEAD_Y_MIN) / (HEAD_Y_MAX - HEAD_Y_MIN);
+      const xEdge = Math.abs(cx) > 10 ? -1 : 0;
+      const shade  = Math.max(0, Math.min(3, Math.floor(yNorm * 12) % 4 + xEdge));
+      // Back-fill abuts head back face (head: center=-1, depth=8 → back at Z=-5)
+      // So back-fill: front=Z=-5, depth=4 → center=-7, back=-9. No overlap with head.
+      const BACK_DEPTH = 4, BACK_Z = -7;
+      const geo = new THREE.BoxGeometry(SCALE, SCALE, BACK_DEPTH * SCALE);
+      const mat = new THREE.MeshStandardMaterial({ color: backColors[shade], roughness:0.6, metalness:0.1 });
       const cube = new THREE.Mesh(geo, mat);
-      cube.position.set(
-        (cx + 0.5) * SCALE,
-        -(cy + 0.5) * SCALE,
-        ROLE_Z.hair * SCALE
-      );
+      cube.position.set((cx+0.5)*SCALE, -(cy+0.5)*SCALE, BACK_Z*SCALE);
       group.add(cube);
     });
 
-    // Center the group
+    // Center group at origin
     const box = new THREE.Box3().setFromObject(group);
-    const center = box.getCenter(new THREE.Vector3());
-    group.position.sub(center);
+    group.position.sub(box.getCenter(new THREE.Vector3()));
     scene.add(group);
+    group.scale.z = 0.01; // start flat — pops to full depth
 
-    // Intro animation: voxels start flat (scaleZ=0) and pop to full depth
-    group.scale.z = 0.01;
+    // ── Position canvas centered on the Agile Lens ring ──
+    // MX/MY are SVG viewBox coords (0 0 1000 600). Compute screen offset.
+    const svgEl = document.getElementById('map-svg');
+    const svgRect = svgEl.getBoundingClientRect();
+    const mapRect = mapS.getBoundingClientRect();
+    const svgScale = Math.min(svgRect.width/1000, svgRect.height/600);
+    const svgOffX  = (svgRect.width  - 1000*svgScale) / 2;
+    const svgOffY  = (svgRect.height -  600*svgScale) / 2;
+    const ringScreenX = MX*svgScale + svgOffX + (svgRect.left - mapRect.left);
+    const ringScreenY = MY*svgScale + svgOffY + (svgRect.top  - mapRect.top);
 
-    // Crossfade: hide SVG avatar, show canvas
+    // Start size matches the sprite visual size (~36 SVG px × scale), grow to 200%
+    const FINAL_PX = 340;
+    const startPx  = Math.round(36 * svgScale);
+    canvas.style.left   = `${ringScreenX}px`;
+    canvas.style.top    = `${ringScreenY}px`;
+    canvas.style.transform = 'translate(-50%,-50%)';
+    canvas.style.width  = `${startPx}px`;
+    canvas.style.height = `${startPx}px`;
+
+    // Position above the ring — ring top in screen coords = ringScreenY - MR*svgScale
+    const ringTopY = ringScreenY - MR * svgScale;
+    selfLabel.style.top  = `${Math.max(8, ringTopY - 56)}px`;
+    selfLabel.style.left = `${ringScreenX}px`;
+    selfLabel.style.transform = 'translateX(-50%)';
+
+    // ── Glow blast SVG ring (radial flash at transformation moment) ──
+    const mapSvg = document.getElementById('map-svg');
+    const glowRing = svgE('circle', { cx:MX, cy:MY, r:'30',
+      fill:'rgba(0,212,255,0)', stroke:'rgba(255,255,255,0)',
+      'stroke-width':'4', id:'voxel-glow-ring' });
+    mapSvg.appendChild(glowRing);
+
+    // ── Crossfade sprite → canvas ──
+    playVoxelSpawn();
     const avPos = document.getElementById('map-av-pos');
-    if (avPos) {
-      avPos.style.transition = 'opacity 1s ease-out';
-      avPos.style.opacity = '0';
-    }
-    canvas.style.opacity = '1';
+    if (avPos) { avPos.style.transition='opacity .6s ease-out'; avPos.style.opacity='0'; }
 
-    // Animate scaleZ from 0 → 1 over 1.2s
-    const popStart = performance.now();
-    const POP_DUR = 1200;
-    function popIn(now) {
-      const t = Math.min((now - popStart) / POP_DUR, 1);
-      const ease = 1 - Math.pow(1 - t, 3);
-      group.scale.z = 0.01 + ease * 0.99;
-      if (t < 1) requestAnimationFrame(popIn);
-    }
-    requestAnimationFrame(popIn);
+    // Glow blast: brief radial pulse emanating outward
+    setTimeout(() => {
+      playVoxelPop();
+      glowRing.style.transition = 'none';
+      glowRing.setAttribute('fill','rgba(0,212,255,0.18)');
+      glowRing.setAttribute('stroke','rgba(255,255,255,0.9)');
+      glowRing.style.transition = 'r 0.6s ease-out, stroke-opacity 0.6s, fill-opacity 0.6s';
+      let gr=30, grRunning=true;
+      (function glowExpand(now){
+        if(!grRunning) return;
+        gr = Math.min(gr+4, MR+20);
+        const op = Math.max(0, 1-(gr-30)/(MR+20-30));
+        glowRing.setAttribute('r', gr);
+        glowRing.setAttribute('stroke',`rgba(255,255,255,${(op*0.9).toFixed(2)})`);
+        glowRing.setAttribute('fill',`rgba(0,212,255,${(op*0.12).toFixed(2)})`);
+        if(gr < MR+20) requestAnimationFrame(glowExpand);
+        else { glowRing.remove(); }
+      })();
+    }, 300);
+
+    // Show canvas and animate: scaleZ 0→1, CSS size startPx→FINAL_PX
+    setTimeout(() => {
+      canvas.style.opacity = '1';
+      const popStart = performance.now();
+      const POP_DUR = 1400, GROW_DUR = 1800;
+      function popIn(now) {
+        const t = Math.min((now-popStart)/POP_DUR, 1);
+        group.scale.z = 0.01 + (1-Math.pow(1-t,3))*0.99;
+        const tg = Math.min((now-popStart)/GROW_DUR, 1);
+        const easeg = tg<.5?2*tg*tg:1-Math.pow(-2*tg+2,2)/2;
+        const sz = startPx + (FINAL_PX-startPx)*easeg;
+        canvas.style.width = canvas.style.height = `${sz.toFixed(0)}px`;
+        if(t<1||tg<1) requestAnimationFrame(popIn);
+      }
+      requestAnimationFrame(popIn);
+    }, 400);
+
+    // SELF-ACTUALIZED: fade in, hold 2s, fade out, gone
+    setTimeout(() => {
+      playSelfActualized();
+      selfLabel.style.transition = 'opacity .7s ease-out';
+      selfLabel.style.opacity = '1';
+      setTimeout(() => {
+        selfLabel.style.transition = 'opacity 1s ease-in';
+        selfLabel.style.opacity = '0';
+      }, 700 + 2000);
+    }, 400 + 1800);
 
     // Continuous slow rotation
     let running = true;
     function animate() {
       if (!running) return;
       group.rotation.y += 0.008;
-      group.rotation.x = Math.sin(performance.now() * 0.0003) * 0.15;
+      group.rotation.x = Math.sin(performance.now()*0.0003)*0.15;
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
     }
     animate();
 
-    // Clean up when leaving the slide
     window._voxelCleanup = () => {
       running = false;
       renderer.dispose();
       canvas.style.opacity = '0';
-      if (avPos) { avPos.style.transition = 'none'; avPos.style.opacity = '1'; }
+      selfLabel.style.opacity = '0'; selfLabel.style.animation = '';
+      glowRing.remove?.();
+      if (avPos) { avPos.style.transition='none'; avPos.style.opacity='1'; }
     };
   };
 })(); } catch(e) { console.error('VoxelMorph init error:', e); }

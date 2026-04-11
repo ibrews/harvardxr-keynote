@@ -227,6 +227,29 @@ canvas#stars{position:absolute;inset:0}
 .cfg-val{min-width:3.8em;font-size:.82rem;color:var(--teal);font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
 .cfg-hint{font-size:.65rem;color:rgba(255,255,255,.2);letter-spacing:.06em;text-align:center;border-top:1px solid rgba(255,255,255,.06);padding-top:20px;line-height:1.8}
 .sg-thumb.sg-settings{background:rgba(0,212,255,.06);border-color:rgba(0,212,255,.2)}
+/* ── Search overlay ── */
+#search-overlay{position:fixed;inset:0;z-index:500;background:rgba(3,5,12,.82);backdrop-filter:blur(18px);display:flex;align-items:flex-start;justify-content:center;padding-top:11vh;opacity:0;pointer-events:none;transition:opacity .18s}
+#search-overlay.open{opacity:1;pointer-events:all}
+#search-box{width:min(700px,90vw);background:rgba(14,16,28,.98);border:1px solid rgba(255,255,255,.12);border-radius:16px;overflow:hidden;box-shadow:0 32px 96px rgba(0,0,0,.7),0 0 0 1px rgba(0,212,255,.05)}
+.srch-input-row{display:flex;align-items:center;gap:12px;padding:15px 20px;border-bottom:1px solid rgba(255,255,255,.07)}
+.srch-icon{color:rgba(255,255,255,.35);font-size:1.05rem;flex-shrink:0;line-height:1}
+#search-input{flex:1;background:none;border:none;outline:none;color:#fff;font-family:var(--font);font-size:1.05rem;font-weight:500;caret-color:var(--teal)}
+#search-input::placeholder{color:rgba(255,255,255,.22)}
+.srch-kbd{font-size:.6rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:4px;padding:2px 7px;color:rgba(255,255,255,.32);font-family:var(--font);letter-spacing:.05em;flex-shrink:0}
+#srch-results{max-height:56vh;overflow-y:auto;padding:6px}
+#srch-results::-webkit-scrollbar{width:4px}
+#srch-results::-webkit-scrollbar-thumb{background:rgba(0,212,255,.2);border-radius:2px}
+.srch-empty{padding:38px 24px;text-align:center;color:rgba(255,255,255,.2);font-size:.82rem;letter-spacing:.04em}
+.sr{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:background .1s}
+.sr:hover,.sr.sel{background:rgba(0,212,255,.1)}
+.sr-num{font-size:.6rem;font-weight:700;color:rgba(255,255,255,.25);min-width:24px;padding-top:3px;font-variant-numeric:tabular-nums;flex-shrink:0}
+.sr-body{flex:1;min-width:0}
+.sr-title{font-size:.88rem;font-weight:600;color:#e8eeff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.sr-snip{font-size:.72rem;color:rgba(255,255,255,.4);line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:4px}
+.sr-snip mark{background:none;color:var(--teal);font-weight:600}
+.sr-badge{display:inline-block;font-size:.56rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(0,212,255,.55);background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.18);border-radius:3px;padding:1px 5px}
+.srch-footer{padding:6px 18px 10px;font-size:.6rem;color:rgba(255,255,255,.2);letter-spacing:.06em;display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,.06)}
+
 .lesson-rule{width:64px;height:4px;border-radius:2px;background:var(--teal);margin:32px auto 0;opacity:.7}
 .lesson-tags{margin-top:18px;font-size:clamp(.6rem,.9vw,.85rem);font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.18)}
 .accent-purple .ey-badge{color:var(--purple)}.accent-purple .lesson-rule{background:var(--purple)}
@@ -311,7 +334,8 @@ body.presentation-mode #anno-toggle,
 body.presentation-mode #move-toggle,
 body.presentation-mode #anno-panel,
 body.presentation-mode #move-hud,
-body.presentation-mode #anno-prompt {
+body.presentation-mode #anno-prompt,
+body.presentation-mode #search-overlay {
   display: none !important;
 }
 
@@ -629,6 +653,19 @@ body.edit-text .slide.active [contenteditable="true"]{outline:2px solid var(--te
 <!-- Slide jump grid (hover bottom of screen to reveal) -->
 <div id="slide-grid-zone"></div>
 <div id="slide-grid"></div>
+
+<!-- Search overlay -->
+<div id="search-overlay">
+  <div id="search-box">
+    <div class="srch-input-row">
+      <span class="srch-icon">⌕</span>
+      <input type="text" id="search-input" placeholder="Search clients, projects, years, topics…" autocomplete="off" spellcheck="false">
+      <kbd class="srch-kbd">Esc</kbd>
+    </div>
+    <div id="srch-results"><div class="srch-empty">Type to search across all slides…</div></div>
+    <div class="srch-footer"><span id="srch-count"></span><span>↑↓ navigate · Enter jump · Esc close</span></div>
+  </div>
+</div>
 
 <!-- Annotation overlay -->
 <button id="anno-toggle" title="Toggle annotation mode (A)">📝 Annotate</button>
@@ -3173,6 +3210,100 @@ function rebuildGrid(){
   // Re-highlight active
   sgEl.querySelectorAll('.sg-thumb').forEach((t,i) => t.classList.toggle('active', i===current));
 }
+
+// ── Slide search ─────────────────────────────────────────────────────────────
+let _searchIndex=[];
+function buildSearchIndex(){
+  _searchIndex=allSlides.map((s,i)=>{
+    const type=s.dataset.type;
+    if(type==='settings'||type==='intermission'||type==='map')return null;
+    let title='',label='',bodyParts=[];
+    if(type==='lesson'){
+      title=(s.querySelector('.lesson-title')?.textContent||'').replace(/\s+/g,' ').trim();
+      label=`Lesson ${s.dataset.ln||'?'} · ${s.dataset.year||''}`;
+      bodyParts=[s.querySelector('.lesson-tagline')?.textContent,s.querySelector('.lesson-tags')?.textContent];
+    } else if(type==='case'){
+      title=(s.querySelector('.case-title')?.textContent||'').replace(/\s+/g,' ').trim();
+      label=`${s.dataset.year||''} case`;
+      bodyParts=[s.querySelector('.case-sub')?.textContent,...[...s.querySelectorAll('.case-bl li')].map(li=>li.textContent)];
+    } else if(type==='cover'){
+      title=(s.querySelector('.talk-title')?.textContent||'Cover').replace(/\s+/g,' ').trim();
+      label='Cover';
+      bodyParts=[s.querySelector('.talk-subtitle')?.textContent,s.querySelector('.event-tag')?.textContent];
+    } else if(type==='bonus'){
+      title=(s.querySelector('.lesson-title')?.textContent||'Bonus').replace(/\s+/g,' ').trim();
+      label='Bonus';
+      bodyParts=[s.querySelector('.lesson-tagline')?.textContent];
+    } else if(type==='close'){
+      title='Thank You / Contact'; label='Close'; bodyParts=[];
+    } else { return null; }
+    const body=bodyParts.filter(Boolean).map(t=>t.replace(/\s+/g,' ').trim()).join(' · ');
+    return {idx:i,title,label,body,full:(title+' '+body).toLowerCase()};
+  }).filter(Boolean);
+}
+function _esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function _hl(text,q){
+  if(!q||!text)return _esc(text||'');
+  return _esc(text).replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark>$1</mark>');
+}
+function _snip(body,q){
+  if(!body)return'';
+  const lo=body.toLowerCase(),pos=lo.indexOf(q);
+  if(pos<0)return body.slice(0,110)+(body.length>110?'…':'');
+  const s=Math.max(0,pos-40),e=Math.min(body.length,pos+q.length+90);
+  return(s>0?'…':'')+body.slice(s,e)+(e<body.length?'…':'');
+}
+let _srSel=0;
+const _srOverlay=document.getElementById('search-overlay');
+const _srInput=document.getElementById('search-input');
+const _srList=document.getElementById('srch-results');
+const _srCount=document.getElementById('srch-count');
+function openSearch(){
+  if(!_searchIndex.length)buildSearchIndex();
+  _srOverlay.classList.add('open');
+  _srInput.value='';_srSel=0;
+  _srList.innerHTML='<div class="srch-empty">Type to search clients, projects, years, topics…</div>';
+  _srCount.textContent='';
+  setTimeout(()=>_srInput.focus(),40);
+}
+function closeSearch(){_srOverlay.classList.remove('open');}
+function _srSelUpdate(){
+  [..._srList.querySelectorAll('.sr')].forEach((el,i)=>el.classList.toggle('sel',i===_srSel));
+  _srList.querySelector('.sr.sel')?.scrollIntoView({block:'nearest'});
+}
+function _srRender(q){
+  const qt=q.trim().toLowerCase();
+  if(!qt){_srList.innerHTML='<div class="srch-empty">Type to search clients, projects, years, topics…</div>';_srCount.textContent='';return;}
+  const hits=_searchIndex.filter(r=>r.full.includes(qt));
+  _srCount.textContent=hits.length?`${hits.length} result${hits.length===1?'':'s'}`:'';
+  if(!hits.length){_srList.innerHTML=`<div class="srch-empty">No results for "${_esc(q)}"</div>`;return;}
+  _srList.innerHTML=hits.map(r=>`<div class="sr" data-idx="${r.idx}">
+    <div class="sr-num">${String(r.idx+1).padStart(2,'0')}</div>
+    <div class="sr-body">
+      <div class="sr-title">${_hl(r.title,qt)}</div>
+      ${r.body?`<div class="sr-snip">${_hl(_snip(r.body,qt),qt)}</div>`:''}
+      <span class="sr-badge">${_esc(r.label)}</span>
+    </div></div>`).join('');
+  _srList.querySelectorAll('.sr').forEach(el=>{
+    el.addEventListener('click',()=>{goTo(parseInt(el.dataset.idx));closeSearch();});
+  });
+  _srSel=0;_srSelUpdate();
+}
+_srInput.addEventListener('input',()=>{_srSel=0;_srRender(_srInput.value);});
+_srInput.addEventListener('keydown',e=>{
+  const rows=[..._srList.querySelectorAll('.sr')];
+  if(e.key==='ArrowDown'){e.preventDefault();_srSel=Math.min(_srSel+1,rows.length-1);_srSelUpdate();}
+  else if(e.key==='ArrowUp'){e.preventDefault();_srSel=Math.max(_srSel-1,0);_srSelUpdate();}
+  else if(e.key==='Enter'&&rows[_srSel]){goTo(parseInt(rows[_srSel].dataset.idx));closeSearch();}
+  else if(e.key==='Escape'){closeSearch();}
+});
+_srOverlay.addEventListener('mousedown',e=>{if(e.target===_srOverlay)closeSearch();});
+document.addEventListener('keydown',e=>{
+  if(['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)||document.activeElement?.isContentEditable)return;
+  if((e.metaKey||e.ctrlKey)&&e.key==='f'){e.preventDefault();openSearch();return;}
+  if(e.key==='/'&&!_srOverlay.classList.contains('open')){e.preventDefault();openSearch();}
+});
+buildSearchIndex();
 
 // Reveal grid on hover at bottom of screen
 let sgHideTimer;

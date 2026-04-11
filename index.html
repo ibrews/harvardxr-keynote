@@ -1626,6 +1626,106 @@ allSlides.forEach((s,i)=>{
   sgEl.appendChild(t);
 });
 
+// ── Drag-to-reorder slides in the carousel ──
+// Drag a thumbnail to swap its slide with the drop target.
+// Reorders allSlides[], the deck DOM, and the grid thumbnails.
+// Generates an annotation so you can share the new order.
+(function initGridDrag(){
+  let dragThumb = null, dragIdx = -1, placeholder = null;
+
+  sgEl.addEventListener('dragstart', e => {
+    const t = e.target.closest('.sg-thumb');
+    if (!t) return;
+    dragThumb = t;
+    dragIdx = parseInt(t.dataset.idx);
+    t.style.opacity = '0.4';
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', dragIdx);
+  });
+
+  sgEl.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const t = e.target.closest('.sg-thumb');
+    if (t && t !== dragThumb) {
+      t.style.borderColor = 'var(--teal)';
+      t.style.background = 'rgba(0,212,255,.15)';
+    }
+  });
+
+  sgEl.addEventListener('dragleave', e => {
+    const t = e.target.closest('.sg-thumb');
+    if (t) { t.style.borderColor = ''; t.style.background = ''; }
+  });
+
+  sgEl.addEventListener('drop', e => {
+    e.preventDefault();
+    const t = e.target.closest('.sg-thumb');
+    if (!t || t === dragThumb) return;
+    const dropIdx = parseInt(t.dataset.idx);
+    t.style.borderColor = ''; t.style.background = '';
+
+    // Swap in allSlides array
+    const tmp = allSlides[dragIdx];
+    allSlides[dragIdx] = allSlides[dropIdx];
+    allSlides[dropIdx] = tmp;
+
+    // Reorder deck DOM to match
+    const deck = document.getElementById('deck');
+    deck.innerHTML = '';
+    allSlides.forEach(s => deck.appendChild(s));
+
+    // Rebuild grid thumbnails
+    rebuildGrid();
+
+    // Update current index to follow the active slide
+    const activeSlide = document.querySelector('.slide.active');
+    if (activeSlide) {
+      const newIdx = allSlides.indexOf(activeSlide);
+      if (newIdx >= 0) current = newIdx;
+    }
+    updateHUD();
+
+    // Toast the reorder
+    if (typeof annoToast === 'function') annoToast(`Swapped slides ${dragIdx+1} ↔ ${dropIdx+1}`);
+  });
+
+  sgEl.addEventListener('dragend', () => {
+    if (dragThumb) dragThumb.style.opacity = '1';
+    dragThumb = null; dragIdx = -1;
+  });
+
+  // Make thumbnails draggable
+  sgEl.querySelectorAll('.sg-thumb').forEach(t => t.setAttribute('draggable', 'true'));
+})();
+
+function rebuildGrid(){
+  sgEl.innerHTML = '';
+  allSlides.forEach((s, i) => {
+    const t = document.createElement('div');
+    const type = s.dataset.type;
+    t.className = 'sg-thumb sg-' + type;
+    t.dataset.idx = i;
+    t.setAttribute('draggable', 'true');
+    let label = '';
+    if(type==='cover') label='Cover';
+    else if(type==='venn') label='Venn';
+    else if(type==='intro-alex') label='Alex';
+    else if(type==='intro-lens') label='Lens';
+    else if(type==='case') label=s.dataset.year+' ▸';
+    else if(type==='lesson') label='L'+(s.dataset.ln||'?')+' '+(s.dataset.year||'');
+    else if(type==='bonus') label='★ Bonus';
+    else if(type==='map') label='Map';
+    else if(type==='close') label='Thank You';
+    else label = type || '?';
+    t.innerHTML = `<div class="sg-num">${String(i+1).padStart(2,'0')}</div><div class="sg-label">${label}</div>`;
+    t.addEventListener('click', () => goTo(i));
+    sgEl.appendChild(t);
+  });
+  // Re-highlight active
+  sgEl.querySelectorAll('.sg-thumb').forEach((t,i) => t.classList.toggle('active', i===current));
+}
+
 // Reveal grid on hover at bottom of screen
 let sgHideTimer;
 function sgShow(){clearTimeout(sgHideTimer);sgEl.classList.add('visible')}

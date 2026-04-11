@@ -89,19 +89,19 @@ const SECTIONS = [
       { title:'Agony × Xsens × Lenovo', subtitle:'Sometimes the hardware just shows up at your door',
         img:'media/xsens-agony/xsens_agony.png',
         bullets:['Xsens sent us two full mocap suits. Lenovo sent workstations. They saw the work and wanted us using their gear.','We tested the Xsens suit on "Agony" from Into the Woods to see how live performance felt in VR with Metahumans. Most clients wouldn\'t have thought to ask for this but we saw potential.','Free hardware doesn\'t mean free. It means someone believes your R&D is their best marketing. Use it that way. And show gratitude!'] },
-      { title:'Blueprint Immersive (BPI)', subtitle:'From bespoke projects to a scalable product',
+      { title:'Blueprint Immersive (BPI)', subtitle:'From bespoke projects to scalable product',
         img:'MEDIA_CYCLER',
-        bullets:['After years of building one-off visualization tools for individual clients, we saw the common thread — every client needed the same core capabilities.','Blueprint Immersive is our own UE-based design and visualization product. One tool that addresses many clients\' needs at once.','The leap from bespoke services to a scalable product is the ultimate tool choice as business strategy.'] },
+        bullets:['After years of building one-off visualization tools for individual clients, we started to look for common threads where clients needed the same core capabilities.','Blueprint Immersive is our own UE-based design and visualization product. One tool that addresses many clients\' needs at once.','Hold onto your IP and you can build amazing things from it.'] },
     ],
     lesson: { title:'Your Tool Choices Are\nBusiness Strategy', tagline:'Don\'t let platform lock-in kill you — but don\'t be a tourist either.<br>Going all-in on Unreal Engine wasn\'t a technical decision — it was a five-year bet on which skills would still be valuable.<br><br>Sometimes the tools come to you: free hardware, free software.<br>The question isn\'t whether to use them; it\'s whether they serve the pipeline you\'re building or distract from it.', short:'TOOLS ARE STRATEGY', tags:'OnboardXR · Unreal Engine · Blueprint Immersive · Xsens Agony' },
   },
   {
     year: 2021, accent: 'purple',
     cases: [
-      { title:'Christmas Carol VR — The ATL Upsell', subtitle:'A small ask becomes our annual flagship',
-        img:'media/xmas-carol/xmas-carol.jpg',
-        bullets:['Actors Theatre Louisville asked us for production assets — metahumans and some good videos. Not a VR project.','We did the R&D, then flipped the brief: "As long as we\'re building sets and characters and costumes for you — how about we just do a full VR production?"','That upsell became our annual production, our R&D vehicle, the SIGGRAPH multi-avatar paper, and the AI Dickens lineage.'] },
-      { title:'The Orchard — Off-Broadway', subtitle:'Protect your IP — not just deliverables, but the knowledge they generate',
+      { title:'Christmas Carol VR —\nThe ATL Upsell', subtitle:'A small ask becomes our annual flagship',
+        img:'MEDIA_CYCLER',
+        bullets:['Actors Theatre of Louisville asked us for production assets — Metahumans and some good videos. Not a full VR project.','We did the R&D, then flipped the brief: "As long as we\'re building sets and characters and costumes for you — how about we just do a full VR production?"','That upsell became our annual production, our R&D vehicle, several SIGGRAPH talks and papers, and endless experience with live shows.'] },
+      { title:'The Orchard —\nOff-Broadway', subtitle:'Protect your IP — not just deliverables, but the knowledge they generate. This was an OSC masterclass!',
         img:'MEDIA_CYCLER',
         bullets:['An Off-Broadway production where we brought our real-time pipeline to live theater — not as a tech demo, but as craft.','The pandemic cash crunch taught us: protect your IP. If the only asset is a client\'s build, you own nothing when the project ends.','Find common ground among clients to productize bespoke services. The Orchard proved our tools had a life beyond one engagement.'] },
     ],
@@ -112,7 +112,7 @@ const SECTIONS = [
     cases: [
       { title:'Waldorf Astoria Miami', subtitle:'Luxury archviz with a live mocap host',
         img:'MEDIA_CYCLER',
-        bullets:['Rokoko motion capture pipeline running inside an archviz tour. A virtual host walks prospective residents through the space.','The client found us after a SIGGRAPH talk I gave entirely about Christmas Carol — they wanted to inject our live performance system into archviz.','One paid talk about theater work generated an enterprise archviz client. Specialist reputation compounds in unexpected directions.'] },
+        bullets:['Rokoko motion capture pipeline running inside an archviz tour. A virtual host walks prospective residents through the space.','The client found us after SIGGRAPH talk I gave entirely about Christmas Carol, wanting our live performance system in archviz.','One 5 minute talk about theater work generated an enterprise archviz client. Specialist reputation compounds in unexpected directions.'] },
       { title:'David Geffen Hall — Lincoln Center', subtitle:'A real railing as an immersion multiplier',
         img:'MEDIA_CYCLER',
         bullets:['We built a physical railing into the VR experience — when stakeholders leaned on something real while seeing the virtual space, belief skyrocketed.','That one tactile detail changed every conversation. Decision-makers stopped debating renderings and started making decisions.','The result: significantly fewer change orders downstream. R&D on immersion multipliers paid for itself many times over.'] },
@@ -126,7 +126,7 @@ const SECTIONS = [
         img:'MEDIA_CYCLER',
         bullets:['London Tech Week 2023: Infinite Reality hires us to build a talking metahuman car salesman. We learn the Inworld + mocap pipeline on their dime.','We turn it into AI Dickens — an LLM-driven Charles Dickens who handles pre-show audience onboarding for Christmas Carol VR.','That R&D became "Directing AI Performers" — a Contemporary Theatre Review paper. Cash cow funded our IP.'] },
     ],
-    lesson: { title:'Protect Time for\n"We\'re Not Sure Either"', tagline:'Our most common brief starts with "I don\'t know if this is possible, but…" The honest answer is "us neither — let\'s find out together." That only works if Phase 1 of every project is explicitly dedicated to R&D, with the discovery budget baked into the contract from day one. Don\'t bet on tech that isn\'t there yet. But when the tech IS there, move fast. R&D keeps you at the bleeding edge — try everything, take advantage of companies that will send you devices.', short:'PROTECT R&D TIME', tags:'David Geffen Hall · Waldorf Astoria · Four Seasons · Body of Mine · AI Dickens' },
+    lesson: { title:'Protect Time for\n"We\'re Not Sure Yet"', tagline:'Our most common brief starts with "I don\'t know if this is possible, but…" The honest answer is "us neither — let\'s find out together."<br><br>That only works if Phase 1 of every project is explicitly dedicated to R&D, with the discovery budget baked into the contract from day one.<br><br>Don\'t bet on tech that isn\'t there yet. But when the tech IS there, move fast. R&D keeps you at the bleeding edge — try everything, take advantage of companies that will give you early access.', short:'PROTECT R&D TIME', tags:'David Geffen Hall · Waldorf Astoria · Four Seasons · Body of Mine · AI Dickens' },
   },
   {
     year: 2023, accent: 'teal',
@@ -2871,6 +2871,20 @@ function buildMediaCycler(slideEl, items, opts){
   ], {imageDuration:6000});
 })();
 
+// ── Christmas Carol VR — The ATL Upsell ──────────────────────────────────
+(function(){
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('The ATL Upsell'));
+  if (!slide) return;
+  buildMediaCycler(slide, [
+    {type:'image', src:'media/xmas-carol/xmas-carol.jpg'},
+    {type:'image', src:'media/xmas-carol/ScroogeDickens.jpg'},
+    {type:'image', src:'media/xmas-carol/marley.png'},
+    {type:'image', src:'media/xmas-carol/Dancing.png'},
+    {type:'image', src:'media/xmas-carol/greg_maupin.jpg'},
+    {type:'image', src:'media/xmas-carol/Future.jpg'},
+  ], {imageDuration:6000});
+})();
+
 // ── The Orchard — Off-Broadway ────────────────────────────────────────────
 (function(){
   const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('The Orchard'));
@@ -2919,10 +2933,10 @@ function buildMediaCycler(slideEl, items, opts){
   const slide = allSlides.find(s => s.dataset.year==='2023' && s.querySelector?.('.case-title')?.textContent.includes('Four Seasons Lake Austin'));
   if (!slide) return;
   buildMediaCycler(slide, [
+    {type:'video', src:'media/fsla/fsla_video.mp4'},
     {type:'image', src:'media/fsla/fsla_01.jpg'},
     {type:'image', src:'media/fsla/fsla_02.jpg'},
     {type:'image', src:'media/fsla/fsla_03.jpg'},
-    {type:'video', src:'media/fsla/fsla_video.mp4'},
   ], {imageDuration:6000});
 })();
 
@@ -3455,7 +3469,7 @@ function buildMediaCycler(slideEl, items, opts){
 })();
 // Macbeth — keep "Kenneth Branagh's Macbeth" on one line, "@ Park Avenue Armory" on second
 // Titles with \n line breaks — apply pre-line so they render correctly
-['The Shed @','Macbeth','The Late Show @','Equus — Syracuse'].forEach(keyword => {
+['The Shed @','Macbeth','The Late Show @','Equus — Syracuse','The ATL Upsell','The Orchard —'].forEach(keyword => {
   const s = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes(keyword));
   if (!s) return;
   const t = s.querySelector('.case-title');

@@ -93,7 +93,7 @@ const SECTIONS = [
         img:'MEDIA_CYCLER',
         bullets:['COVID shut down every live venue. We co-founded OnboardXR — a WebXR performance platform anyone could join from a browser.','No app store. No headset required. Accessible by default. That constraint forced better design.','OnboardXR became the proving ground for every live-performance idea we couldn\'t test in enterprise.'] },
       { title:'The Unreal Engine Bet', subtitle:'All-in on one engine. No more Unity. No more hedging.',
-        img:'',
+        img:'MEDIA_CYCLER',
         bullets:['Going all-in on Unreal Engine — including Gold Authorized Instructor certification — wasn\'t a technical decision. It was a five-year bet on which skills would still be valuable.','Every studio that chased the latest shiny (NFTs, then "the metaverse," then generative AI) lost their XR muscle memory. We didn\'t.','Platform lock-in is real — but so is platform mastery. From bespoke one-offs to a scalable pipeline, UE was the foundation.'] },
       { title:'Agony × Xsens × Lenovo', subtitle:'Sometimes the hardware just shows up at your door',
         img:'media/xsens-agony/xsens_agony.png',
@@ -2468,7 +2468,23 @@ function buildMediaCycler(slideEl, items, opts){
   ], {imageDuration:6000});
 })();
 
-// ── OnboardXR — looping Brockman Hall video ──────────────────────────────
+// ── The Unreal Engine Bet — looping Brockman Hall video ──────────────────
+(function(){
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Unreal Engine Bet'));
+  if (!slide) return;
+  buildMediaCycler(slide, [
+    {type:'video', src:'media/onboardxr/brockman.mp4', loop:true},
+  ]);
+  const mount = slide.querySelector('.media-cycler-mount');
+  if (mount) {
+    const cap = document.createElement('div');
+    cap.textContent = 'Brockman Hall for Opera';
+    cap.style.cssText = 'text-align:center;color:rgba(240,244,255,.45);font-size:.85rem;letter-spacing:.12em;margin-top:8px;font-style:italic';
+    mount.parentElement.appendChild(cap);
+  }
+})();
+
+// ── OnboardXR ────────────────────────────────────────────────────────────
 (function(){
   const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('OnboardXR'));
   if (!slide) return;
@@ -2477,16 +2493,7 @@ function buildMediaCycler(slideEl, items, opts){
     {type:'image', src:'media/onboardxr/OnBoard_Island.gif'},
     {type:'image', src:'media/onboardxr/OnBoard_Jettison.gif'},
     {type:'image', src:'media/onboardxr/OnBoard_JettisonScreen.gif'},
-    {type:'video', src:'media/onboardxr/brockman.mp4', loop:true},
   ], {imageDuration:6000});
-  // Add caption under the media cycler
-  const mount = slide.querySelector('.media-cycler-mount');
-  if (mount) {
-    const cap = document.createElement('div');
-    cap.textContent = 'Brockman Hall for Opera';
-    cap.style.cssText = 'text-align:center;color:rgba(240,244,255,.45);font-size:.85rem;letter-spacing:.12em;margin-top:8px;font-style:italic';
-    mount.parentElement.appendChild(cap);
-  }
 })();
 
 // ── Blueprint Immersive (BPI) ─────────────────────────────────────────────

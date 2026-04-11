@@ -2219,9 +2219,9 @@ function buildMediaCycler(slideEl, items, opts){
   function easeOut3(k){ return 1 - Math.pow(1-k, 3); }
   function easeIn2(k){ return k*k; }
 
-  // Contain-fit: fit source fully inside canvas (no cropping, minimal padding)
+  // Cover-fit: fill canvas fully, slight center-crop if aspect ratios differ
   function coverRect(sw, sh) {
-    const scale = Math.min(CW / sw, CH / sh);
+    const scale = Math.max(CW / sw, CH / sh);
     const dw = sw * scale, dh = sh * scale;
     const dx = (CW - dw) / 2, dy = (CH - dh) / 2;
     return { dx, dy, dw, dh };

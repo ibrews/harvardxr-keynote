@@ -2410,9 +2410,9 @@ function buildMediaCycler(slideEl, items, opts){
   const shedSlide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('The Shed'));
   if (!shedSlide) return;
   buildMediaCycler(shedSlide, [
-    {type:'image', src:'media/shed/Shed_Axon.png'},
-    {type:'video', src:'media/shed/Shed_Video.mp4'},
     {type:'image', src:'media/shed/Shed_Photo.jpg'},
+    {type:'video', src:'media/shed/Shed_Video.mp4'},
+    {type:'image', src:'media/shed/Shed_Axon.png'},
   ], {imageDuration:6000});
 })();
 

@@ -46,7 +46,7 @@ const SECTIONS = [
         bullets:['Jonathan pitched the same brief to 10 different studios. He hired two: Pure Blink for visual fidelity, Agile Lens for our particular method of problem-solving.','Diverse teams don\'t win on what they ship. They win on how they think.','Architects, theater directors, lighting designers, motion capture artists, choreographers — in the same room as engineers.'] },
     ],
     lesson: { title:'The Best XR Teams Look\nNothing Like Tech Teams', tagline:'XR is too new to have native experts, so we build them from everywhere. But don\'t go to zero on traditional engineers either — our early years without dedicated devs cost us in source control, QA, and project discipline. The principle is theater-first, engineering-second. Never engineering-zero.', short:'HIRE UNLIKE TECH', tags:'Stage Presence · High Fidelity 2019 · Fisher Dachs Associates · Fisher Marantz Stone' },
-    altLesson: { badge:'Lesson 02 / 10', title:"It's OK to Pivot!\nDon't Forget Your Calling.", tagline:"Architects don't have any money. Some will be game to collaborate, but most can't afford the risk.<br><br>We pivoted from Unity + design focus to UE + archviz focus.<br><br>With R&D to keep it fresh, it led to attracting valuable eyes, led to a relationship with Epic Games, and then...", short:"It's ok to pivot", tags:'ArchViz · R&D · Speaking Engagements · Press' },
+    altLesson: { badge:'Lesson 02 / 10', title:"It's OK to Pivot!\nDon't Forget Your Calling.", tagline:"Architects don't have any money. Some will be game to collaborate, but most can't afford the risk.<br><br>We pivoted from Unity + design focus to UE + archviz focus.<br><br>With R&D to keep it fresh, it led to attracting valuable eyes, led to a relationship with Epic Games, and then...", short:"It's OK to Pivot", tags:'ArchViz · R&D · Speaking Engagements · Press' },
     altCases: [
       { title:'ArchViz & R&D', subtitle:'One thing leads to another',
         img:'MEDIA_CYCLER',
@@ -76,8 +76,8 @@ const SECTIONS = [
         bullets:['Rockwell Group also draws from theater and regularly hires non-standard consultants to improve design.'] },
       { title:'Connective Corridor — Syracuse University', subtitle:'Civic technology as public art',
         img:'media/interdisciplinary/connectivecorridor_ribbon.jpg',
-        bullets:['School of Interdisciplinary Design to bring myriad designers together','Weekend long charette (design hackathon)','Reminiscent of ETC at Carnegie Mellon'] },
-      { title:'Equus — Syracuse\nBlack Box Players', subtitle:'Set design is the middle of the architecture/theater venn diagram',
+        bullets:['School of Interdisciplinary Design to bring myriad designers together','Weekend-long charrette (design hackathon)','Reminiscent of ETC at Carnegie Mellon'] },
+      { title:'Equus — Syracuse\nBlack Box Players', subtitle:'Set design is the middle of the architecture/theater Venn diagram',
         img:'media/interdisciplinary/equus.png',
         bullets:['Just like VR; consider scale and create only what they\'ll see','VR would have been amazing in 2008 to test more variations quicker'] },
       { title:'Ghosted — With Kevin Laibson & Allyson Morgan', subtitle:'Where all of it came together for the first time',
@@ -131,7 +131,7 @@ const SECTIONS = [
       { title:'Body of Mine', subtitle:'Full-body VR — Producers Guild Innovation Award',
         img:'media/body-of-mine/body-of-mine.jpg',
         bullets:['Body, face, and eye tracking — inhabit another gender. BAFTA, SXSW, Games for Change recognition.','Try everything. Take the devices companies send you. Body of Mine happened because we said yes to experimental hardware.','Don\'t bet on tech that isn\'t there yet — but when the tech IS there, move fast.'] },
-      { title:'Vodafone Metahuman → AI Dickens', subtitle:'Paid client work becomes internal R&D becomes published research',
+      { title:'Infinite Reality → AI Dickens', subtitle:'Paid client work becomes internal R&D becomes published research',
         img:'MEDIA_CYCLER',
         bullets:['London Tech Week 2023: Infinite Reality hires us to build a talking metahuman car salesman. We learn the Inworld + mocap pipeline on their dime.','We turn it into AI Dickens — an LLM-driven Charles Dickens who handles pre-show audience onboarding for Christmas Carol VR.','That R&D became "Directing AI Performers" — a Contemporary Theatre Review paper. Cash cow funded our IP.'] },
     ],
@@ -148,7 +148,7 @@ const SECTIONS = [
         bullets:['A large-scale immersive XR experience bringing a centuries-old tradition into spatial computing.','Complex multi-stakeholder project with cultural sensitivity requirements that no tech brief could capture.','Scope definition was everything — the more meaningful the project, the harder it is to draw boundaries.'] },
       { title:'Your Mind, Girls — The Scope Creep Story', subtitle:'How $0 of revenue funded a genuinely excellent piece',
         img:'',
-        bullets:['Hope Hutman approached us asking for a small blueprint script. We said yes, planning to hand it off and take a small credit.','Each yes spawned 5 new problems. Sony Mocopi was the new shiny in the room. We thought we were killing two birds. Kevin: "We were just being sat on by a giant bird."','We ended up as full co-producers. 30 people in headsets watching a real actor in a virtual space. Beautiful work. Zero dollars.'] },
+        bullets:['Hope Hutman approached us asking for a small Blueprint script. We said yes, planning to hand it off and take a small credit.','Each yes spawned 5 new problems. Sony Mocopi was the new shiny in the room. We thought we were killing two birds. Kevin: "We were just being sat on by a giant bird."','We ended up as full co-producers. 30 people in headsets watching a real actor in a virtual space. Beautiful work. Zero dollars.'] },
     ],
     lesson: { title:'Complex Projects Are Thrilling —\nand Perfect Breeding Grounds for Scope Creep', tagline:'The most dangerous projects are the ones that hit the bullseye of everything you\'ve been wanting to try. New hardware in the room plus a brief that fits your ambitions plus a creative collaborator you like = sunk cost fallacy by month two. XR\'s evolving tech makes it harder to say no. Learn to distinguish "we could" from "we should." The fix isn\'t saying no to thrilling projects. It\'s saying yes only with hard scope boundaries before the work starts.', short:'SCOPE CREEP WILL FIND YOU', tags:'FSLA · La Pasion XR · Your Mind, Girls · Sony Mocopi' },
   },
@@ -2501,9 +2501,9 @@ function buildMediaCycler(slideEl, items, opts){
   ], {imageDuration:6000});
 })();
 
-// ── Vodafone Metahuman → AI Dickens ──────────────────────────────────────
+// ── Infinite Reality → AI Dickens ─────────────────────────────────────────
 (function(){
-  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Vodafone Metahuman'));
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Infinite Reality'));
   if (!slide) return;
   buildMediaCycler(slide, [
     {type:'image', src:'media/vodafone/01.jpg'},

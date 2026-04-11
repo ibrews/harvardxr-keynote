@@ -1093,12 +1093,21 @@ allSlides.push(introLens);
   const hx = CX + (monocleR+14)*Math.cos(hingeA), hy = CY + (monocleR+14)*Math.sin(hingeA);
   svg.appendChild(svgE('circle', { cx:hx, cy:hy, r:'10',
     fill:'none', stroke:'rgba(255,255,255,.1)', 'stroke-width':'6' }));
-  // Cord + eyepiece (lower right, like the real logo)
-  const eyeA = 0.9;
-  const ex = CX + (monocleR+60)*Math.cos(eyeA), ey = CY + (monocleR+60)*Math.sin(eyeA);
-  const cordStart = { x: CX + monocleR*Math.cos(eyeA), y: CY + monocleR*Math.sin(eyeA) };
+  // Cord + eyepiece — positioned using actual PNG geometry.
+  // In the real logo, eyepiece center is at (775,788) relative to ring center (407,432).
+  // That's an offset of (+368, +356) from ring center, at angle ≈ 44° below horizontal.
+  const eyeDx = (775 - 407) * mScale, eyeDy = (788 - 432) * mScale;
+  const ex = CX + eyeDx, ey = CY + eyeDy;
+  // Cord starts where the ring meets the eyepiece direction
+  const eyeAngle = Math.atan2(eyeDy, eyeDx);
+  const cordStart = { x: CX + monocleR * Math.cos(eyeAngle), y: CY + monocleR * Math.sin(eyeAngle) };
+  // Gentle curve outward
+  const ctrl = {
+    x: (cordStart.x + ex) / 2 + 15 * Math.cos(eyeAngle + Math.PI/2),
+    y: (cordStart.y + ey) / 2 + 15 * Math.sin(eyeAngle + Math.PI/2),
+  };
   svg.appendChild(svgE('path', {
-    d: `M${cordStart.x} ${cordStart.y} Q${(cordStart.x+ex)/2+20} ${(cordStart.y+ey)/2+15} ${ex} ${ey}`,
+    d: `M${cordStart.x} ${cordStart.y} Q${ctrl.x} ${ctrl.y} ${ex} ${ey}`,
     fill:'none', stroke:'rgba(255,255,255,.08)', 'stroke-width':'4', 'stroke-linecap':'round'
   }));
   svg.appendChild(svgE('circle', { cx:ex, cy:ey, r:'18',

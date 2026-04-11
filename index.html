@@ -2738,19 +2738,24 @@ function buildMediaCycler(slideEl, items, opts){
   }
   svg.appendChild(burstG);
 
-  // Pulse loop — monocle glow + subtle avatar breathe while holding
-  let pulseT=0, pulseRaf=null;
-  function runPulse(){
-    pulseT+=0.02;
-    imPulseImg.setAttribute('opacity',(0.05+0.05*Math.sin(pulseT)).toFixed(3));
-    const s=HOLD_SCALE-0.06*Math.sin(pulseT);
-    avInner.setAttribute('transform',`scale(${s.toFixed(3)})`);
-    pulseRaf=requestAnimationFrame(runPulse);
+  // Shared slow clock — same period (~5.2s) drives both INTERMISSION and monocle/avatar,
+  // syncopated: INTERMISSION bright when monocle PNG is dim, and vice versa.
+  let imClockT=0, imClockRaf=null, imClockDriveMonocle=false;
+  function runImClock(){
+    imClockT+=0.02;
+    // INTERMISSION: inverted phase (π offset) → ranges 0.05–1.0
+    imTitle.setAttribute('opacity',(0.525+0.475*Math.sin(imClockT+Math.PI)).toFixed(3));
+    if(imClockDriveMonocle){
+      imPulseImg.setAttribute('opacity',(0.05+0.05*Math.sin(imClockT)).toFixed(3));
+      const s=HOLD_SCALE-0.06*Math.sin(imClockT);
+      avInner.setAttribute('transform',`scale(${s.toFixed(3)})`);
+    }
+    imClockRaf=requestAnimationFrame(runImClock);
   }
-  function stopPulse(){ if(pulseRaf){ cancelAnimationFrame(pulseRaf); pulseRaf=null; } }
+  function stopImClock(){ if(imClockRaf){ cancelAnimationFrame(imClockRaf); imClockRaf=null; } imClockDriveMonocle=false; }
 
   function imReset(){
-    stopPulse();
+    stopImClock(); imClockT=0;
     avG.style.opacity='0'; avG.style.transition='';
     avG.setAttribute('transform',`translate(${BRX},${BRY})`);
     avInner.setAttribute('transform','scale(0.22)');
@@ -2764,7 +2769,7 @@ function buildMediaCycler(slideEl, items, opts){
 
   // Step 1 — send him back to the minimap with shrink SFX
   function imStep1(){
-    stopPulse(); imPulseImg.setAttribute('opacity','0');
+    stopImClock(); imPulseImg.setAttribute('opacity','0');
     if(window._playShrinkSfx) window._playShrinkSfx();
     const {x:tgtX, y:tgtY} = trackerSvgPos();
     const dur=1800, t0=performance.now();
@@ -2789,15 +2794,45 @@ function buildMediaCycler(slideEl, items, opts){
     requestAnimationFrame(shrinkFrame);
   }
 
+  // Short electric pop for each beard on/off toggle
+  function playFlashSfx(beardOn){
+    try{
+      const ctx=new(window.AudioContext||window.webkitAudioContext)();
+      const now=ctx.currentTime;
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='square';o.frequency.value=beardOn?920:620;
+      o.connect(g);g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.07,now);
+      g.gain.exponentialRampToValueAtTime(0.001,now+0.055);
+      o.start(now);o.stop(now+0.06);
+    }catch(e){}
+  }
+  // Rising chord burst for the particle finale
+  function playFinaleBeardSfx(){
+    try{
+      const ctx=new(window.AudioContext||window.webkitAudioContext)();
+      const now=ctx.currentTime;
+      [[523,0],[659,0.05],[784,0.10],[1047,0.16],[1319,0.22]].forEach(([freq,t])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type='triangle';o.frequency.value=freq;
+        o.connect(g);g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.09,now+t);
+        g.gain.exponentialRampToValueAtTime(0.001,now+t+0.28);
+        o.start(now+t);o.stop(now+t+0.3);
+      });
+    }catch(e){}
+  }
   function startBeardFlash(){
     [{b:true,t:0},{b:false,t:210},{b:true,t:420},{b:false,t:660},
      {b:true,t:940},{b:false,t:1250},{b:true,t:1560}].forEach(({b,t})=>
       setTimeout(()=>{
         avClean.setAttribute('visibility',b?'hidden':'visible');
         avBeard.setAttribute('visibility',b?'visible':'hidden');
+        playFlashSfx(b);
       },t));
-    // Particles at 1s
+    // Particles + finale SFX at 1s
     setTimeout(()=>{
+      playFinaleBeardSfx();
       burstG.style.opacity='1';
       burstG.querySelectorAll('circle').forEach(p=>{
         p.style.setProperty('--tx',`${p.getAttribute('data-tx')}px`);
@@ -2805,8 +2840,8 @@ function buildMediaCycler(slideEl, items, opts){
         p.style.animation='evoBurst 1.4s ease-out forwards';
       });
     },1000);
-    // At 1.8s lock bearded at HOLD_SCALE and start pulse — waits for click
-    setTimeout(()=>{ avInner.setAttribute('transform',`scale(${HOLD_SCALE})`); runPulse(); },1800);
+    // At 1.8s lock bearded and enable monocle/avatar drive on shared clock
+    setTimeout(()=>{ avInner.setAttribute('transform',`scale(${HOLD_SCALE})`); imClockDriveMonocle=true; },1800);
   }
 
   // Compute tracker center in intermission SVG coords
@@ -2844,7 +2879,8 @@ function buildMediaCycler(slideEl, items, opts){
     imReset();
     setTimeout(()=>{
       imTitle.style.transition='opacity .5s'; imTitle.setAttribute('opacity','1');
-      setTimeout(()=>{ imTitle.style.transition=''; imTitle.style.animation='intermissionFlash .7s ease-in-out infinite'; },600);
+      // Start slow syncopated clock — init at -π/2 so INTERMISSION opens at full opacity
+      setTimeout(()=>{ imTitle.style.transition=''; imClockT=-Math.PI/2; runImClock(); },600);
     },200);
     setTimeout(()=>{ imMonocleG.style.transition='opacity 1.2s'; imMonocleG.setAttribute('opacity','1'); },400);
     setTimeout(()=>{

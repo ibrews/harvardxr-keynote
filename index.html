@@ -2317,6 +2317,11 @@ function buildMediaCycler(slideEl, items, opts){
           ctx.restore();
           pulseAlpha = Math.max(0, pulseAlpha - 0.022);
         }
+        // Single-item: once flash fades, draw final frame and stop — no cycling
+        if (items.length === 1 && pulseAlpha <= 0) {
+          drawPixelated(src, 1, _flip);
+          return; // stop rAF loop
+        }
         const isVid = src.tagName==='VIDEO';
         if (manualMode && isVid && videoEnded) {
           // Loop video in manual mode instead of advancing

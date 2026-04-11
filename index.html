@@ -27,7 +27,7 @@ const SECTIONS = [
         img:'https://website-ivory-omega-78.vercel.app/portfolio/four-seasons-holodeck.jpg',
         bullets:['Mid-experience, guests sit in a physical chair that also exists in VR. Jonathan asked: "If only there was a way to make sure the chair was placed in exactly the right spot every time…"','Kevin Laibson: "Jonathan, I can\'t wait for you to meet our thousand-year-old invention — spike tape."','"It\'s not a VR experience that is similar to theater. It\'s a theater experience that has VR in it." — Kevin'] },
       { title:'The Shed @ Hudson Yards', subtitle:'Our first major VR architecture project',
-        img:'https://website-ivory-omega-78.vercel.app/portfolio/the-shed.png',
+        img:'SHED_CYCLER',
         bullets:['Custom AR & VR walkthroughs for a $475M cultural venue','Parametric design options explored in real-time VR','We weren\'t doing film. We weren\'t doing games. We were doing stagecraft.'] },
     ],
     lesson: { title:'VR Is Theater.\nNot Film. Not Games.', tagline:'Film hands you cuts, wide shots, and montage to control where the audience looks. Games demand controller literacy and active participation. Theater is spatial, live, and trusts an audience to look anywhere they want — exactly like VR. Stop borrowing from cinema. Start borrowing from stagecraft.', tags:'Four Seasons · Christmas Carol VR · Stage Presence · RSC' },
@@ -807,6 +807,30 @@ allSlides.push(vennSlide);
     }, 60);
   }
 
+  // Soft shuffle SFX — two quick filtered-noise bursts like cards riffling
+  let _vennSfxCtx = null;
+  function playVennShuffle() {
+    try {
+      if (!_vennSfxCtx) _vennSfxCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = _vennSfxCtx; if (ctx.state === 'suspended') ctx.resume();
+      const now = ctx.currentTime;
+      [0, 0.09].forEach(offset => {
+        const bufLen = Math.floor(ctx.sampleRate * 0.07);
+        const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < bufLen; i++) d[i] = Math.random() * 2 - 1;
+        const src = ctx.createBufferSource(); src.buffer = buf;
+        const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2400;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0, now + offset);
+        g.gain.linearRampToValueAtTime(0.06, now + offset + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.06);
+        src.connect(hp); hp.connect(g); g.connect(ctx.destination);
+        src.start(now + offset); src.stop(now + offset + 0.07);
+      });
+    } catch(e) {}
+  }
+
   // Map waypoint index → reaction function
   // waypoints[0]=architecture, [1]=theatre, [2]=realtime tech, [3]=center
   const reactions = [reactArch, reactTheat, reactTech, null];
@@ -826,8 +850,8 @@ allSlides.push(vennSlide);
     const dx = target.x - orbX, dy = target.y - orbY;
     const dist = Math.hypot(dx, dy);
     if (dist < 4) {
-      // Arrived — trigger reaction and dwell
-      if (reactions[wpIdx]) reactions[wpIdx]();
+      // Arrived — trigger reaction, shuffle SFX, and dwell
+      if (reactions[wpIdx]) { reactions[wpIdx](); playVennShuffle(); }
       wpIdx = (wpIdx + 1) % waypoints.length;
       dwellTimer = DWELL;
     } else {
@@ -869,7 +893,8 @@ introAlex.innerHTML = `
     <div class="intro-content">
       <div class="intro-eyebrow" id="intro-eyebrow" style="opacity:0;transition:opacity .6s">Your Speaker</div>
       <h1 class="intro-title" id="intro-title" style="opacity:0;transition:opacity .6s">Alex<br>Coulombe</h1>
-      <p class="intro-sub" id="intro-sub" style="opacity:0;transition:opacity .6s">CEO of Agile Lens. Architect turned XR-chitect who has spent the last decade building spatial experiences for the world's most ambitious clients.<br><br>Gold authorized UE5 instructor. Host of Unreal NYC &amp; The Unofficial Unreal Engine podcast.</p>
+      <p class="intro-sub" id="intro-sub" style="opacity:0;transition:opacity .6s">CEO of Agile Lens. Architect turned XR-chitect who has spent the last decade building spatial experiences for the world's most ambitious clients.</p>
+      <p class="intro-sub" id="intro-sub-ue5" style="opacity:0;transition:opacity .6s;margin-top:.6em">Gold authorized UE5 instructor. Host of Unreal NYC &amp; The Unofficial Unreal Engine podcast.</p>
       <div class="intro-stats" id="intro-stats-row" style="opacity:0;transition:opacity .6s">
         <div class="intro-stat"><span class="num">16</span><span class="lbl">Years in XR</span></div>
         <div class="intro-stat"><span class="num">10</span><span class="lbl">Years at Agile Lens</span></div>
@@ -1045,6 +1070,31 @@ function buildUE5Block(svg) {
   svg.appendChild(blockPos);
 }
 
+// ── Slide-advance whoosh — subtle air/page-turn sound ──
+let _whooshCtx = null;
+function playWhoosh() {
+  try {
+    if (!_whooshCtx) _whooshCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = _whooshCtx; if (ctx.state === 'suspended') ctx.resume();
+    const now = ctx.currentTime;
+    // White-noise burst filtered through a bandpass — airy whoosh
+    const bufLen = ctx.sampleRate * 0.25;
+    const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 0.6;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.08, now + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+    src.connect(bp); bp.connect(gain); gain.connect(ctx.destination);
+    src.start(now); src.stop(now + 0.25);
+  } catch(e) {}
+}
+
 // Fireball — spinning GoldAuthorized logo projectile with zap SFX
 let _fbAudioCtx = null;
 function playZapSfx() {
@@ -1113,7 +1163,7 @@ function playAlexIntro() {
   // Hide everything initially to prevent flash of stale final state
   anim.style.opacity = '0';
   // Reset all text/stats to hidden (in case navigating back)
-  ['intro-eyebrow','intro-title','intro-sub'].forEach(id => {
+  ['intro-eyebrow','intro-title','intro-sub','intro-sub-ue5'].forEach(id => {
     const el = document.getElementById(id); if(el) el.style.opacity='0';
   });
   const statsRow = document.getElementById('intro-stats-row');
@@ -1216,6 +1266,12 @@ function introUE5PowerUp() {
   setTimeout(() => {
     anim.style.animation = 'ue5FallDown .55s cubic-bezier(.55,0,.8,1) forwards';
   }, 2700);
+
+  // Reveal UE5 bio line once the powerup lands
+  setTimeout(() => {
+    const ue5sub = document.getElementById('intro-sub-ue5');
+    if (ue5sub) ue5sub.style.opacity = '1';
+  }, 3300);
 
   // Lock at 2x + run back and forth shooting fireballs
   setTimeout(() => {
@@ -1404,6 +1460,36 @@ allSlides.push(introLens);
 
   // Orbit ring removed per user preference (was too visible)
 
+  // ── Monocle hum — low sine wave whose amplitude pulses with the monocle ──
+  let _humCtx = null, _humOsc = null, _humGain = null;
+  function startLensHum() {
+    try {
+      if (!_humCtx) _humCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (_humCtx.state === 'suspended') _humCtx.resume();
+      if (_humOsc) { try { _humOsc.stop(); } catch(e){} }
+      _humOsc = _humCtx.createOscillator();
+      _humGain = _humCtx.createGain();
+      _humOsc.type = 'sine';
+      _humOsc.frequency.value = 68; // deep low hum
+      _humGain.gain.value = 0;      // ramp in gently
+      _humOsc.connect(_humGain); _humGain.connect(_humCtx.destination);
+      _humOsc.start();
+      _humCtx.currentTime; // warm up
+      _humGain.gain.setValueAtTime(0, _humCtx.currentTime);
+      _humGain.gain.linearRampToValueAtTime(0.04, _humCtx.currentTime + 1.2);
+    } catch(e) {}
+  }
+  function stopLensHum() {
+    try {
+      if (_humGain && _humCtx) {
+        _humGain.gain.setValueAtTime(_humGain.gain.value, _humCtx.currentTime);
+        _humGain.gain.linearRampToValueAtTime(0, _humCtx.currentTime + 0.6);
+        const osc = _humOsc; _humOsc = null;
+        setTimeout(() => { try { osc.stop(); } catch(e){} }, 700);
+      }
+    } catch(e) {}
+  }
+
   // Animate: slowly rotate client names + pulse the white monocle
   let lensRunning = false;
   let lensAngle = 0;
@@ -1421,14 +1507,19 @@ allSlides.push(introLens);
       const brightness = 0.3 + 0.5 * (1 - (Math.sin(a) + 1) / 2);
       el.setAttribute('fill', `rgba(255,255,255,${brightness.toFixed(2)})`);
     });
-    // Pulse white monocle PNG
+    // Pulse white monocle PNG — and modulate hum gain in sync
     const pulse = 0.06 + 0.06 * Math.sin(lensT);
     pulseImg.setAttribute('opacity', pulse.toFixed(3));
+    if (_humGain && _humCtx && _humOsc) {
+      // Target gain pulses between 0.025 and 0.055, matching the visual pulse
+      const targetVol = 0.025 + 0.030 * ((Math.sin(lensT) + 1) / 2);
+      _humGain.gain.setTargetAtTime(targetVol, _humCtx.currentTime, 0.08);
+    }
     requestAnimationFrame(lensStep);
   }
 
-  window.startLensOrbit = () => { lensRunning = true; lensT = 0; requestAnimationFrame(lensStep); };
-  window.stopLensOrbit = () => { lensRunning = false; };
+  window.startLensOrbit = () => { lensRunning = true; lensT = 0; startLensHum(); requestAnimationFrame(lensStep); };
+  window.stopLensOrbit = () => { lensRunning = false; stopLensHum(); };
 
   // Sub-text at the bottom
   const sub = svgE('text', { x:CX, y:830, 'text-anchor':'middle',
@@ -1447,6 +1538,24 @@ allSlides.push(introLens);
       el.style.transition = 'opacity .8s ease-out';
       el.style.opacity = '0';
     });
+    stopLensHum();
+  }
+
+  // Avatar spawn SFX — short ascending shimmer, like materializing
+  function playLensSpawnSfx() {
+    try {
+      if (!_humCtx) _humCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (_humCtx.state === 'suspended') _humCtx.resume();
+      const ctx = _humCtx; const now = ctx.currentTime;
+      [[523,0],[659,0.07],[784,0.14],[1047,0.22],[1319,0.30]].forEach(([freq,t]) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = freq;
+        o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.07, now+t);
+        g.gain.exponentialRampToValueAtTime(0.001, now+t+0.18);
+        o.start(now+t); o.stop(now+t+0.19);
+      });
+    } catch(e) {}
   }
 
   // Step 2: Alex avatar spawns in center with VR goggles, arms up then down
@@ -1463,24 +1572,26 @@ allSlides.push(introLens);
     // Start with arms up
     avRoot.classList.add('arm-up');
     svg.appendChild(lensAvG);
-    // Fade in
+    // Fade in + spawn SFX
     lensAvG.style.opacity = '0';
     lensAvG.style.transition = 'opacity .5s';
-    setTimeout(() => { lensAvG.style.opacity = '1'; }, 50);
+    setTimeout(() => { lensAvG.style.opacity = '1'; playLensSpawnSfx(); }, 50);
     // Arms down after 1.5s
     setTimeout(() => { avRoot.classList.remove('arm-up'); }, 1500);
   }
 
-  // Step 3: Avatar shrinks from center to the eyepiece (~5 o'clock) — the starting box
-  const FIVE_OCLOCK = eyeAngle; // ~0.77 rad, matches the real monocle eyepiece
+  // FIVE_OCLOCK = eyepiece angle on the ring (where the cord meets the ring)
+  // The avatar first lands on the eyepiece circle (ex,ey) which is OFFSHORE from
+  // the ring, then dashes along a straight dashed line back to the ring edge,
+  // then arcs clockwise to 6 o'clock.
+  const FIVE_OCLOCK = eyeAngle; // ~0.77 rad — ring-edge at the eyepiece direction
   const SIX_OCLOCK = Math.PI / 2; // bottom of the ring, where 2016 goes
 
+  // Step 3: Shrink from center → eyepiece circle (the small offshore ring)
   function lensStep3() {
     if (!lensAvG) return;
-    const rx = CX + monocleR * Math.cos(FIVE_OCLOCK);
-    const ry = CY + monocleR * Math.sin(FIVE_OCLOCK);
     const startTf = { x: CX, y: CY, s: 1.2 };
-    const endTf = { x: rx, y: ry, s: 0.4 };
+    const endTf   = { x: ex, y: ey, s: 0.4 }; // land ON the eyepiece
     const dur = 1500;
     const t0 = performance.now();
     function shrinkStep(now) {
@@ -1495,8 +1606,8 @@ allSlides.push(introLens);
     requestAnimationFrame(shrinkStep);
   }
 
-  // Step 4: Chiptune plays, avatar walks from 5 o'clock → 6 o'clock along
-  // the ring with a dashed trail behind it. "2016" label appears at 6 o'clock.
+  // Step 4: Chiptune plays, avatar dashes eyepiece → ring entry (dashed straight
+  // line), then arcs clockwise 5 o'clock → 6 o'clock. "2016" label appears.
   let _chiptuneCtx = null;
   function playChiptune() {
     try {
@@ -1521,39 +1632,54 @@ allSlides.push(introLens);
     if (!lensAvG) return;
     playChiptune();
 
-    // Build dashed trail path element
-    const trail = svgE('path', {
+    // Ring-entry point at 5 o'clock
+    const rx = CX + monocleR * Math.cos(FIVE_OCLOCK);
+    const ry = CY + monocleR * Math.sin(FIVE_OCLOCK);
+
+    // ── Phase A: straight dashed dash from eyepiece (ex,ey) → ring entry (rx,ry) ──
+    const trailA = svgE('path', {
       d: '', fill:'none', stroke:'rgba(0,212,255,.4)',
       'stroke-width':'2', 'stroke-dasharray':'6 4', 'stroke-linecap':'round',
     });
-    svg.insertBefore(trail, lensAvG); // behind the avatar
+    svg.insertBefore(trailA, lensAvG);
+    const durA = 700;
+    const t0A = performance.now();
+    const ptsA = [];
 
-    // Animate from 5 o'clock to 6 o'clock (short clockwise arc)
-    const dur = 2800;
-    const t0 = performance.now();
-    const trailPts = [];
-
-    function orbitStep(now) {
-      const k = Math.min(1, (now - t0) / dur);
+    function phaseA(now) {
+      const k = Math.min(1, (now - t0A) / durA);
       const ease = k < 0.5 ? 2*k*k : 1 - Math.pow(-2*k+2, 2)/2;
-      const a = FIVE_OCLOCK + (SIX_OCLOCK - FIVE_OCLOCK) * ease;
-      const x = CX + monocleR * Math.cos(a);
-      const y = CY + monocleR * Math.sin(a);
+      const x = ex + (rx - ex) * ease;
+      const y = ey + (ry - ey) * ease;
       lensAvG.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(0.4)`);
+      ptsA.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+      if (ptsA.length > 1) trailA.setAttribute('d', 'M' + ptsA.join(' L'));
+      if (k < 1) { requestAnimationFrame(phaseA); return; }
 
-      // Grow trail
-      trailPts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
-      if (trailPts.length > 1) {
-        trail.setAttribute('d', 'M' + trailPts.join(' L'));
-      }
+      // ── Phase B: arc along ring from 5 o'clock → 6 o'clock ──
+      const trailB = svgE('path', {
+        d: '', fill:'none', stroke:'rgba(0,212,255,.4)',
+        'stroke-width':'2', 'stroke-dasharray':'6 4', 'stroke-linecap':'round',
+      });
+      svg.insertBefore(trailB, lensAvG);
+      const durB = 2800;
+      const t0B = performance.now();
+      const ptsB = [];
 
-      if (k < 1) {
-        requestAnimationFrame(orbitStep);
-      } else {
-        // Arrived at 6 o'clock — show "2016" label
+      function phaseB(now) {
+        const k = Math.min(1, (now - t0B) / durB);
+        const ease = k < 0.5 ? 2*k*k : 1 - Math.pow(-2*k+2, 2)/2;
+        const a = FIVE_OCLOCK + (SIX_OCLOCK - FIVE_OCLOCK) * ease;
+        const x = CX + monocleR * Math.cos(a);
+        const y = CY + monocleR * Math.sin(a);
+        lensAvG.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(0.4)`);
+        ptsB.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+        if (ptsB.length > 1) trailB.setAttribute('d', 'M' + ptsB.join(' L'));
+        if (k < 1) { requestAnimationFrame(phaseB); return; }
+        // Arrived at 6 o'clock — show "2016" label (lowered for space)
         const lbl = svgE('text', {
           x: CX + monocleR * Math.cos(SIX_OCLOCK),
-          y: CY + monocleR * Math.sin(SIX_OCLOCK) + 28,
+          y: CY + monocleR * Math.sin(SIX_OCLOCK) + 52,
           'text-anchor':'middle', fill:'rgba(0,212,255,.8)',
           'font-family':'Space Grotesk,sans-serif', 'font-size':'18',
           'font-weight':'600', 'letter-spacing':'2', id:'lens-2016-lbl',
@@ -1563,8 +1689,9 @@ allSlides.push(introLens);
         svg.appendChild(lbl);
         setTimeout(() => { lbl.style.transition = 'opacity .5s'; lbl.style.opacity = '1'; }, 50);
       }
+      requestAnimationFrame(phaseB);
     }
-    requestAnimationFrame(orbitStep);
+    requestAnimationFrame(phaseA);
   }
 
   // Register steps (runs after slideSteps is available)
@@ -1597,7 +1724,7 @@ SECTIONS.forEach((sec,si)=>{
   // Case study slides follow the lesson
   sec.cases.forEach((c,ci)=>{
     const s=document.createElement('div');s.className=`slide case-slide${ac}`;s.dataset.type='case';s.dataset.year=sec.year;s.dataset.section=si;
-    const img=c.img?`<img src="${c.img}" alt="${c.title}" loading="lazy">`:`<div class="ph">Image TBD</div>`;
+    const img=c.img==='SHED_CYCLER'?`<div class="shed-cycler-mount" style="width:100%;height:100%"></div>`:c.img?`<img src="${c.img}" alt="${c.title}" loading="lazy">`:`<div class="ph">Image TBD</div>`;
     s.innerHTML=`<div class="case-image">${img}</div><div class="case-content">
       <div class="case-ytag">${sec.year} · Case Study ${ci+1}/${sec.cases.length}</div>
       <h2 class="case-title">${c.title}</h2><p class="case-sub">${c.subtitle}</p>
@@ -1633,10 +1760,202 @@ cls.innerHTML=`<div class="close-ey">Thank You · HXR 2026</div><h2 class="close
 </div>`;
 deck.appendChild(cls);allSlides.push(cls);
 
+// ── Shed @ Hudson Yards — cycling media player ────────────────────────────
+// Cycles Axon wireframe → exterior photo → trimmed video clip.
+// Each item: enter from right (pixelated) → de-pixelate with flash → hold
+// 7 s → soft bing → re-pixelate → fly left → next item.  ~10 s per loop.
+(function buildShedCycler(){
+  const shedSlide = allSlides.find(s => s.querySelector && s.querySelector('.case-title')?.textContent.includes('The Shed'));
+  if (!shedSlide) return;
+  const mount = shedSlide.querySelector('.shed-cycler-mount');
+  if (!mount) return;
+
+  const CW = 800, CH = 500;
+  const canvas = document.createElement('canvas');
+  canvas.width = CW; canvas.height = CH;
+  canvas.style.cssText = 'width:100%;height:100%;display:block;transition:none;';
+  mount.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+
+  // Offscreen canvas for pixelation downsample
+  const off = document.createElement('canvas');
+  const offCtx = off.getContext('2d');
+
+  // Load media
+  const axon = new Image(); axon.src = 'media/shed/Shed_Axon.png';
+  const photo = new Image(); photo.src = 'media/shed/Shed_Photo.jpg';
+  const vid = document.createElement('video');
+  vid.src = 'media/shed/Shed_Video.mp4';
+  vid.muted = true; vid.loop = true; vid.preload = 'auto';
+  vid.playsInline = true; vid.style.display = 'none';
+  document.body.appendChild(vid);
+
+  const ITEMS = [axon, photo, vid];
+
+  // Durations (ms)
+  const DUR_ENTER  = 700;
+  const DUR_REVEAL = 1600;
+  const DUR_HOLD   = 7000;
+  const DUR_EXIT   = 500;
+
+  let idx = 0, phase = 'entering', phaseStart = 0;
+  let pulseAlpha = 0, rafId = null;
+
+  function easeOut3(k){ return 1 - Math.pow(1-k, 3); }
+  function easeIn2(k){ return k*k; }
+
+  // Draw source at given pixelSize (1 = full res, 32 = very chunky)
+  function drawPixelated(src, ps){
+    if (ps <= 1.2){
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(src, 0, 0, CW, CH);
+    } else {
+      const bw = Math.max(1, Math.round(CW/ps));
+      const bh = Math.max(1, Math.round(CH/ps));
+      off.width = bw; off.height = bh;
+      offCtx.drawImage(src, 0, 0, bw, bh);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(off, 0, 0, CW, CH);
+    }
+  }
+
+  // Soft bing — ascending sine bell
+  let _bingCtx = null;
+  function playBing(){
+    try {
+      if (!_bingCtx) _bingCtx = new (window.AudioContext||window.webkitAudioContext)();
+      if (_bingCtx.state==='suspended') _bingCtx.resume();
+      const c=_bingCtx, t=c.currentTime;
+      const o=c.createOscillator(), g=c.createGain();
+      o.type='sine';
+      o.frequency.setValueAtTime(1047,t);
+      o.frequency.exponentialRampToValueAtTime(1400,t+0.07);
+      o.connect(g); g.connect(c.destination);
+      g.gain.setValueAtTime(0.10,t);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.65);
+      o.start(t); o.stop(t+0.66);
+    } catch(e){}
+  }
+
+  function tick(now){
+    if (!phaseStart) phaseStart = now;
+    const el = now - phaseStart;
+    const src = ITEMS[idx];
+    ctx.clearRect(0, 0, CW, CH);
+
+    switch(phase){
+      case 'entering': {
+        const k = Math.min(1, el/DUR_ENTER);
+        const ease = easeOut3(k);
+        // translate: 50% → 0 (slides in from right)
+        canvas.style.transform = `translateX(${((1-ease)*50).toFixed(2)}%)`;
+        drawPixelated(src, 32);
+        if (k >= 1){ canvas.style.transform=''; phase='revealing'; phaseStart=now; pulseAlpha=0; }
+        break;
+      }
+      case 'revealing': {
+        const k = Math.min(1, el/DUR_REVEAL);
+        const ps = Math.pow(2, (1-k)*5); // 32→1
+        drawPixelated(src, ps);
+        if (k >= 1 && pulseAlpha === 0){
+          pulseAlpha = 0.5; // trigger flash
+          phase='holding'; phaseStart=now;
+          if (src.tagName==='VIDEO'){ src.currentTime=0; src.play().catch(()=>{}); }
+        }
+        break;
+      }
+      case 'holding': {
+        drawPixelated(src, 1);
+        // Pulse flash overlay fades out quickly
+        if (pulseAlpha > 0){
+          ctx.save();
+          ctx.globalCompositeOperation='lighter';
+          ctx.fillStyle=`rgba(255,255,255,${pulseAlpha.toFixed(3)})`;
+          ctx.fillRect(0,0,CW,CH);
+          ctx.restore();
+          pulseAlpha = Math.max(0, pulseAlpha - 0.022);
+        }
+        if (el >= DUR_HOLD){
+          if (src.tagName==='VIDEO'){ src.pause(); src.currentTime=0; }
+          playBing();
+          phase='exiting'; phaseStart=now;
+        }
+        break;
+      }
+      case 'exiting': {
+        const k = Math.min(1, el/DUR_EXIT);
+        const ease = easeIn2(k);
+        canvas.style.transform = `translateX(${(-ease*110).toFixed(2)}%)`;
+        drawPixelated(src, Math.pow(2, k*5)); // 1→32
+        if (k >= 1){
+          canvas.style.transform = 'translateX(50%)';
+          idx = (idx+1) % ITEMS.length;
+          phase='entering'; phaseStart=now;
+        }
+        break;
+      }
+    }
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function start(){ if (!rafId){ phaseStart=0; rafId=requestAnimationFrame(tick); } }
+  function stop(){
+    if (rafId){ cancelAnimationFrame(rafId); rafId=null; }
+    canvas.style.transform='';
+    const cur=ITEMS[idx];
+    if (cur?.tagName==='VIDEO'){ cur.pause(); cur.currentTime=0; }
+    idx=0; phase='entering'; phaseStart=0; pulseAlpha=0;
+  }
+
+  // Start/stop with slide visibility
+  new MutationObserver(()=>{
+    shedSlide.classList.contains('active') ? start() : stop();
+  }).observe(shedSlide, {attributes:true, attributeFilter:['class']});
+
+  // Already active on load? (e.g. hash routing to slide 7)
+  if (shedSlide.classList.contains('active')) start();
+})();
+
 const total=allSlides.length;let current=0;const counterEl=document.getElementById('counter');
 
 // ── Nav ──
 function updateHUD(){counterEl.textContent=`${String(current+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;updateTracker()}
+// ── Tally SFX ─────────────────────────────────────────────────
+let _tallyCtx = null;
+function _getTallyCtx() {
+  if (!_tallyCtx) _tallyCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_tallyCtx.state === 'suspended') _tallyCtx.resume();
+  return _tallyCtx;
+}
+// Short high tick — called each time the displayed number increments visibly
+function playTallyTick() {
+  try {
+    const ctx = _getTallyCtx(); const now = ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square'; o.frequency.value = 1200 + Math.random() * 200;
+    o.connect(g); g.connect(ctx.destination);
+    g.gain.setValueAtTime(0.04, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+    o.start(now); o.stop(now + 0.04);
+  } catch(e) {}
+}
+// Bright "ching!" when a number lands on its final value
+function playTallyChing() {
+  try {
+    const ctx = _getTallyCtx(); const now = ctx.currentTime;
+    [[1047,0],[1319,0.04],[1568,0.09],[2093,0.14]].forEach(([freq,t]) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = freq;
+      o.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.10, now+t);
+      g.gain.exponentialRampToValueAtTime(0.001, now+t+0.35);
+      o.start(now+t); o.stop(now+t+0.36);
+    });
+  } catch(e) {}
+}
+
 // ── Tally count-up ──────────────────────────────────────────────
 // Animates .num elements whose text is a whole number (optionally with +)
 // from 0 → target over ~1s with a light hop + landing squash.
@@ -1651,10 +1970,14 @@ function animateTally(el){
   const start = performance.now();
   el.style.display = 'inline-block';
   el.style.willChange = 'transform';
+  let _lastTickVal = -1;
   function frame(t){
     const k = Math.min(1, (t-start)/dur);
     const eased = 1 - Math.pow(1-k, 3);
-    el.textContent = Math.round(eased*target) + (k>=1?suffix:'');
+    const cur = Math.round(eased*target);
+    el.textContent = cur + (k>=1?suffix:'');
+    // Tick on each new integer value
+    if (cur !== _lastTickVal && k < 1) { playTallyTick(); _lastTickVal = cur; }
     // Light hop: up then land, plus tiny squash on landing
     let y = 0, sx = 1, sy = 1;
     if (k < 0.85) { y = -Math.sin((k/0.85)*Math.PI) * 14; }
@@ -1665,7 +1988,7 @@ function animateTally(el){
     }
     el.style.transform = `translateY(${y.toFixed(2)}px) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
     if (k<1) requestAnimationFrame(frame);
-    else el.style.transform = '';
+    else { el.style.transform = ''; playTallyChing(); }
   }
   requestAnimationFrame(frame);
 }
@@ -1707,6 +2030,7 @@ function resetSteps(slide) {
 let animating=false;
 function goTo(n){
   if(n<0||n>=total||n===current||animating)return;
+  playWhoosh();
   animating=true;const fwd=n>current;
   const p=allSlides[current],nx=allSlides[n];
   // Ensure no stale active slides
@@ -1738,7 +2062,7 @@ function goTo(n){
   if(t==='map') setTimeout(startMap, 400);
   // Clean up voxel renderer when leaving the map slide
   if (allSlides[n].dataset.type !== 'map' && window._voxelCleanup) { window._voxelCleanup(); window._voxelCleanup = null; }
-  if(t==='intro-alex') { primeTallies(nx); setTimeout(playAlexIntro, 500); }
+  if(t==='intro-alex') { const _aw=document.getElementById('alex-intro-anim'); if(_aw){_aw.style.transition='none';_aw.style.opacity='0';} primeTallies(nx); setTimeout(playAlexIntro, 500); }
   // Tally count-up for any .num element that's purely numeric.
   // Skip on intro-alex — the tallies are triggered AFTER the avatar lands
   // inside playAlexIntro(), so the stats count up as Alex grows.
@@ -1750,8 +2074,8 @@ function goTo(n){
 document.getElementById('btn-prev').addEventListener('click',()=>goTo(current-1));
 document.getElementById('btn-next').addEventListener('click',()=>goTo(current+1));
 document.addEventListener('keydown',e=>{
-  // Don't intercept keys when typing in inputs (annotation textarea)
-  if(['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return;
+  // Don't intercept keys when typing in inputs, annotation textarea, or contenteditable edit-text
+  if(['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)||document.activeElement?.isContentEditable)return;
   // Forward: arrows, space, PageDown, N (most clickers send PageDown)
   // Try to advance a sub-step first; if none remain, go to next slide.
   if(['ArrowRight','ArrowDown',' ','PageDown','n','N'].includes(e.key)){e.preventDefault();if(!advanceStep())goTo(current+1)}
@@ -2919,7 +3243,7 @@ document.getElementById('anno-toggle').addEventListener('click',()=>annoToggleMo
 // Keyboard shortcut: A toggles annotate mode
 document.addEventListener('keydown',e=>{
   if(e.key==='a'||e.key==='A'){
-    if(['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return;
+    if(['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)||document.activeElement?.isContentEditable)return;
     e.preventDefault(); annoToggleMode();
   }
 });
@@ -3245,7 +3569,7 @@ document.getElementById('move-undo').addEventListener('click', () => moveUndo())
 document.getElementById('move-redo').addEventListener('click', () => moveRedo());
 
 document.addEventListener('keydown', e => {
-  if (['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)) return;
+  if (['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)||document.activeElement?.isContentEditable) return;
   if (e.key === 'm' || e.key === 'M') { e.preventDefault(); moveModeToggle(); return; }
   // Cmd/Ctrl + Z = undo, Cmd/Ctrl + Shift + Z = redo
   if ((e.metaKey || e.ctrlKey) && (e.key === 'z' || e.key === 'Z')) {

@@ -23,9 +23,9 @@ const SECTIONS = [
   {
     year: 2016, accent: 'teal',
     cases: [
-      { title:'The Shed @ Hudson Yards', subtitle:'Our first major VR architecture project',
+      { title:'The Shed @\nHudson Yards', subtitle:'My first major USA VR architecture project',
         img:'MEDIA_CYCLER',
-        bullets:['Custom AR & VR walkthroughs for a $475M cultural venue','Parametric design options explored in real-time VR','We weren\'t doing film. We weren\'t doing games. We were doing stagecraft.'] },
+        bullets:['Custom internal VR design apps for a $500M cultural venue','Parametric design options and solutions for Fisher Dachs','We weren\'t doing film. We weren\'t doing games.\nWe were doing stagecraft and looking for quick wins.'] },
       { title:'Macbeth at Park Avenue Armory', subtitle:'Shakespeare\'s Scottish Play, reimagined in real-time 3D',
         img:'MEDIA_CYCLER',
         bullets:['PLACEHOLDER bullet 1','PLACEHOLDER bullet 2','PLACEHOLDER bullet 3'] },
@@ -46,7 +46,7 @@ const SECTIONS = [
         bullets:['Jonathan pitched the same brief to 10 different studios. He hired two: Pure Blink for visual fidelity, Agile Lens for our particular method of problem-solving.','Diverse teams don\'t win on what they ship. They win on how they think.','Architects, theater directors, lighting designers, motion capture artists, choreographers — in the same room as engineers.'] },
     ],
     lesson: { title:'The Best XR Teams Look\nNothing Like Tech Teams', tagline:'XR is too new to have native experts, so we build them from everywhere. But don\'t go to zero on traditional engineers either — our early years without dedicated devs cost us in source control, QA, and project discipline. The principle is theater-first, engineering-second. Never engineering-zero.', short:'HIRE UNLIKE TECH', tags:'Stage Presence · High Fidelity 2019 · Fisher Dachs Associates · Fisher Marantz Stone' },
-    altLesson: { badge:'Lesson 02 / 10', title:"It's ok to pivot!\nDon't forget your calling.", tagline:"Architects don't have any money. Some will be game to collaborate, but most can't afford the risk.<br><br>We pivoted from Unity + design focus to UE + archviz focus.<br><br>With R&D to keep it fresh, it led to attracting valuable eyes, led to a relationship with Epic Games, and then...", short:"It's ok to pivot", tags:'ArchViz · R&D · Speaking Engagements · Press' },
+    altLesson: { badge:'Lesson 02 / 10', title:"It's OK to Pivot!\nDon't Forget Your Calling.", tagline:"Architects don't have any money. Some will be game to collaborate, but most can't afford the risk.<br><br>We pivoted from Unity + design focus to UE + archviz focus.<br><br>With R&D to keep it fresh, it led to attracting valuable eyes, led to a relationship with Epic Games, and then...", short:"It's ok to pivot", tags:'ArchViz · R&D · Speaking Engagements · Press' },
     altCases: [
       { title:'ArchViz & R&D', subtitle:'One thing leads to another',
         img:'MEDIA_CYCLER',
@@ -3030,9 +3030,9 @@ function buildMediaCycler(slideEl, items, opts){
 })();
 
 // ── Bake annotations ─────────────────────────────────────────────────────
-// REORDER: move Venn (allSlides[2]) to after introLens (allSlides[4])
-// Results in: Settings, Cover, introAlex, introLens, Venn, 2016 Lesson...
-{const v=allSlides.splice(2,1)[0];allSlides.splice(4,0,v);}
+// REORDER: move Venn (allSlides[2]) to after introAlex (allSlides[3])
+// Results in: Settings, Cover, introAlex, Venn, introLens, 2016 Lesson...
+{const v=allSlides.splice(2,1)[0];allSlides.splice(3,0,v);}
 
 // Lesson 2016 — baked positional transforms
 (function(){

@@ -291,7 +291,7 @@ canvas#stars{position:absolute;inset:0}
 
 /* Map */
 .slide-map{padding:clamp(20px,2.5vw,48px)}
-.map-label{font-size:clamp(.7rem,1.1vw,1rem);font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:16px;text-align:left;padding-left:clamp(40px,5vw,80px)}
+.map-label{font-size:clamp(.7rem,1.1vw,1rem);font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:16px;align-self:flex-start;text-align:left}
 #map-svg{width:100%;height:100%;max-height:84vh}
 .recap-pill{cursor:pointer}
 .recap-pill:hover circle:first-child{fill:rgba(0,212,255,.12)!important}
@@ -4669,7 +4669,7 @@ try { (function initVoxelMorph(){
   const selfLabel = document.createElement('div');
   selfLabel.id = 'self-actualized-label';
   selfLabel.textContent = 'SELF-ACTUALIZED';
-  selfLabel.style.cssText = 'position:absolute;left:50%;top:55%;transform:translate(-50%,0);font-family:"Space Grotesk",sans-serif;font-size:clamp(1.2rem,2.2vw,2rem);font-weight:700;letter-spacing:.22em;color:var(--amber);opacity:0;pointer-events:none;z-index:6;white-space:nowrap;text-shadow:0 0 40px rgba(245,158,11,.6)';
+  selfLabel.style.cssText = 'position:absolute;left:50%;bottom:clamp(60px,10vh,120px);transform:translateX(-50%);font-family:"Space Grotesk",sans-serif;font-size:clamp(1.4rem,3vw,2.8rem);font-weight:700;letter-spacing:.22em;color:var(--amber);opacity:0;pointer-events:none;z-index:6;white-space:nowrap;text-shadow:0 0 40px rgba(245,158,11,.6)';
   mapS.appendChild(selfLabel);
 
   // SFX helpers (standalone ctx so they don't stomp other audio)
@@ -4850,7 +4850,7 @@ try { (function initVoxelMorph(){
     const ringScreenY = MY*svgScale + svgOffY + (svgRect.top  - mapRect.top);
 
     // Start size matches the sprite visual size (~36 SVG px × scale), grow to 200%
-    const FINAL_PX = 400;
+    const FINAL_PX = 680;
     const startPx  = Math.round(36 * svgScale);
     canvas.style.left   = `${ringScreenX}px`;
     canvas.style.top    = `${ringScreenY}px`;

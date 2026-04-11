@@ -3046,12 +3046,12 @@ function buildMediaCycler(slideEl, items, opts){
   const span = l16.querySelector('.lesson-tags span');
   if (span) { span.style.display='inline-block'; span.style.transform='translate(0px,-14px)'; }
 })();
-// Macbeth — keep "Kenneth Branagh's Macbeth" on one line
+// Macbeth — keep "Kenneth Branagh's Macbeth" on one line, "@ Park Avenue Armory" on second
 (function(){
   const s = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Macbeth'));
   if (!s) return;
   const t = s.querySelector('.case-title');
-  if (t) t.style.whiteSpace = 'pre-line';
+  if (t) { t.style.whiteSpace = 'pre-line'; t.style.fontSize = 'clamp(1.4rem,2.8vw,3rem)'; }
 })();
 
 const total=allSlides.length;let current=allSlides.findIndex(s=>s.classList.contains('active'));if(current<0)current=0;const counterEl=document.getElementById('counter');

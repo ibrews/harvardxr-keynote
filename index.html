@@ -1295,7 +1295,7 @@ allSlides.push(introLens);
   svg.appendChild(svgE('circle', { cx:CX, cy:CY, r:monocleR,
     fill:'none', stroke:'rgba(255,255,255,.06)', 'stroke-width':'34' }));
   // Hinge nubs — two small circles on the upper-right "shoulders" of the monocle
-  const hingeA1 = -1.25, hingeA2 = -0.2; // top shoulder ~12:15, bottom shoulder ~2 o'clock
+  const hingeA1 = -1.41, hingeA2 = -0.2; // top shoulder (baked Δ-33,-10), bottom shoulder ~2 o'clock
   const hr = monocleR + 16;
   const h1x = CX + hr*Math.cos(hingeA1), h1y = CY + hr*Math.sin(hingeA1);
   const h2x = CX + hr*Math.cos(hingeA2), h2y = CY + hr*Math.sin(hingeA2);
@@ -1325,13 +1325,13 @@ allSlides.push(introLens);
 
   // White monocle PNG overlay — pulsing glow aligned with the SVG ring
   const pulseImg = svgE('image', {
-    href: 'monocle-white.png', x: mX, y: mY, width: mW, height: mH,
+    href: 'monocle-white.png', x: mX + 1, y: mY - 4, width: mW, height: mH,
     opacity: '0', id: 'lens-pulse',
   });
   svg.appendChild(pulseImg);
 
   // "AGILE LENS" + subtitle on separate lines, all centered
-  const t1 = svgE('text', { x:CX, y:CY-18, 'text-anchor':'middle', 'dominant-baseline':'middle',
+  const t1 = svgE('text', { x:CX+2, y:CY-16, 'text-anchor':'middle', 'dominant-baseline':'middle',
     fill:'rgba(255,255,255,.85)', 'font-family':'Space Grotesk,sans-serif',
     'font-size':'42', 'font-weight':'700', 'letter-spacing':'6' });
   t1.textContent = 'AGILE LENS';
@@ -1394,9 +1394,7 @@ allSlides.push(introLens);
     clientEls.push(txt);
   });
 
-  // Faint orbit ring
-  svg.appendChild(svgE('circle', { cx:CX, cy:CY, r:orbitR,
-    fill:'none', stroke:'rgba(167,139,250,.08)', 'stroke-width':'1', 'stroke-dasharray':'4 6' }));
+  // Orbit ring removed per user preference (was too visible)
 
   // Animate: slowly rotate client names + pulse the white monocle
   let lensRunning = false;

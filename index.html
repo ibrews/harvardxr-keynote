@@ -211,7 +211,7 @@ canvas#stars{position:absolute;inset:0}
 .ey-yr{color:rgba(255,255,255,.4)}.ey-sep{color:rgba(255,255,255,.15)}.ey-badge{color:var(--teal)}
 .lesson-title{font-size:clamp(2.4rem,5.8vw,6.2rem);font-weight:700;letter-spacing:-.025em;line-height:1.06;max-width:1300px;margin-bottom:32px;white-space:pre-line}
 .lesson-tagline{font-size:clamp(1rem,1.7vw,1.6rem);color:var(--dim);max-width:880px;line-height:1.7}
-.lesson-tagline br+br{display:block;height:.55em;line-height:0}
+.lesson-tagline .para-gap{display:block;height:.55em}
 .lesson-rule{width:64px;height:4px;border-radius:2px;background:var(--teal);margin:32px auto 0;opacity:.7}
 .lesson-tags{margin-top:18px;font-size:clamp(.6rem,.9vw,.85rem);font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.18)}
 .accent-purple .ey-badge{color:var(--purple)}.accent-purple .lesson-rule{background:var(--purple)}
@@ -1948,7 +1948,7 @@ SECTIONS.forEach((sec,si)=>{
   const ls=document.createElement('div');ls.className=`slide slide-lesson${ac}`;ls.dataset.type='lesson';ls.dataset.year=sec.year;ls.dataset.section=si;ls.dataset.ln=si+1;
   ls.innerHTML=`<div class="year-ghost">${sec.year}</div>
     <div class="lesson-ey"><span class="ey-yr">${sec.year}</span><span class="ey-sep">·</span><span class="ey-badge">Lesson ${String(si+1).padStart(2,'0')} / 10</span></div>
-    <h2 class="lesson-title">${sec.lesson.title}</h2><p class="lesson-tagline">${sec.lesson.tagline}</p>
+    <h2 class="lesson-title">${sec.lesson.title}</h2><p class="lesson-tagline">${sec.lesson.tagline.replace(/<br><br>/g,'<br><span class="para-gap"></span>')}</p>
     ${sec.lesson.tags?`<div class="lesson-tags">${sec.lesson.tags}</div>`:''}<div class="lesson-rule"></div>`;
   deck.appendChild(ls);allSlides.push(ls);lessonIdxs.push(allSlides.length-1);
   // Case study slides follow the lesson
@@ -1966,7 +1966,7 @@ SECTIONS.forEach((sec,si)=>{
     const al=document.createElement('div');al.className=`slide slide-lesson${ac}`;al.dataset.type='lesson';al.dataset.year=sec.year;al.dataset.section=si;
     al.innerHTML=`<div class="year-ghost">${sec.year}</div>
       <div class="lesson-ey"><span class="ey-yr">${sec.year}</span><span class="ey-sep">·</span><span class="ey-badge">${sec.altLesson.badge||'Lesson'}</span></div>
-      <h2 class="lesson-title">${sec.altLesson.title}</h2><p class="lesson-tagline">${sec.altLesson.tagline}</p>
+      <h2 class="lesson-title">${sec.altLesson.title}</h2><p class="lesson-tagline">${sec.altLesson.tagline.replace(/<br><br>/g,'<br><span class="para-gap"></span>')}</p>
       ${sec.altLesson.tags?`<div class="lesson-tags">${sec.altLesson.tags}</div>`:''}<div class="lesson-rule"></div>`;
     deck.appendChild(al);allSlides.push(al);lessonIdxs.push(allSlides.length-1);
     (sec.altCases||[]).forEach(c=>{

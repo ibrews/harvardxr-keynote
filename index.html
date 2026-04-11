@@ -162,11 +162,8 @@ const SECTIONS = [
     year: 2025, accent: 'rose',
     cases: [
       { title:'A Christmas Carol VR — Five Seasons Running', subtitle:'The R&D vehicle that keeps on giving',
-        img:'media/xmas-carol/xmas-carol.jpg',
-        bullets:['What started as an upsell in 2021 is now in its fifth season. Each year we push the tech: multi-avatar, AI Dickens, new venues.','Christmas Carol proves the model: a funded annual production that doubles as our R&D lab.','Get people excited about what you\'re building. The best marketing is work people can experience firsthand.'] },
-      { title:'Unreal NYC & HalcyonVR', subtitle:'Guerrilla demos and genuine feedback from real humans',
         img:'MEDIA_CYCLER',
-        bullets:['Co-founded the ACC VR community and helped launch Unreal Engine NYC — bringing developers and artists together around real-time tech.','Do guerrilla demos. Put headsets on people who\'ve never tried VR. Their reactions teach you more than any QA team.','The best XR quality assurance comes from a wide range of people, not a narrow team of experts. Solicit genuine feedback.'] },
+        bullets:['What started as an upsell in 2021 is now in its fifth season. Each year we push the tech: multi-avatar, AI Dickens, new venues.','Christmas Carol proves the model: a funded annual production that doubles as our R&D lab.','Get people excited about what you\'re building. The best marketing is work people can experience firsthand.'] },
     ],
     lesson: { title:'Build a Community!', tagline:'The most underrated business strategy in XR: get people in the room. Not investors, not press — actual humans experiencing actual work. Guerrilla demos, meetups, open studios. Solicit genuine feedback from the widest possible range of people. Your best QA comes from someone who\'s never worn a headset before. Build the community you wish existed, and the pipeline follows.', short:'BUILD A COMMUNITY', tags:'Christmas Carol VR · Unreal NYC · HalcyonVR · ACC VR' },
   },
@@ -2321,22 +2318,22 @@ deck.appendChild(cls);allSlides.push(cls);
 
 // ── Close slide: Pixel Alex (left) + Voxel Alex (right) with particle bursts ──
 (function(){
-  // Pixel Alex — SVG avatar with arms up, positioned bottom-left
+  // Pixel Alex — SVG avatar with arms up, flanking left of title
   const pixelSvg = document.createElement('div');
-  pixelSvg.style.cssText = 'position:absolute;bottom:clamp(120px,18vh,220px);left:clamp(60px,8vw,160px);z-index:2';
+  pixelSvg.style.cssText = 'position:absolute;top:clamp(40px,8vh,120px);left:clamp(100px,14vw,240px);z-index:2';
   pixelSvg.innerHTML = '<svg viewBox="-22 -46 44 76" style="width:140px;height:auto;overflow:visible"></svg>';
   cls.appendChild(pixelSvg);
   const pSvg = pixelSvg.querySelector('svg');
   const pAvatar = buildAvatar(pSvg, { withBeard:true });
-  // Lock arms up
+  // Lock arms up (use SVG visibility, not CSS display)
   const armsDown = pAvatar.querySelector('.av-arms-down');
   const armsUp = pAvatar.querySelector('.av-arms-up');
-  if(armsDown) armsDown.style.display='none';
-  if(armsUp) armsUp.style.display='block';
+  if(armsDown) armsDown.setAttribute('visibility','hidden');
+  if(armsUp) armsUp.setAttribute('visibility','visible');
 
-  // Voxel Alex — Three.js canvas, positioned bottom-right
+  // Voxel Alex — Three.js canvas, flanking right of title
   const voxelDiv = document.createElement('div');
-  voxelDiv.style.cssText = 'position:absolute;bottom:clamp(120px,18vh,220px);right:clamp(60px,8vw,160px);z-index:2;width:140px;height:200px';
+  voxelDiv.style.cssText = 'position:absolute;top:clamp(40px,8vh,120px);right:clamp(100px,14vw,240px);z-index:2;width:140px;height:200px';
   cls.appendChild(voxelDiv);
   const voxCanvas = document.createElement('canvas');
   voxCanvas.width = 256; voxCanvas.height = 360;
@@ -2387,7 +2384,7 @@ deck.appendChild(cls);allSlides.push(cls);
     voxRunning = true;
     function animate(){
       if(!voxRunning) return;
-      voxGroup.rotation.y = Math.sin(performance.now()*0.0006)*0.3;
+      voxGroup.rotation.y = Math.PI + Math.sin(performance.now()*0.0006)*0.3;
       voxRenderer.render(voxScene, voxCamera);
       requestAnimationFrame(animate);
     }
@@ -2764,9 +2761,9 @@ function buildMediaCycler(slideEl, items, opts){
   ], {imageDuration:6000});
 })();
 
-// ── Unreal NYC & HalcyonVR (was "Build a Community") ─────────────────────
+// ── A Christmas Carol VR — Five Seasons Running ───────────────────────────
 (function(){
-  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Unreal NYC & HalcyonVR'));
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('A Christmas Carol VR — Five Seasons Running'));
   if (!slide) return;
   buildMediaCycler(slide, [
     {type:'image', src:'media/community/community01_accvr.jpg'},
@@ -2950,7 +2947,7 @@ function buildMediaCycler(slideEl, items, opts){
 
 // ── Christmas Carol Quote Rain (Community slide) ───────────────────────────
 (function(){
-  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Unreal NYC & HalcyonVR'));
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('A Christmas Carol VR — Five Seasons Running'));
   if (!slide) return;
 
   const QUOTES = [
@@ -3609,7 +3606,7 @@ function goTo(n){
   if(t!=='close' && window._closeStop) window._closeStop();
   if(t==='map') setTimeout(startMap, 400);
   // Quote rain — stop when leaving Community slide
-  { const isComm = nx.querySelector?.('.case-title')?.textContent.includes('Unreal NYC & HalcyonVR');
+  { const isComm = nx.querySelector?.('.case-title')?.textContent.includes('A Christmas Carol VR — Five Seasons Running');
     if (window._quoteRain && !isComm) window._quoteRain.stop(); }
   // Clean up voxel renderer when leaving the map slide
   if (allSlides[n].dataset.type !== 'map' && window._voxelCleanup) { window._voxelCleanup(); window._voxelCleanup = null; }

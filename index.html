@@ -117,14 +117,14 @@ const SECTIONS = [
         img:'MEDIA_CYCLER',
         bullets:['We built a physical railing into the VR experience — when stakeholders leaned on something real while seeing the virtual space, belief skyrocketed.','That one tactile detail changed every conversation. Decision-makers stopped debating renderings and started making decisions.','The result: significantly fewer change orders downstream. R&D on immersion multipliers paid for itself many times over.'] },
       { title:'Four Seasons Lake Austin', subtitle:'When innovating, build R&D into budgets explicitly',
-        img:'media/four-seasons/four-seasons-holodeck.jpg',
+        img:'MEDIA_CYCLER',
         bullets:['We could not have executed this project without the runway to explore what was possible.','Bake off with 9 other studios. Agile Lens finally was able to bring on a full time staff.','The wrong move is pretending you already have the answers. The right move is getting paid to figure them out.'] },
       { title:'Body of Mine', subtitle:'Full-body VR — Producers Guild Innovation Award',
         img:'MEDIA_CYCLER',
-        bullets:['Body, face, and eye tracking — inhabit another gender. BAFTA, SXSW, Games for Change recognition.','Try everything. Take the devices companies send you. Body of Mine happened because we said yes to experimental hardware.','Don\'t bet on tech that isn\'t there yet — but when the tech IS there, move fast.'] },
-      { title:'Infinite Reality → AI Dickens', subtitle:'Paid client work becomes internal R&D becomes published research',
+        bullets:['Body, face, and eye tracking — inhabit another gender. BAFTA, SXSW, Games for Change awards supporting Cameron Kostopoulos.','Help people who need help. Body of Mine happened because Cameron saw our other work and asked for advice before he got a grant.','Don\'t bet on tech that isn\'t there yet — but when the tech IS there, move fast: in this case? The Meta Movement SDK.'] },
+      { title:'Vodafone Car Sales\n→ AI Dickens', subtitle:'Paid client work becomes internal R&D becomes published research',
         img:'MEDIA_CYCLER',
-        bullets:['London Tech Week 2023: Infinite Reality hires us to build a talking metahuman car salesman. We learn the Inworld + mocap pipeline on their dime.','We turn it into AI Dickens — an LLM-driven Charles Dickens who handles pre-show audience onboarding for Christmas Carol VR.','That R&D became "Directing AI Performers" — a Contemporary Theatre Review paper. Cash cow funded our IP.'] },
+        bullets:['London Tech Week: Infinite Reality hires us to build a talking Metahuman car salesman. We learn the Inworld + mocap pipeline on their dime for PCVR.','We turn it into AI Dickens — an LLM-driven Charles Dickens who handles pre-show audience onboarding for Christmas Carol VR.','That R&D became "Directing AI Performers" — a Contemporary Theatre Review paper. Cash cow funding our IP. Clients get licenses.'] },
     ],
     lesson: { title:'Protect Time for\n"We\'re Not Sure Yet"', tagline:'Our most common brief starts with "I don\'t know if this is possible, but…" The honest answer is "us neither — let\'s find out together."<br><br>That only works if Phase 1 of every project is explicitly dedicated to R&D, with the discovery budget baked into the contract from day one.<br><br>Don\'t bet on tech that isn\'t there yet. But when the tech IS there, move fast. R&D keeps you at the bleeding edge — try everything, take advantage of companies that will give you early access.', short:'PROTECT R&D TIME', tags:'David Geffen Hall · Waldorf Astoria · Four Seasons · Body of Mine · AI Dickens' },
   },
@@ -2918,7 +2918,7 @@ function buildMediaCycler(slideEl, items, opts){
 
 // ── Infinite Reality → AI Dickens ─────────────────────────────────────────
 (function(){
-  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Infinite Reality'));
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Vodafone Car Sales'));
   if (!slide) return;
   buildMediaCycler(slide, [
     {type:'image', src:'media/vodafone/01.jpg'},
@@ -2927,17 +2927,22 @@ function buildMediaCycler(slideEl, items, opts){
   ], {imageDuration:6000});
 })();
 
-// ── Four Seasons Lake Austin ─────────────────────────────────────────────
+// ── Four Seasons Lake Austin (2022 — R&D section, video only) ────────────
 (function(){
-  // Match the 2023 FSLA (scope creep section), not the 2022 one (R&D section)
+  const slide = allSlides.find(s => s.dataset.year==='2022' && s.querySelector?.('.case-title')?.textContent.includes('Four Seasons Lake Austin'));
+  if (!slide) return;
+  buildMediaCycler(slide, [
+    {type:'video', src:'media/fsla/fsla_video.mp4', loop:true},
+  ]);
+})();
+
+// ── Four Seasons Lake Austin (2023 — scope creep section, holodeck image) ─
+(function(){
   const slide = allSlides.find(s => s.dataset.year==='2023' && s.querySelector?.('.case-title')?.textContent.includes('Four Seasons Lake Austin'));
   if (!slide) return;
   buildMediaCycler(slide, [
-    {type:'video', src:'media/fsla/fsla_video.mp4'},
-    {type:'image', src:'media/fsla/fsla_01.jpg'},
-    {type:'image', src:'media/fsla/fsla_02.jpg'},
-    {type:'image', src:'media/fsla/fsla_03.jpg'},
-  ], {imageDuration:6000});
+    {type:'image', src:'media/four-seasons/four-seasons-holodeck.jpg'},
+  ], {imageDuration:999999});
 })();
 
 // ── La Pasion XR ─────────────────────────────────────────────────────────
@@ -3469,7 +3474,7 @@ function buildMediaCycler(slideEl, items, opts){
 })();
 // Macbeth — keep "Kenneth Branagh's Macbeth" on one line, "@ Park Avenue Armory" on second
 // Titles with \n line breaks — apply pre-line so they render correctly
-['The Shed @','Macbeth','The Late Show @','Equus — Syracuse','The ATL Upsell','The Orchard —'].forEach(keyword => {
+['The Shed @','Macbeth','The Late Show @','Equus — Syracuse','The ATL Upsell','The Orchard —','Vodafone Car Sales'].forEach(keyword => {
   const s = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes(keyword));
   if (!s) return;
   const t = s.querySelector('.case-title');

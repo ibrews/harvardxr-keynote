@@ -4369,11 +4369,11 @@ function startMap(){
   bTt.textContent='Everything Changes. Ship Anyway.';bG.appendChild(bTt);
   svg.appendChild(bG);
 
-  // Center text — positioned left of monocle to avoid overlap
-  const cL=svgE('text',{x:MX-MR-60,y:MY+10,'text-anchor':'end','dominant-baseline':'middle',fill:'rgba(255,255,255,0)',
+  // Center text — inside the monocle ring
+  const cL=svgE('text',{x:MX,y:MY-4,'text-anchor':'middle','dominant-baseline':'middle',fill:'rgba(255,255,255,0)',
     'font-family':'Space Grotesk,sans-serif','font-size':'20','font-weight':'600','letter-spacing':'4'});
   cL.textContent='AGILE LENS';svg.appendChild(cL);
-  const cS=svgE('text',{x:MX-MR-60,y:MY+30,'text-anchor':'end','dominant-baseline':'middle',fill:'rgba(255,255,255,0)',
+  const cS=svgE('text',{x:MX,y:MY+20,'text-anchor':'middle','dominant-baseline':'middle',fill:'rgba(255,255,255,0)',
     'font-family':'Space Grotesk,sans-serif','font-size':'10','font-weight':'400','letter-spacing':'2.5'});
   cS.textContent='2016 – 2026';svg.appendChild(cS);
 

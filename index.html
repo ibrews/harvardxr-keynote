@@ -2177,42 +2177,102 @@ deck.appendChild(recapS);allSlides.push(recapS);
     }catch(e){}
   }
 
-  function walkerHopAndTease(){
+  // Step 11: "But wait..." text appears
+  function showButWait(){
     playTaDaSfx();
+    waitEl.style.opacity='1';
+  }
+
+  // Step 12: Big dramatic hops → walk to 2026 → year label SFX
+  function walkerHopTo2026(){
     const walker=document.getElementById('tav');
-    if(walker){
-      let hopFrame=0;
-      const inner=walker.querySelector('g');
-      const wScale=0.22;
-      function hop(){
-        hopFrame++;
-        const bounceY=-Math.abs(Math.sin(hopFrame*0.18))*12*Math.max(0,1-hopFrame/50);
-        if(inner)inner.setAttribute('transform',`scale(${wScale}) translate(0,${(bounceY/wScale).toFixed(1)})`);
-        if(hopFrame<50) requestAnimationFrame(hop);
-        else{
-          if(inner)inner.setAttribute('transform',`scale(${wScale})`);
-          const tsvg=document.getElementById('tracker-svg');
-          if(tsvg){
-            const epx=parseFloat(tsvg.dataset.epx)||60;
-            const epy=parseFloat(tsvg.dataset.epy)||60;
-            walker.style.transition='transform 0.8s cubic-bezier(.4,0,.2,1)';
-            walker.setAttribute('transform',`translate(${epx},${epy})`);
-            setTimeout(()=>{walker.style.transition='';},900);
-          }
-          const yrEl=document.getElementById('tracker-year');
-          if(yrEl) yrEl.textContent='2026';
+    if(!walker) return;
+    const inner=walker.querySelector('g');
+    const wScale=0.22;
+    let hopCount=0, hopFrame=0;
+    const hopHeight=28; // tall noticeable hops
+
+    function playHopSfx(pitch){
+      try{
+        const ctx=new(window.AudioContext||window.webkitAudioContext)();
+        const now=ctx.currentTime;
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type='sine';o.frequency.value=pitch;
+        o.connect(g);g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.1,now);
+        g.gain.exponentialRampToValueAtTime(0.001,now+0.15);
+        o.start(now);o.stop(now+0.16);
+      }catch(e){}
+    }
+
+    function playArrivalSfx(){
+      try{
+        const ctx=new(window.AudioContext||window.webkitAudioContext)();
+        const now=ctx.currentTime;
+        [[784,0],[988,0.08],[1319,0.16],[1568,0.24]].forEach(([freq,t])=>{
+          const o=ctx.createOscillator(),g=ctx.createGain();
+          o.type='triangle';o.frequency.value=freq;
+          o.connect(g);g.connect(ctx.destination);
+          g.gain.setValueAtTime(0.1,now+t);
+          g.gain.exponentialRampToValueAtTime(0.001,now+t+0.25);
+          o.start(now+t);o.stop(now+t+0.28);
+        });
+      }catch(e){}
+    }
+
+    // Two big hops, then walk to 2026
+    function doHop(){
+      hopFrame++;
+      // Single big arc: sin over 30 frames
+      const k=hopFrame/30;
+      const bounceY=-Math.sin(k*Math.PI)*hopHeight;
+      if(inner)inner.setAttribute('transform',`scale(${wScale}) translate(0,${(bounceY/wScale).toFixed(1)})`);
+      if(hopFrame<30){
+        requestAnimationFrame(doHop);
+      } else {
+        // Land
+        if(inner)inner.setAttribute('transform',`scale(${wScale})`);
+        hopCount++;
+        hopFrame=0;
+        playHopSfx(hopCount===1?880:1047);
+        if(hopCount<2){
+          // Pause briefly then second hop
+          setTimeout(()=>requestAnimationFrame(doHop),200);
+        } else {
+          // Walk to 2026 position
+          setTimeout(()=>{
+            const tsvg=document.getElementById('tracker-svg');
+            if(tsvg){
+              const epx=parseFloat(tsvg.dataset.epx)||60;
+              const epy=parseFloat(tsvg.dataset.epy)||60;
+              walker.style.transition='transform 1s cubic-bezier(.4,0,.2,1)';
+              walker.setAttribute('transform',`translate(${epx},${epy})`);
+              setTimeout(()=>{
+                walker.style.transition='';
+                // Arrival SFX + year label change
+                playArrivalSfx();
+                const yrEl=document.getElementById('tracker-year');
+                if(yrEl){
+                  yrEl.style.transition='color .4s';
+                  yrEl.textContent='2026';
+                  yrEl.style.color='var(--amber)';
+                  setTimeout(()=>{yrEl.style.transition='';yrEl.style.color='';},500);
+                }
+              },1050);
+            }
+          },300);
         }
       }
-      requestAnimationFrame(hop);
     }
-    setTimeout(()=>{waitEl.style.opacity='1';},600);
+    requestAnimationFrame(doHop);
   }
 
   const steps=[];
   for(let i=0;i<items.length;i++){
     steps.push(()=>{playDropSfx();items[i].classList.add('visible');});
   }
-  steps.push(walkerHopAndTease);
+  steps.push(showButWait);
+  steps.push(walkerHopTo2026);
 
   window._recapReset=recapReset;
   window._recapInit=function(){

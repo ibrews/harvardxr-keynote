@@ -57,7 +57,7 @@ const SECTIONS = [
         img:'MEDIA_CYCLER',
         bullets:['Philip Rosedale asked me to assemble a NYC live-VR dream team.','How do you distribute fees to contractors? How do you delegate?','Nearly every client we\'ve had in 10 years found us first. No cold calls. No outbound. Pure inbound. The blessing is real. So is the curse: when the phone stops ringing, we have no sales muscle to fall back on.'] },
     ],
-    lesson: { title:'Being Sought-After Is\na Blessing and a Curse', tagline:'It\'s incredible to be chased by killer clients. It also means we\'ve never learned how to sell. Inbound is feast-or-famine. Being sought-after and being able to pitch are different skills.', short:'INBOUND IS TRICKY', tags:'Intel Project Arena · Samsung · High Fidelity' },
+    lesson: { title:'Being Sought-After Is\na Blessing and a Curse', tagline:'It\'s incredible to be chased by killer clients. It also means we\'ve never learned how to sell. Inbound is feast-or-famine.<br><br>Being sought-after and being able to pitch are different skills.', short:'INBOUND IS TRICKY', tags:'Intel Project Arena · Samsung · High Fidelity' },
   },
   {
     year: 2019, accent: 'amber',
@@ -73,7 +73,7 @@ const SECTIONS = [
         bullets:['Just like VR; consider scale and create only what they\'ll see','VR would have been amazing in 2008 to test more variations quicker'] },
       { title:'Ghosted — With Kevin Laibson & Allyson Morgan', subtitle:'Where all of it came together for the first time',
         img:'MEDIA_CYCLER',
-        bullets:['Magic Leap experience that turns bugs into features','Creative-first approach with 90% of team being non-technical','Digital Twin + VR is perfect previz of an MR experience'] },
+        bullets:['Magic Leap experience that turns limitations into features','Creative-first approach with 90% of team being non-technical','Digital Twin + VR is perfect previz of an MR experience'] },
     ],
     lesson: { title:'Great XR Comes From\nOutside XR', tagline:'XR is still too new to have native experts,<br>so you build them from everywhere.<br><br>The best XR teams look nothing like tech teams — architects, directors, lighting designers, journalists, choreographers,<br>all in the same room as engineers.', short:'OUTSIDE-IN IS THE EDGE', tags:'JetBlue T5 · Connective Corridor · Equus · Ghosted' },
   },
@@ -93,7 +93,7 @@ const SECTIONS = [
         img:'MEDIA_CYCLER',
         bullets:['After years of building one-off visualization tools for individual clients, we saw the common thread — every client needed the same core capabilities.','Blueprint Immersive is our own UE-based design and visualization product. One tool that addresses many clients\' needs at once.','The leap from bespoke services to a scalable product is the ultimate tool choice as business strategy.'] },
     ],
-    lesson: { title:'Your Tool Choices Are\nBusiness Strategy', tagline:'Don\'t let platform lock-in kill you — but don\'t be a tourist either.<br>Going all-in on Unreal Engine wasn\'t a technical decision — it was a five-year bet on which skills would still be valuable.<br><br>Sometimes the tools come to you: free hardware, free software.<br>The question isn\'t whether to use them; it\'s whether they serve the pipeline you\'re building or distract from it.', short:'TOOLS ARE STRATEGY', tags:'OnboardXR · Unreal Engine · Blueprint Immersive · Xsens · Agony' },
+    lesson: { title:'Your Tool Choices Are\nBusiness Strategy', tagline:'Don\'t let platform lock-in kill you — but don\'t be a tourist either.<br>Going all-in on Unreal Engine wasn\'t a technical decision — it was a five-year bet on which skills would still be valuable.<br><br>Sometimes the tools come to you: free hardware, free software.<br>The question isn\'t whether to use them; it\'s whether they serve the pipeline you\'re building or distract from it.', short:'TOOLS ARE STRATEGY', tags:'OnboardXR · Unreal Engine · Blueprint Immersive · Xsens Agony' },
   },
   {
     year: 2021, accent: 'purple',
@@ -2379,9 +2379,9 @@ deck.appendChild(cls);allSlides.push(cls);
       const c = new THREE.Color(fill);
       const cx = x + w/2, cy = -(y + h/2);
       const area = w * h;
-      // Face/beard details are small rects in the face region. Push them
-      // forward past the head box's front face (~8.8 units) so they're visible.
-      const isFaceDetail = area < 35 && Math.abs(cx) <= 13 && cy >= 8 && cy <= 34;
+      // Face/hair/beard details are small rects in the head region. Push them
+      // forward past the head/hair box fronts so they're visible.
+      const isFaceDetail = area < 55 && Math.abs(cx) <= 16 && cy >= 10 && cy <= 45;
       const geo = new THREE.BoxGeometry(w, h, Math.min(w,h)*0.8);
       const mat = new THREE.MeshStandardMaterial({ color:c, roughness:0.7 });
       const mesh = new THREE.Mesh(geo, mat);

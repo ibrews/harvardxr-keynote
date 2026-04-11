@@ -594,10 +594,10 @@ allSlides.push(vennSlide);
   const R = 220;
   circles.forEach(c => {
     svg.appendChild(svgE('circle', { cx:c.x, cy:c.y, r:R, fill:c.color, stroke:c.stroke, 'stroke-width':'1.5' }));
-    // Label: above the circle for top two, inside near bottom for bottom one
-    // (below-circle placement collides with the name/quote text)
+    // Label inside the circle — top two get label in upper portion,
+    // bottom one gets label in lower portion
     const isBottom = c.y > CY;
-    const ly = isBottom ? c.y + R * 0.65 : c.y - R - 18;
+    const ly = isBottom ? c.y + R * 0.6 : c.y - R * 0.6;
     const lbl = svgE('text', { x:c.x, y:ly, 'text-anchor':'middle', fill:'rgba(255,255,255,.7)',
       'font-family':'Space Grotesk,sans-serif', 'font-size':'18', 'font-weight':'600', 'letter-spacing':'2' });
     lbl.textContent = c.label.toUpperCase();
@@ -701,8 +701,9 @@ allSlides.push(vennSlide);
   techG.style.shapeRendering = 'crispEdges';
   svg.appendChild(techG);
 
-  // Beardless Alex sprite orbiting the center
-  const orbitG = svgE('g', { id:'venn-orbit' });
+  // Beardless Alex sprite orbiting the center — hidden initially,
+  // shown when startVennOrbit is called (prevents flash on slide entry)
+  const orbitG = svgE('g', { id:'venn-orbit', opacity:'0' });
   const avScale = 1.0;
   const avInner = svgE('g', { transform:`scale(${avScale})` });
   orbitG.appendChild(avInner);
@@ -832,8 +833,8 @@ allSlides.push(vennSlide);
     requestAnimationFrame(orbStep);
   }
 
-  window.startVennOrbit = () => { orbRunning = true; requestAnimationFrame(orbStep); };
-  window.stopVennOrbit = () => { orbRunning = false; };
+  window.startVennOrbit = () => { orbRunning = true; orbitG.setAttribute('opacity','1'); requestAnimationFrame(orbStep); };
+  window.stopVennOrbit = () => { orbRunning = false; orbitG.setAttribute('opacity','0'); };
 
   // Name + quote at the bottom
   const nameT = svgE('text', { x: CX, y: 775, 'text-anchor':'middle', fill:'rgba(255,255,255,.7)',

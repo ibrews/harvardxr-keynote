@@ -2468,6 +2468,26 @@ function buildMediaCycler(slideEl, items, opts){
   ], {imageDuration:6000});
 })();
 
+// ── Auto-wrap static case images in single-item media cyclers ────────────
+// So every case image gets the pixelated reveal effect, not just multi-image slides.
+(function(){
+  allSlides.forEach(s => {
+    if (s.dataset.type !== 'case') return;
+    const ci = s.querySelector('.case-image');
+    if (!ci) return;
+    const img = ci.querySelector('img');
+    if (!img || ci.querySelector('.media-cycler-mount')) return;
+    const src = img.getAttribute('src');
+    if (!src) return;
+    // Replace <img> with a media-cycler-mount
+    const mount = document.createElement('div');
+    mount.className = 'media-cycler-mount';
+    mount.style.cssText = 'width:100%;height:100%';
+    ci.replaceChild(mount, img);
+    buildMediaCycler(s, [{type:'image', src:src}], {imageDuration:999999});
+  });
+})();
+
 // ── The Unreal Engine Bet — looping Brockman Hall video ──────────────────
 (function(){
   const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Unreal Engine Bet'));

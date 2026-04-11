@@ -1069,8 +1069,10 @@ function shootFireball(svg, startX, startY, dir) {
   const spin = () => {
     frame++;
     const cx = startX + speed * frame;
-    const cy = startY + Math.sin(frame * 0.2) * 4;
-    fb.setAttribute('transform', `translate(${cx},${cy}) rotate(${frame * 15})`);
+    // Bouncy arc: initial upward launch then gravity-like bounce
+    const bounce = -Math.abs(Math.sin(frame * 0.12)) * 18 * Math.max(0, 1 - frame/40);
+    const cy = startY + bounce;
+    fb.setAttribute('transform', `translate(${cx},${cy}) rotate(${frame * 12})`);
     if (frame < 35 && cx > 10 && cx < 390) requestAnimationFrame(spin);
     else fb.remove();
   };
@@ -1208,29 +1210,43 @@ function introUE5PowerUp() {
   setTimeout(() => {
     anim.style.animation = 'none';
     anim.style.transform = 'translate(0, 0) scale(2)';
-    // Run back and forth on the platform, shooting at random intervals
-    let runDir = 1;
-    let runX = 0;
-    let fbTimer = 0;
-    let runFrame = 0;
-    const runLoop = () => {
-      if (runFrame > 180) return; // ~3s of running
-      runFrame++;
-      runX += runDir * 2.5;
-      // Bounce off platform edges
-      if (runX > 200) { runDir = -1; }
-      if (runX < -20) { runDir = 1; }
-      anim.style.transform = `translate(${runX}px, 0) scale(2)`;
-      // Shoot at random intervals
-      fbTimer++;
-      if (fbTimer > 20 && Math.random() < 0.15) {
-        const sx = 80 + runX + (runDir > 0 ? 20 : -20);
-        shootFireball(svg, sx, 270, runDir);
-        fbTimer = 0;
-      }
-      requestAnimationFrame(runLoop);
-    };
-    requestAnimationFrame(runLoop);
+
+    function runBurst(startX, withHop, onDone) {
+      let runDir = 1;
+      let runX = startX;
+      let fbTimer = 0;
+      let runFrame = 0;
+      const loop = () => {
+        if (runFrame > 180) { if (onDone) onDone(runX); return; }
+        runFrame++;
+        runX += runDir * 2.8;
+        if (runX > 200) runDir = -1;
+        if (runX < -20) runDir = 1;
+        // Optional hop: small sine bounce while running
+        const hopY = withHop ? -Math.abs(Math.sin(runFrame * 0.15)) * 8 : 0;
+        anim.style.transform = `translate(${runX}px, ${hopY}px) scale(2)`;
+        fbTimer++;
+        if (fbTimer > 18 && Math.random() < 0.18) {
+          const sx = 80 + runX + (runDir > 0 ? 25 : -25);
+          shootFireball(svg, sx, 270 + hopY, runDir);
+          fbTimer = 0;
+        }
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
+    }
+
+    // Burst 1: run without hop
+    runBurst(0, false, (endX) => {
+      // Park in center for 5s
+      anim.style.transform = `translate(${90}px, 0) scale(2)`;
+      setTimeout(() => {
+        // Burst 2: run WITH hop
+        runBurst(90, true, (endX2) => {
+          anim.style.transform = `translate(${endX2}px, 0) scale(2)`;
+        });
+      }, 5000);
+    });
   }, 3300);
 }
 

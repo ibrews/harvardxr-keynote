@@ -2381,7 +2381,7 @@ function buildMediaCycler(slideEl, items, opts){
 
 // ── High Fidelity — Alive in Plasticland ─────────────────────────────────
 (function(){
-  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('High Fidelity — Alive in Plasticland'));
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('High Fidelity'));
   if (!slide) return;
   buildMediaCycler(slide, [
     {type:'image', src:'media/hifi/AIP_02.jpg'},

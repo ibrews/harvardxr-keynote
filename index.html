@@ -66,16 +66,25 @@ const SECTIONS = [
         img:'MEDIA_CYCLER',
         bullets:['Philip Rosedale reached out directly: "I want YOU to build this." We assembled the NYC live-VR dream team.','Every client we\'ve had in 10 years found us first. No cold calls. No outbound. Pure inbound.','The blessing is real. So is the curse: when the phone stops ringing, we have no sales muscle to fall back on.'] },
     ],
-    lesson: { title:'Being Sought-After Is\na Blessing and a Curse', tagline:'It\'s incredible to be chased by killer clients. It also means we\'ve never learned how to sell. Inbound is feast-or-famine. Being sought-after and being able to pitch are different skills.', short:'INBOUND IS A TRAP', tags:'Intel Project Arena · Samsung · High Fidelity' },
+    lesson: { title:'Being Sought-After Is\na Blessing and a Curse', tagline:'It\'s incredible to be chased by killer clients. It also means we\'ve never learned how to sell. Inbound is feast-or-famine. Being sought-after and being able to pitch are different skills.', short:'INBOUND IS TRICKY', tags:'Intel Project Arena · Samsung · High Fidelity' },
   },
   {
     year: 2019, accent: 'amber',
     cases: [
-      { title:'Infinite Reality → AI Dickens', subtitle:'Paid client work becomes internal R&D becomes published research',
-        img:'',
-        bullets:['London Tech Week 2023: Infinite Reality hires us to build a talking metahuman car salesman. We learn the Inworld + mocap pipeline on their dime.','We turn it into AI Dickens — an LLM-driven Charles Dickens who handles pre-show audience onboarding for Christmas Carol VR, then theatrically hands off to the human Ari Tarr at showtime.','That R&D became "Directing AI Performers" — a Contemporary Theatre Review paper. Cash cow funded our IP.'] },
+      { title:'JetBlue Terminal 5 — Designed by Rockwell Group', subtitle:'First lesson: architecture is theater at scale (2008)',
+        img:'file:///Users/alex/Desktop/HARVARD%20MEDIA/interdisciplinary/jetblue_terminal.jpg',
+        bullets:['PLACEHOLDER — what JetBlue T5 taught me about designing for experience, not just function','PLACEHOLDER — Rockwell Group\'s approach to blending architecture, theater, and technology','PLACEHOLDER — the takeaway: great spaces are choreographed experiences, not just functional containers'] },
+      { title:'Connective Corridor — School of Interdisciplinary Design, Syracuse', subtitle:'Civic technology as public art, and why the ETC at Carnegie Mellon matters',
+        img:'file:///Users/alex/Desktop/HARVARD%20MEDIA/interdisciplinary/connectivecorridor_ribbon.jpg',
+        bullets:['PLACEHOLDER — what the Connective Corridor project was and my role in it','PLACEHOLDER — how this connected to the ETC at Carnegie Mellon — the original interdisciplinary lab for entertainment and technology','PLACEHOLDER — what I took away: the best work happens at the intersections of disciplines'] },
+      { title:'Equus — Syracuse Blackbox Players', subtitle:'What the theater gave me that computer science never could',
+        img:'file:///Users/alex/Desktop/HARVARD%20MEDIA/interdisciplinary/equus.png',
+        bullets:['PLACEHOLDER — performing in Equus at Syracuse and what it unlocked','PLACEHOLDER — theater training: presence, spatial awareness, timing, the body as an instrument','PLACEHOLDER — this is what I bring to every XR experience: the theater director\'s eye'] },
+      { title:'Ghosted — With Kevin Laibson & Allyson Morgan', subtitle:'Where all of it came together for the first time',
+        img:'MEDIA_CYCLER',
+        bullets:['PLACEHOLDER — what Ghosted was and how it came about','PLACEHOLDER — how Kevin and Allyson brought theater, technology, and design into one room','PLACEHOLDER — this collaboration was the prototype for everything Agile Lens became'] },
     ],
-    lesson: { title:'Know Which Work Pays\nthe Bills. Do Both.', tagline:'Real estate visualization pays our salaries. VR theater and mixed-reality art installations make us worth hiring. The trick isn\'t picking one — it\'s building a cash cow specifically so you can bankroll the ambitious, low-margin work that nobody else will fund. You need both, or you eventually lose both.', short:'KNOW YOUR CASH COW', tags:'Infinite Reality · Christmas Carol · Diriyah Gate · City of Apparition · Salle d\'Or' },
+    lesson: { title:'Great XR Comes From\nOutside XR', tagline:'PLACEHOLDER — the lesson about interdisciplinary background. JetBlue T5 taught architecture as experience. Connective Corridor taught civic technology. Equus taught the body. Ghosted taught what happens when theater people and technology people trust each other. None of it was labeled "XR" — all of it made the XR better.', short:'OUTSIDE-IN IS THE EDGE', tags:'JetBlue T5 · Connective Corridor · Equus · Ghosted' },
   },
   {
     year: 2020, accent: 'rose',
@@ -83,6 +92,9 @@ const SECTIONS = [
       { title:'October 2022 — The $60K Ask', subtitle:'The moment Agile Lens became a real company',
         img:'',
         bullets:['I was giving the longest talk of Unreal Fest 2022. Simultaneously running Waldorf Astoria solo. June had left for a German training company. I was burning out.','When Jonathan started the Four Seasons conversation, I mustered the courage for the first time to say: "Yes — but only if you pay us $60,000 up front for one month of R&D."','I didn\'t know he was talking to 9 other studios. He said yes. That retainer paid for June\'s first full-time role. Agile Lens stopped being me + contractors and became a real studio.'] },
+      { title:'Infinite Reality → AI Dickens', subtitle:'Paid client work becomes internal R&D becomes published research',
+        img:'',
+        bullets:['London Tech Week 2023: Infinite Reality hires us to build a talking metahuman car salesman. We learn the Inworld + mocap pipeline on their dime.','We turn it into AI Dickens — an LLM-driven Charles Dickens who handles pre-show audience onboarding for Christmas Carol VR, then theatrically hands off to the human Ari Tarr at showtime.','That R&D became "Directing AI Performers" — a Contemporary Theatre Review paper. Cash cow funded our IP.'] },
     ],
     lesson: { title:'Require a Deposit.\nBefore You Write a Line of Code.', tagline:'The single best operational decision we ever made. The first check separates the curious from the committed, gives you runway to actually staff the work, and buys you the right to say "we\'re not sure yet" instead of pretending you have all the answers. It filters out tire-kickers, protects the team from scope creep, and means your R&D never happens on your own dime.', short:'REQUIRE A DEPOSIT', tags:'Four Seasons · Samsung 360 · Weapons Free' },
   },
@@ -2331,9 +2343,9 @@ function buildMediaCycler(slideEl, items, opts){
   const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Intel — Project Arena'));
   if (!slide) return;
   buildMediaCycler(slide, [
-    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Intel%20Project%20Arena/Intel01.jpg'},
-    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Intel%20Project%20Arena/Intel02.jpg'},
-    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Intel%20Project%20Arena/Intel03.png'},
+    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/USED/Intel%20Project%20Arena/Intel01.jpg'},
+    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/USED/Intel%20Project%20Arena/Intel02.jpg'},
+    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/USED/Intel%20Project%20Arena/Intel03.png'},
   ], {imageDuration:6000});
 })();
 
@@ -2354,6 +2366,21 @@ function buildMediaCycler(slideEl, items, opts){
     {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Alive%20in%20Plasticland/AIP_01.jpg'},
     {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Alive%20in%20Plasticland/AIP_02.jpg'},
     {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Alive%20in%20Plasticland/AIP_03.jpg'},
+  ], {imageDuration:6000});
+})();
+
+// ── Ghosted ───────────────────────────────────────────────────────────────
+(function(){
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Ghosted'));
+  if (!slide) return;
+  buildMediaCycler(slide, [
+    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Ghosted/Ghosted01.jpg'},
+    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Ghosted/Ghosted02.jpg'},
+    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Ghosted/Ghosted03.jpg'},
+    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Ghosted/Ghosted04.gif'},
+    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Ghosted/ghosted05.png'},
+    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Ghosted/Ghosted06.png'},
+    {type:'image', src:'file:///Users/alex/Desktop/HARVARD%20MEDIA/Ghosted/Ghosted07.jpg'},
   ], {imageDuration:6000});
 })();
 
@@ -3069,7 +3096,7 @@ window.addEventListener('hashchange', goToFromHash);
 
 // ── Park slides at end (user: "I need to decide how to sort them") ──
 (function(){
-  const PARK=[9,10,11]; // 0-indexed after settings slide at slot 0: Four Seasons Lake Austin, 2017 Lesson, Four Seasons 10-Studio
+  const PARK=[9,11]; // 0-indexed: Four Seasons Lake Austin (2016 case 4), Four Seasons 10-Studio (2017 case 1)
   const parked=PARK.map(i=>allSlides[i]);
   [...PARK].sort((a,b)=>b-a).forEach(i=>allSlides.splice(i,1));
   parked.forEach(s=>{s.dataset.parked='1';allSlides.push(s);});

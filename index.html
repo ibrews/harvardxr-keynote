@@ -90,7 +90,7 @@ const SECTIONS = [
     year: 2020, accent: 'rose',
     cases: [
       { title:'OnboardXR', subtitle:'The pandemic pivot that proved WebXR could work',
-        img:'media/onboardxr/onboard.jpg',
+        img:'MEDIA_CYCLER',
         bullets:['COVID shut down every live venue. We co-founded OnboardXR — a WebXR performance platform anyone could join from a browser.','No app store. No headset required. Accessible by default. That constraint forced better design.','OnboardXR became the proving ground for every live-performance idea we couldn\'t test in enterprise.'] },
       { title:'The Unreal Engine Bet', subtitle:'All-in on one engine. No more Unity. No more hedging.',
         img:'',
@@ -102,7 +102,7 @@ const SECTIONS = [
         img:'MEDIA_CYCLER',
         bullets:['After years of building one-off visualization tools for individual clients, we saw the common thread — every client needed the same core capabilities.','Blueprint Immersive is our own UE-based design and visualization product. One tool that addresses many clients\' needs at once.','The leap from bespoke services to a scalable product is the ultimate tool choice as business strategy.'] },
     ],
-    lesson: { title:'Your Tool Choices Are\nBusiness Strategy', tagline:'Don\'t let platform lock-in kill you — but don\'t be a tourist either. WebXR for accessibility, Unreal for premium. Going all-in on Unreal Engine wasn\'t a technical decision — it was a five-year bet on which skills would still be valuable. Sometimes the tools come to you: free hardware, free software. The question isn\'t whether to use them. It\'s whether they serve the pipeline you\'re building or distract from it.', short:'TOOLS ARE STRATEGY', tags:'OnboardXR · Unreal Engine · Blueprint Immersive · Xsens · Agony' },
+    lesson: { title:'Your Tool Choices Are\nBusiness Strategy', tagline:'Don\'t let platform lock-in kill you — but don\'t be a tourist either.<br>Going all-in on Unreal Engine wasn\'t a technical decision — it was a five-year bet on which skills would still be valuable.<br><br>Sometimes the tools come to you: free hardware, free software.<br>The question isn\'t whether to use them; it\'s whether they serve the pipeline you\'re building or distract from it.', short:'TOOLS ARE STRATEGY', tags:'OnboardXR · Unreal Engine · Blueprint Immersive · Xsens · Agony' },
   },
   {
     year: 2021, accent: 'purple',
@@ -188,7 +188,7 @@ const BONUS = { year:2026, title:'Every Three Years,\nEverything Changes. Ship A
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#060810;--teal:#00d4ff;--purple:#a78bfa;--amber:#f59e0b;--rose:#f43f5e;--text:#f0f4ff;--dim:rgba(240,244,255,.45);--font:'Space Grotesk',system-ui,sans-serif;--para-gap:.55em;--tagline-scale:1;--title-scale:1}
+:root{--bg:#060810;--teal:#00d4ff;--purple:#a78bfa;--amber:#f59e0b;--rose:#f43f5e;--text:#f0f4ff;--dim:rgba(240,244,255,.45);--font:'Space Grotesk',system-ui,sans-serif;--para-gap:.35em;--tagline-scale:1;--title-scale:1}
 html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font)}
 
 .bg{position:fixed;inset:0;z-index:0;overflow:hidden}
@@ -733,7 +733,7 @@ const deck=document.getElementById('deck'),allSlides=[],lessonIdxs=[];
 
 // ── Settings slide (slot 0, hidden by default — UI mode only) ──
 (function(){
-  const DEFAULTS={paraGap:.55,taglineScale:1,titleScale:1,imgDur:6};
+  const DEFAULTS={paraGap:.35,taglineScale:1,titleScale:1,imgDur:6};
   const saved=JSON.parse(localStorage.getItem('keynote-cfg')||'{}');
   const C={...DEFAULTS,...saved};
   function applyAll(){
@@ -2179,7 +2179,7 @@ function buildMediaCycler(slideEl, items, opts){
   const sources = items.map(item => {
     if (item.type === 'video'){
       const v = document.createElement('video');
-      v.src = item.src; v.muted = true; v.loop = false; v.preload = 'auto';
+      v.src = item.src; v.muted = true; v.loop = !!item.loop; v.preload = 'auto';
       v.playsInline = true; v.style.display = 'none';
       document.body.appendChild(v);
       return v;
@@ -2466,6 +2466,24 @@ function buildMediaCycler(slideEl, items, opts){
     {type:'image', src:'media/community/community05_halcyonvr.jpg'},
     {type:'image', src:'media/community/community06_halcyon_collage.jpg'},
   ], {imageDuration:6000});
+})();
+
+// ── OnboardXR — looping Brockman Hall video ──────────────────────────────
+(function(){
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('OnboardXR'));
+  if (!slide) return;
+  buildMediaCycler(slide, [
+    {type:'image', src:'media/onboardxr/onboard.jpg'},
+    {type:'video', src:'media/onboardxr/brockman.mp4', loop:true},
+  ], {imageDuration:6000});
+  // Add caption under the media cycler
+  const mount = slide.querySelector('.media-cycler-mount');
+  if (mount) {
+    const cap = document.createElement('div');
+    cap.textContent = 'Brockman Hall for Opera';
+    cap.style.cssText = 'text-align:center;color:rgba(240,244,255,.45);font-size:.85rem;letter-spacing:.12em;margin-top:8px;font-style:italic';
+    mount.parentElement.appendChild(cap);
+  }
 })();
 
 // ── Blueprint Immersive (BPI) ─────────────────────────────────────────────

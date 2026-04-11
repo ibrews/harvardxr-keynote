@@ -26,10 +26,10 @@ const SECTIONS = [
       { title:'The Shed @\nHudson Yards', subtitle:'My first major USA VR architecture project',
         img:'MEDIA_CYCLER',
         bullets:['Custom internal VR design apps for a $500M cultural venue','Parametric design options and solutions for Fisher Dachs','We weren\'t doing film. We weren\'t doing games.\nWe were doing stagecraft and looking for quick wins.'] },
-      { title:'Kenneth Branagh\'s Macbeth\n@ Park Avenue Armory', subtitle:'Shakespeare\'s Scottish Play, previz\'d in 3D and VR',
+      { title:'Kenneth Branagh\'s Macbeth\n@ The Park Avenue Armory', subtitle:'Shakespeare\'s Scottish Play, previz\'d in 3D and VR',
         img:'MEDIA_CYCLER',
         bullets:['Transfer from Manchester, England with tight timeline','Tested & adjusted sightlines, sets, & even actor blocking','Immediately useful to experience human scale'] },
-      { title:'The Late Show @\nEd Sullivan Theater', subtitle:'"The Church of Stephen Colbert" without damaging an historic dome.',
+      { title:'The Late Show @\nThe Ed Sullivan Theater', subtitle:'"The Church of Stephen Colbert" without damaging an historic dome.',
         img:'MEDIA_CYCLER',
         bullets:['Bravo Media saw the potential of my code for a new purpose','Saved valuable time','Just another sightline !'] },
     ],
@@ -42,7 +42,7 @@ const SECTIONS = [
         img:'MEDIA_CYCLER',
         bullets:['Trying Archviz with Unreal Engine','R&D with Tilt Brush','Leads to Autodesk University','Leads to Epic Games relationship'] },
     ],
-    lesson: { title:"It's OK to Pivot!\nDon't Forget Your Calling.", tagline:"Architects don't have any money. Some will be game to collaborate, but most can't afford the risk.<br><br>We pivoted from Unity + design focus to UE + archviz focus.<br><br>With R&D to keep it fresh, it led to attracting valuable eyes, led to a relationship with Epic Games, and then...", short:"It's OK to Pivot", tags:'ArchViz · R&D · Speaking Engagements · Press' },
+    lesson: { title:"It's OK to Pivot!\nDon't Forget Your Calling.", tagline:"Architects don't have any money.<br>Some will be game to collaborate, but most can't afford the risk.<br><br>We pivoted from Unity + design focus to UE + archviz focus.<br><br>With R&D to keep it fresh, it led to attracting valuable eyes, led to a relationship with Epic Games, and then...", short:"It's OK to Pivot", tags:'ArchViz · R&D · Speaking Engagements · Press' },
   },
   {
     year: 2018, accent: 'teal',
@@ -2613,10 +2613,18 @@ function buildMediaCycler(slideEl, items, opts){
           ctx.restore();
           pulseAlpha = Math.max(0, pulseAlpha - 0.022);
         }
-        // Single-item: once flash fades, draw final frame and stop — no cycling
+        // Single-item: once flash fades...
         if (items.length === 1 && pulseAlpha <= 0) {
-          drawPixelated(src, 1, _flip);
-          return; // stop rAF loop
+          if (src.tagName === 'VIDEO') {
+            // Single video: keep rendering frames and loop
+            if (!src.loop) { src.loop = true; }
+            drawPixelated(src, 1, _flip);
+            // continue rAF — don't return
+          } else {
+            // Single image: draw final frame and stop
+            drawPixelated(src, 1, _flip);
+            return; // stop rAF loop
+          }
         }
         const isVid = src.tagName==='VIDEO';
         if (manualMode && isVid && videoEnded) {
@@ -3442,11 +3450,18 @@ function buildMediaCycler(slideEl, items, opts){
   if (span) { span.style.display='inline-block'; span.style.transform='translate(0px,-14px)'; }
 })();
 // Macbeth — keep "Kenneth Branagh's Macbeth" on one line, "@ Park Avenue Armory" on second
+// The Shed, Macbeth, Late Show — respect \n after @
+['The Shed @','Macbeth','The Late Show @'].forEach(keyword => {
+  const s = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes(keyword));
+  if (!s) return;
+  const t = s.querySelector('.case-title');
+  if (t) t.style.whiteSpace = 'pre-line';
+});
 (function(){
   const s = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Macbeth'));
   if (!s) return;
   const t = s.querySelector('.case-title');
-  if (t) { t.style.whiteSpace = 'pre-line'; t.style.fontSize = 'clamp(1.4rem,2.8vw,3rem)'; }
+  if (t) t.style.fontSize = 'clamp(1.4rem,2.8vw,3rem)';
 })();
 // High Fidelity — respect \n line break in title
 (function(){

@@ -49,6 +49,12 @@ const SECTIONS = [
         bullets:['Jonathan pitched the same brief to 10 different studios. He hired two: Pure Blink for visual fidelity, Agile Lens for our particular method of problem-solving.','Diverse teams don\'t win on what they ship. They win on how they think.','Architects, theater directors, lighting designers, motion capture artists, choreographers — in the same room as engineers.'] },
     ],
     lesson: { title:'The Best XR Teams Look\nNothing Like Tech Teams', tagline:'XR is too new to have native experts, so we build them from everywhere. But don\'t go to zero on traditional engineers either — our early years without dedicated devs cost us in source control, QA, and project discipline. The principle is theater-first, engineering-second. Never engineering-zero.', short:'HIRE UNLIKE TECH', tags:'Stage Presence · High Fidelity 2019 · Fisher Dachs Associates · Fisher Marantz Stone' },
+    altLesson: { badge:'Lesson 02 / 10', title:"It's ok to pivot!\nJust don't forget your calling.", tagline:"Architects don't have any money, and no matter how much they might want to use your tools, some of them can't afford the risk.<br><br>So we pivoted from Unity and design focus to archviz and marketing focus.<br><br>But with some R&D to keep it fresh, it led to attracting valuable eyes, led to a relationship with Epic Games, and then...", short:'PIVOT', tags:'ArchViz · R&D · Speaking Engagements · Press' },
+    altCases: [
+      { title:'Pivot to ArchViz & R&D', subtitle:'New tools, new clients, new doors',
+        img:'MEDIA_CYCLER',
+        bullets:['Trying Archviz with Unreal Engine','R&D with Tilt Brush','Leads to Autodesk University','Leads to Epic Games relationship'] },
+    ],
   },
   {
     year: 2018, accent: 'amber',
@@ -1588,7 +1594,7 @@ allSlides.push(introLens);
         o.start(); _humOscs.push(o);
       });
       _humGain.gain.setValueAtTime(0, _humCtx.currentTime);
-      _humGain.gain.linearRampToValueAtTime(0.13, _humCtx.currentTime + 1.2);
+      _humGain.gain.linearRampToValueAtTime(0.091, _humCtx.currentTime + 1.2);
     } catch(e) {}
   }
   function stopLensHum() {
@@ -1624,7 +1630,7 @@ allSlides.push(introLens);
     pulseImg.setAttribute('opacity', pulse.toFixed(3));
     if (_humGain && _humCtx && _humOscs.length) {
       // Pulse gain between 0.08 and 0.18, in sync with monocle visual pulse
-      const targetVol = 0.08 + 0.10 * ((Math.sin(lensT) + 1) / 2);
+      const targetVol = 0.056 + 0.07 * ((Math.sin(lensT) + 1) / 2);
       _humGain.gain.setTargetAtTime(targetVol, _humCtx.currentTime, 0.08);
     }
     requestAnimationFrame(lensStep);
@@ -1951,6 +1957,24 @@ SECTIONS.forEach((sec,si)=>{
       <ul class="case-bl">${c.bullets.map(b=>`<li>${b}</li>`).join('')}</ul></div>`;
     deck.appendChild(s);allSlides.push(s);
   });
+  // Alt lesson + alt cases (optional second lesson block per section)
+  if (sec.altLesson) {
+    const al=document.createElement('div');al.className=`slide slide-lesson${ac}`;al.dataset.type='lesson';al.dataset.year=sec.year;al.dataset.section=si;
+    al.innerHTML=`<div class="year-ghost">${sec.year}</div>
+      <div class="lesson-ey"><span class="ey-yr">${sec.year}</span><span class="ey-sep">·</span><span class="ey-badge">${sec.altLesson.badge||'Lesson'}</span></div>
+      <h2 class="lesson-title">${sec.altLesson.title}</h2><p class="lesson-tagline">${sec.altLesson.tagline}</p>
+      ${sec.altLesson.tags?`<div class="lesson-tags">${sec.altLesson.tags}</div>`:''}<div class="lesson-rule"></div>`;
+    deck.appendChild(al);allSlides.push(al);lessonIdxs.push(allSlides.length-1);
+    (sec.altCases||[]).forEach(c=>{
+      const s=document.createElement('div');s.className=`slide case-slide${ac}`;s.dataset.type='case';s.dataset.year=sec.year;s.dataset.section=si;
+      const img=c.img==='MEDIA_CYCLER'?`<div class="media-cycler-mount" style="width:100%;height:100%"></div>`:c.img?`<img src="${c.img}" alt="${c.title}" loading="lazy">`:`<div class="ph">Image TBD</div>`;
+      s.innerHTML=`<div class="case-image">${img}</div><div class="case-content">
+        <div class="case-ytag">Case Study · ${sec.altLesson.short||''}</div>
+        <h2 class="case-title">${c.title}</h2><p class="case-sub">${c.subtitle}</p>
+        <ul class="case-bl">${c.bullets.map(b=>`<li>${b}</li>`).join('')}</ul></div>`;
+      deck.appendChild(s);allSlides.push(s);
+    });
+  }
 });
 
 // ── Bonus ──
@@ -2032,22 +2056,58 @@ function buildMediaCycler(slideEl, items, opts){
 
   let idx = 0, phase = 'entering', phaseStart = 0;
   let pulseAlpha = 0, rafId = null, videoEnded = false;
+  let manualMode = false;
+
+  function goNext() {
+    const src = sources[idx];
+    if (src.tagName === 'VIDEO') { src.pause(); src.currentTime = 0; videoEnded = false; }
+    playBing();
+    idx = (idx + 1) % sources.length;
+    phase = 'entering'; phaseStart = 0;
+    canvas.style.transform = 'translateX(50%)';
+    manualMode = true;
+  }
+  function goPrev() {
+    const src = sources[idx];
+    if (src.tagName === 'VIDEO') { src.pause(); src.currentTime = 0; videoEnded = false; }
+    playBing();
+    idx = (idx - 1 + sources.length) % sources.length;
+    phase = 'entering'; phaseStart = 0;
+    canvas.style.transform = 'translateX(-50%)';
+    manualMode = true;
+  }
+  const cyclerAPI = {
+    next: goNext, prev: goPrev,
+    setManual() { manualMode = true; },
+    setAuto()   { manualMode = false; },
+  };
 
   function easeOut3(k){ return 1 - Math.pow(1-k, 3); }
   function easeIn2(k){ return k*k; }
 
+  // Cover-fit: fill canvas by center-cropping source, no squash/letterbox
+  function coverRect(sw, sh) {
+    const scale = Math.max(CW / sw, CH / sh);
+    const dw = sw * scale, dh = sh * scale;
+    const dx = (CW - dw) / 2, dy = (CH - dh) / 2;
+    return { dx, dy, dw, dh };
+  }
   function drawPixelated(src, ps){
+    const sw = src.naturalWidth || src.videoWidth || CW;
+    const sh = src.naturalHeight || src.videoHeight || CH;
+    const { dx, dy, dw, dh } = coverRect(sw, sh);
+    ctx.clearRect(0, 0, CW, CH);
     if (ps <= 1.2){
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(src, 0, 0, CW, CH);
+      ctx.drawImage(src, dx, dy, dw, dh);
     } else {
-      const bw = Math.max(1, Math.round(CW/ps));
-      const bh = Math.max(1, Math.round(CH/ps));
+      const bw = Math.max(1, Math.round(dw/ps));
+      const bh = Math.max(1, Math.round(dh/ps));
       off.width = bw; off.height = bh;
       offCtx.drawImage(src, 0, 0, bw, bh);
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(off, 0, 0, CW, CH);
+      ctx.drawImage(off, dx, dy, dw, dh);
     }
   }
 
@@ -2110,7 +2170,14 @@ function buildMediaCycler(slideEl, items, opts){
           pulseAlpha = Math.max(0, pulseAlpha - 0.022);
         }
         const isVid = src.tagName==='VIDEO';
-        const done = isVid ? videoEnded : el >= imageDuration;
+        if (manualMode && isVid && videoEnded) {
+          // Loop video in manual mode instead of advancing
+          videoEnded = false;
+          src.currentTime = 0;
+          src.play().catch(()=>{});
+          src.addEventListener('ended', ()=>{ videoEnded=true; }, {once:true});
+        }
+        const done = !manualMode && (isVid ? videoEnded : el >= imageDuration);
         if (done){
           if (isVid){ src.pause(); src.currentTime=0; }
           playBing();
@@ -2143,9 +2210,16 @@ function buildMediaCycler(slideEl, items, opts){
   }
 
   new MutationObserver(()=>{
-    slideEl.classList.contains('active') ? start() : stop();
+    if (slideEl.classList.contains('active')) {
+      window._activeCycler = cyclerAPI;
+      start();
+    } else {
+      if (window._activeCycler === cyclerAPI) window._activeCycler = null;
+      manualMode = false; // reset to auto on slide exit
+      stop();
+    }
   }).observe(slideEl, {attributes:true, attributeFilter:['class']});
-  if (slideEl.classList.contains('active')) start();
+  if (slideEl.classList.contains('active')) { window._activeCycler = cyclerAPI; start(); }
 }
 
 // ── The Shed @ Hudson Yards ────────────────────────────────────────────────
@@ -2183,6 +2257,19 @@ function buildMediaCycler(slideEl, items, opts){
   ], {imageDuration:6000});
 })();
 
+// ── Pivot to ArchViz & R&D ────────────────────────────────────────────────
+(function(){
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Pivot to ArchViz'));
+  if (!slide) return;
+  buildMediaCycler(slide, [
+    {type:'video', src:'media/pivot/pivot01_academy65.mp4'},
+    {type:'video', src:'media/pivot/pivot02_avenueMain360.mp4'},
+    {type:'video', src:'media/pivot/pivot03_tiltbrush.mp4'},
+    {type:'image', src:'media/pivot/pivot04_autodeskuniversity2017.jpg'},
+    {type:'image', src:'media/pivot/pivot05_article.jpg'},
+  ], {imageDuration:6000});
+})();
+
 // ── Build a Community ─────────────────────────────────────────────────────
 (function(){
   const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Build a Community'));
@@ -2195,6 +2282,222 @@ function buildMediaCycler(slideEl, items, opts){
     {type:'image', src:'media/community/community05_halcyonvr.jpg'},
     {type:'image', src:'media/community/community06_halcyon_collage.jpg'},
   ], {imageDuration:6000});
+})();
+
+// ── Christmas Carol Quote Rain (Community slide) ───────────────────────────
+(function(){
+  const slide = allSlides.find(s => s.querySelector?.('.case-title')?.textContent.includes('Build a Community'));
+  if (!slide) return;
+
+  const QUOTES = [
+    {t:'A Christmas Carol VR is a masterclass in acting.',a:'Raindance Immersive 2025 Judges'},
+    {t:'The team at Agile Lens creates an experience that skillfully breaks the fourth wall and invites audience members to be at the center of a 150 year old story told for a brand new generation.',a:'Raindance Immersive 2025 Judges'},
+    {t:'Fantastic mix of technology and talented actors to bring Dickens and his classic tale to life!',a:'eminus, Dec 22, 2024'},
+    {t:'Debbie and Ari\'s performance cannot be beat.',a:'Stephen Butchko, Dec 6, 2025'},
+    {t:'An absolute joy seeing those amazing actors creating magic in the victorian metaverse.',a:'Deirdre Lyons, June 18, 2025'},
+    {t:'Really wonderful acting and narration, and the swapping characters was really awesome.',a:'nehmia, June 18, 2025'},
+    {t:'The single actor bouncing between two characters was very successful.',a:'Josh Rubin, Dec 20, 2025'},
+    {t:'Ari Tarr... [delivered] remarkable, rapid-fire exchanges between Scrooge and characters such as his nephew, Cratchit, etc.',a:'Chuck Webster MD, Dec 22, 2024'},
+    {t:'Ari Tarr as Charles Dickens was particularly suburb [sic] during the narration of the tale.',a:'Elizabeth Tasker, Dec 22, 2024'},
+    {t:'Particularly liked the way they use the actors in combination with the amount of roles. Go see it!',a:'Jedidjah Julia Noomen, Dec 5, 2025'},
+    {t:'The narrator was excellent at making the audience feel included. Scene changes dissolved and reappeared around you, while the door knocker that became Marley\'s face enlarged to terrifying proportions!',a:'Elizabeth Tasker, Dec 22, 2024'},
+    {t:'It was ingenious. The audience were small sprites. We were immersed in the flow of the story and we were addressed by the narrator.',a:'Dave the Turner, June 18, 2025'},
+    {t:'It was fascinating to see the affordances of VR used in this way. I\'d love to see more VR plays done like this.',a:'Claren Naïlo, Dec 22, 2024'},
+    {t:'Phenomenal experience that wonderfully showcases VR\'s unique ability to immerse an audience into a fantastical world!',a:'Nithia09, Dec 14, 2025'},
+    {t:'The experience was amazing, and succeeded in recreating true theatrical audience interaction with the Spectator Ball. A genius idea!',a:'César Chiffre, Dec 20, 2025'},
+    {t:'The technology is accessible enough to reach a wide audience, and the limitations are a driver for a ton of innovation.',a:'Elizabeth Tasker, Dec 22, 2024'},
+    {t:'Nice acting & it was curious how avatar switching really framed my attention. Nice use of scenes too. Our avatars as tiny colored balls brought a smile.',a:'SteveG67, June 21, 2025'},
+    {t:'WOW doesn\'t even come close to describing what I just experienced! I haven\'t enjoyed \'A Christmas Carol\' this much in years.',a:'Robert Copelan, Dec 22, 2024'},
+    {t:'Omgoodness! It was FANTASTIC! Thank you and all involved so much!',a:'katerobbie, June 18, 2025'},
+    {t:'CONGRATULATIONS!! to everyone involved. It\'s such a wonderful production!',a:'katerobbie, Dec 22, 2025'},
+    {t:'Quite enjoyed catching the opening night of this. The world needs more live VR performances!',a:'Nick Suda, Dec 1, 2025'},
+    {t:'Blown away at how good this was. Thanks to everyone involved.',a:'b34k3r, Dec 23, 2024'},
+    {t:'I sat on that bench and looked up at Scrooge... and [he] emotionally spoke, of me... It felt remarkable!',a:'Chuck Webster MD, Dec 22, 2024'},
+    {t:'Amazing job on this production!!!',a:'Lisa Lokshina, Dec 21, 2024'},
+    {t:'Thanks for a really wonderful show!',a:'Andrew Eglinton, June 25, 2025'},
+    {t:'This was just great. Thank you.',a:'Donna K., Dec 20, 2025'},
+    {t:'Just tried the Christmas Carol VR experience and that was fun. Thanks for putting it together!',a:'Ian XR Nerd, Dec 21, 2024'},
+    {t:'I\'m glad I dropped in to see this!',a:'Scott Stein, Dec 22, 2024'},
+    {t:'Thoroughly enjoyed #AChristmasCarolVR which was developed by Agile Lens. Do look out for more of their productions.',a:'Elizabeth Tasker, Dec 22, 2024'},
+    {t:'This looks incredible.',a:'Over Coffee Podcast, Dec 21, 2023'},
+    {t:'THAT WAS SO COOL. So cool to see such unique art featured, and huge props to everyone involved.',a:'Trudeus, June 19, 2025'},
+    {t:'Just had my first time experience of A Christmas Carol VR, it was AMAZING!!!',a:'Zihao Zhang, Dec 7, 2025'},
+    {t:'I watched it live on my television! It was terrific.',a:'ZigZagMLT, Dec 20, 2025'},
+    {t:'Congratulations to you all for this epic run of shows! What a wonderful way to celebrate with others in this timeless story.',a:'Rebecca Evans, Dec 21, 2025'},
+    {t:'This was a working glimpse into the future of VR as a medium for Real Time Live Production.',a:'Jimmy6DOF, Dec 17, 2021'},
+    {t:'Once again Agile Lens pushes the technical art form of what is possible in XR with Live Actors realtime performance by consummate professionals. So good and evolved so much since 2021.',a:'Jimmy6DOF, Dec 24, 2025'},
+    {t:'The evolution of this show over the years is remarkable and the performances are top shelf!',a:'Stephen Butchko, Dec 6, 2025'},
+    {t:'What a huge upgrade! I really enjoyed the show, like I was experiencing for the first time.',a:'Sngmoo Lee, Dec 21, 2025'},
+    {t:'I attended one of the awesome performances last year and encourage any of you that have a VR headset to check this show out.',a:'eminus, Dec 15, 2025'},
+    {t:'I did this last year and it was very fun. Recommended!',a:'Clare Naïlo, Dec 12, 2025'},
+    {t:'The production took some interesting poetic liberties with the Christmas ghosts... Made A Christmas Carol fresh and surprisingly surprising.',a:'Chuck Webster MD, Dec 22, 2024'},
+    {t:'I cannot wait to attend / participate this year once again! This is such an impressive way to see and \'be part\' of a show.',a:'Michèle Thibeau, Dec 12, 2025'},
+    {t:'I registered to see it again.',a:'Dave the Turner, June 18, 2025'},
+  ];
+
+  const GOLDS = ['#f59e0b','#fbbf24','#d97706','#fcd34d','#ca8a04','#eab308','#f5c518','#e8a010'];
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:8';
+  slide.appendChild(overlay);
+
+  const COLS = 22;
+  const pileH = new Float32Array(COLS);
+  let running = false, tid = null, qi = 0, order = [];
+
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function spawnQuote() {
+    if (!running) return;
+    // Cycle through all quotes in shuffled order before repeating
+    if (qi >= order.length) { order = shuffle([...Array(QUOTES.length).keys()]); qi = 0; }
+    const q = QUOTES[order[qi++]];
+
+    const rot = (Math.random() - 0.5) * 8;
+    const color = GOLDS[Math.floor(Math.random() * GOLDS.length)];
+    const fallDur = (1.5 + Math.random() * 1.4).toFixed(2);
+    const len = q.t.length;
+    const fs = len < 60 ? '0.66rem' : len < 140 ? '0.58rem' : '0.50rem';
+    const maxW = len < 80 ? '210px' : '268px';
+
+    const el = document.createElement('div');
+    el.style.cssText = `position:absolute;visibility:hidden;max-width:${maxW};padding:4px 9px;
+      border-radius:5px;background:rgba(0,0,0,0.52);
+      font-family:'Space Grotesk',sans-serif;font-size:${fs};line-height:1.35;font-weight:500;
+      color:${color};transform:rotate(${rot}deg);transform-origin:center top;pointer-events:none;`;
+    el.innerHTML = `\u201c${q.t}\u201d<br><span style="font-size:0.85em;opacity:0.6">\u2014 ${q.a}</span>`;
+    overlay.appendChild(el);
+
+    requestAnimationFrame(() => {
+      const slideW = overlay.offsetWidth || 900;
+      const slideH = overlay.offsetHeight || 600;
+      const qW = el.offsetWidth;
+      const qH = el.offsetHeight;
+      const colW = slideW / COLS;
+      const spanCols = Math.max(1, Math.ceil((qW + 6) / colW));
+      const maxStart = Math.max(0, COLS - spanCols);
+      const startCol = Math.floor(Math.random() * (maxStart + 1));
+
+      let maxPH = 0;
+      for (let c = startCol; c < Math.min(startCol + spanCols, COLS); c++) maxPH = Math.max(maxPH, pileH[c]);
+      const landFromBottom = maxPH + qH + 4 + Math.random() * 6;
+      const landTop = slideH - landFromBottom;
+
+      // Only pile up if there's room — stop adding to columns that have filled past 60% height
+      if (landTop > slideH * 0.08) {
+        for (let c = startCol; c < Math.min(startCol + spanCols, COLS); c++) pileH[c] = landFromBottom;
+      }
+
+      el.style.left = `${startCol * colW}px`;
+      el.style.top = `${-(qH + 20)}px`;
+      el.style.visibility = 'visible';
+
+      requestAnimationFrame(() => {
+        el.style.transition = `top ${fallDur}s cubic-bezier(0.25,0.05,0.8,1)`;
+        el.style.top = `${Math.max(slideH * 0.08, landTop)}px`;
+      });
+    });
+  }
+
+  // Frenzy: spawn quotes rapidly anywhere on screen at varied scales
+  function spawnFrenzyQuote() {
+    if (qi >= order.length) { order = shuffle([...Array(QUOTES.length).keys()]); qi = 0; }
+    const q = QUOTES[order[qi++]];
+    const rot   = (Math.random() - 0.5) * 30;
+    const scale = 0.7 + Math.random() * 1.0; // 0.7× to 1.7×
+    const color = GOLDS[Math.floor(Math.random() * GOLDS.length)];
+    const dur   = (0.28 + Math.random() * 0.4).toFixed(2);
+    const len   = q.t.length;
+    const fs    = len < 60 ? '0.66rem' : len < 140 ? '0.58rem' : '0.50rem';
+    const maxW  = len < 80 ? '210px' : '268px';
+
+    const el = document.createElement('div');
+    el.style.cssText = `position:absolute;visibility:hidden;max-width:${maxW};padding:4px 9px;
+      border-radius:5px;background:rgba(0,0,0,0.52);
+      font-family:'Space Grotesk',sans-serif;font-size:${fs};line-height:1.35;font-weight:500;
+      color:${color};transform:rotate(${rot}deg) scale(${scale});transform-origin:center center;pointer-events:none;`;
+    el.innerHTML = `\u201c${q.t}\u201d<br><span style="font-size:0.85em;opacity:0.6">\u2014 ${q.a}</span>`;
+    overlay.appendChild(el);
+
+    requestAnimationFrame(() => {
+      const sW = overlay.offsetWidth || 900, sH = overlay.offsetHeight || 600;
+      const qW = el.offsetWidth, qH = el.offsetHeight;
+      const landX = Math.random() * Math.max(1, sW - qW);
+      const landY = Math.random() * Math.max(1, sH - qH);
+      // Fly in from a random edge
+      const edge = Math.floor(Math.random() * 3);
+      const startX = edge === 1 ? -(qW+20) : edge === 2 ? sW+20 : landX;
+      const startY = edge === 0 ? -(qH+20) : landY + (Math.random()-0.5)*80;
+      el.style.left = `${startX}px`;
+      el.style.top  = `${startY}px`;
+      el.style.visibility = 'visible';
+      requestAnimationFrame(() => {
+        el.style.transition = `left ${dur}s ease-out, top ${dur}s cubic-bezier(0.2,0,0.6,1.15)`;
+        el.style.left = `${landX}px`;
+        el.style.top  = `${landY}px`;
+      });
+    });
+  }
+
+  // Register as a slide step so rain starts on click, not automatically
+  setTimeout(() => {
+    slideSteps.set(slide, { current: 0, steps: [
+      () => window._quoteRain.start(),
+      () => window._quoteRain.frenzy(),
+    ]});
+  }, 0);
+
+  window._quoteRain = {
+    start() {
+      if (running) return;
+      running = true;
+      overlay.innerHTML = '';
+      pileH.fill(0);
+      qi = 0;
+      order = shuffle([...Array(QUOTES.length).keys()]);
+      spawnQuote();
+      tid = setInterval(spawnQuote, 370);
+    },
+    frenzy() {
+      // Inject shake keyframe once
+      if (!document.getElementById('qs-kf')) {
+        const s = document.createElement('style'); s.id='qs-kf';
+        s.textContent = '@keyframes quoteShake{0%,100%{translate:0 0}15%{translate:-10px 5px}30%{translate:9px -6px}45%{translate:-7px 8px}60%{translate:10px -5px}75%{translate:-8px 6px}90%{translate:6px -8px}}';
+        document.head.appendChild(s);
+      }
+      // Shake the pile
+      const piled = [...overlay.querySelectorAll('div')];
+      piled.forEach(el => { el.style.animation = 'quoteShake 0.1s ease-in-out 9'; });
+      // After shake, scatter pile quotes to random positions across full screen
+      setTimeout(() => {
+        const sW = overlay.offsetWidth, sH = overlay.offsetHeight;
+        piled.forEach(el => {
+          el.style.animation = '';
+          const sc = 0.8 + Math.random() * 0.8;
+          const ro = (Math.random() - 0.5) * 26;
+          const nx = Math.random() * Math.max(1, sW - el.offsetWidth);
+          const ny = Math.random() * Math.max(1, sH - el.offsetHeight);
+          el.style.transition = 'left 0.45s cubic-bezier(0.34,1.5,0.64,1), top 0.45s cubic-bezier(0.34,1.5,0.64,1), transform 0.45s';
+          el.style.left = `${nx}px`;
+          el.style.top  = `${ny}px`;
+          el.style.transform = `rotate(${ro}deg) scale(${sc})`;
+        });
+      }, 900);
+      // Rapid full-screen spray
+      clearInterval(tid);
+      running = true;
+      let fc = 0;
+      const fTid = setInterval(() => {
+        if (!running) { clearInterval(fTid); return; }
+        spawnFrenzyQuote();
+        if (++fc >= 55) clearInterval(fTid);
+      }, 50);
+    },
+    stop() {
+      running = false;
+      clearInterval(tid);
+    }
+  };
 })();
 
 // ── Intermission: Beard Evolution ─────────────────────────────────────────
@@ -2257,15 +2560,17 @@ function buildMediaCycler(slideEl, items, opts){
   avG.style.opacity = '0';
   svg.appendChild(avG);
 
-  // Particles — 32 radiating from center
+  // Particles — 32 radiating from mouth/beard area
+  // Beard is at y≈-12 in local avatar coords → CY + (-12 × HOLD_SCALE) ≈ CY-34
+  const BURST_X = CX, BURST_Y = CY - 34;
   const EVO_COLORS=['#fde68a','#a78bfa','#00d4ff','#f43f5e','#fff','#f59e0b'];
   const burstG = svgE('g',{ opacity:'0' });
   for(let i=0;i<32;i++){
     const a=(i/32)*Math.PI*2, d=100+Math.random()*160;
-    const p=svgE('circle',{ cx:CX, cy:CY, r:(2+Math.random()*4).toFixed(1),
+    const p=svgE('circle',{ cx:BURST_X, cy:BURST_Y, r:(2+Math.random()*4).toFixed(1),
       fill:EVO_COLORS[i%EVO_COLORS.length],
       'data-tx':(Math.cos(a)*d).toFixed(1), 'data-ty':(Math.sin(a)*d).toFixed(1) });
-    p.style.transformOrigin=`${CX}px ${CY}px`;
+    p.style.transformOrigin=`${BURST_X}px ${BURST_Y}px`;
     burstG.appendChild(p);
   }
   svg.appendChild(burstG);
@@ -2273,9 +2578,9 @@ function buildMediaCycler(slideEl, items, opts){
   // Pulse loop — monocle glow + subtle avatar breathe while holding
   let pulseT=0, pulseRaf=null;
   function runPulse(){
-    pulseT+=0.022;
+    pulseT+=0.02;
     imPulseImg.setAttribute('opacity',(0.05+0.05*Math.sin(pulseT)).toFixed(3));
-    const s=HOLD_SCALE+0.04*Math.sin(pulseT*0.8);
+    const s=HOLD_SCALE-0.06*Math.sin(pulseT);
     avInner.setAttribute('transform',`scale(${s.toFixed(3)})`);
     pulseRaf=requestAnimationFrame(runPulse);
   }
@@ -2298,25 +2603,30 @@ function buildMediaCycler(slideEl, items, opts){
   function imStep1(){
     stopPulse(); imPulseImg.setAttribute('opacity','0');
     if(window._playShrinkSfx) window._playShrinkSfx();
+    const {x:tgtX, y:tgtY} = trackerSvgPos();
     const dur=1800, t0=performance.now();
     function shrinkFrame(now){
       const k=Math.min(1,(now-t0)/dur);
       const ease=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
       const s=HOLD_SCALE+(0.22-HOLD_SCALE)*ease;
-      const x=CX+(BRX-CX)*ease, y=CY+(BRY-CY)*ease;
+      const x=CX+(tgtX-CX)*ease, y=CY+(tgtY-CY)*ease;
       avG.setAttribute('transform',`translate(${x.toFixed(1)},${y.toFixed(1)})`);
       avInner.setAttribute('transform',`scale(${s.toFixed(3)})`);
       if(k<1){ requestAnimationFrame(shrinkFrame); return; }
       avG.style.transition='opacity .5s'; avG.style.opacity='0';
+      // Fade minimap walker back in now that the big sprite is gone
+      const tavEl = document.getElementById('tav');
+      if (tavEl) { tavEl.style.transition='opacity 0.5s'; tavEl.style.opacity='1'; }
       imTitle.style.animation='';
       imTitle.style.transition='opacity .6s'; imTitle.setAttribute('opacity','0');
       imMonocleG.style.transition='opacity .6s'; imMonocleG.setAttribute('opacity','0');
+      // Minimap walker swap + particle burst once sprite is settled
+      setTimeout(() => playBeardEvolution(), 600);
     }
     requestAnimationFrame(shrinkFrame);
   }
 
   function startBeardFlash(){
-    playBeardEvolution(); // minimap walker swap + SFX
     [{b:true,t:0},{b:false,t:210},{b:true,t:420},{b:false,t:660},
      {b:true,t:940},{b:false,t:1250},{b:true,t:1560}].forEach(({b,t})=>
       setTimeout(()=>{
@@ -2336,6 +2646,37 @@ function buildMediaCycler(slideEl, items, opts){
     setTimeout(()=>{ avInner.setAttribute('transform',`scale(${HOLD_SCALE})`); runPulse(); },1800);
   }
 
+  // Compute tracker center in intermission SVG coords
+  function trackerSvgPos() {
+    const tEl = document.getElementById('tracker');
+    if (!tEl) return { x: BRX, y: BRY };
+    const tRect = tEl.getBoundingClientRect();
+    const svgRect = svg.getBoundingClientRect();
+    const svgScale = Math.min(svgRect.width / 1600, svgRect.height / 900);
+    const svgOffX = (svgRect.width - 1600 * svgScale) / 2;
+    const svgOffY = (svgRect.height - 900 * svgScale) / 2;
+    return {
+      x: (tRect.left + tRect.width / 2 - svgRect.left - svgOffX) / svgScale,
+      y: (tRect.top + tRect.height / 2 - svgRect.top - svgOffY) / svgScale,
+    };
+  }
+
+  // Ascending chirp — reverse of playShrinkSfx (392→587→880)
+  function playGrowSfx() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = ctx.currentTime;
+      [[392,0],[587,0.09],[880,0.18]].forEach(([freq,t]) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = freq;
+        o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.08, now+t);
+        g.gain.exponentialRampToValueAtTime(0.001, now+t+0.12);
+        o.start(now+t); o.stop(now+t+0.13);
+      });
+    } catch(e) {}
+  }
+
   window._playIntermission = function(){
     imReset();
     setTimeout(()=>{
@@ -2344,13 +2685,19 @@ function buildMediaCycler(slideEl, items, opts){
     },200);
     setTimeout(()=>{ imMonocleG.style.transition='opacity 1.2s'; imMonocleG.setAttribute('opacity','1'); },400);
     setTimeout(()=>{
+      const {x:startX, y:startY} = trackerSvgPos();
+      avG.setAttribute('transform',`translate(${startX.toFixed(1)},${startY.toFixed(1)})`);
       avG.style.opacity='1';
+      playGrowSfx();
+      // Fade out minimap walker so there's only one sprite
+      const tavEl = document.getElementById('tav');
+      if (tavEl) { tavEl.style.transition='opacity 0.4s'; tavEl.style.opacity='0'; }
       const dur=2000, t0=performance.now();
       function growFrame(now){
         const k=Math.min(1,(now-t0)/dur);
         const ease=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
         const s=0.22+(HOLD_SCALE-0.22)*ease;
-        const x=BRX+(CX-BRX)*ease, y=BRY+(CY-BRY)*ease;
+        const x=startX+(CX-startX)*ease, y=startY+(CY-startY)*ease;
         avG.setAttribute('transform',`translate(${x.toFixed(1)},${y.toFixed(1)})`);
         avInner.setAttribute('transform',`scale(${s.toFixed(3)})`);
         if(k<1) requestAnimationFrame(growFrame); else startBeardFlash();
@@ -2534,6 +2881,9 @@ function goTo(n){
     setTimeout(playBeardEvolution, 800);
   }
   if(t==='map') setTimeout(startMap, 400);
+  // Quote rain — stop when leaving Community slide
+  { const isComm = nx.querySelector?.('.case-title')?.textContent.includes('Build a Community');
+    if (window._quoteRain && !isComm) window._quoteRain.stop(); }
   // Clean up voxel renderer when leaving the map slide
   if (allSlides[n].dataset.type !== 'map' && window._voxelCleanup) { window._voxelCleanup(); window._voxelCleanup = null; }
   if(t==='intro-alex') { const _aw=document.getElementById('alex-intro-anim'); if(_aw){_aw.style.transition='none';_aw.style.opacity='0';} primeTallies(nx); setTimeout(playAlexIntro, 500); }
@@ -2550,6 +2900,11 @@ document.getElementById('btn-next').addEventListener('click',()=>goTo(current+1)
 document.addEventListener('keydown',e=>{
   // Don't intercept keys when typing in inputs, annotation textarea, or contenteditable edit-text
   if(['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)||document.activeElement?.isContentEditable)return;
+  // Shift+Arrow = media cycler manual controls (case study slides with MEDIA_CYCLER)
+  if(e.shiftKey && e.key==='ArrowRight'){ e.preventDefault(); window._activeCycler?.next(); return; }
+  if(e.shiftKey && e.key==='ArrowLeft') { e.preventDefault(); window._activeCycler?.prev(); return; }
+  if(e.shiftKey && e.key==='ArrowDown') { e.preventDefault(); window._activeCycler?.setManual(); return; }
+  if(e.shiftKey && e.key==='ArrowUp')   { e.preventDefault(); window._activeCycler?.setAuto(); return; }
   // Forward: arrows, space, PageDown, N (most clickers send PageDown)
   // Try to advance a sub-step first; if none remain, go to next slide.
   if(['ArrowRight','ArrowDown',' ','PageDown','n','N'].includes(e.key)){e.preventDefault();if(!advanceStep())goTo(current+1)}
@@ -2945,8 +3300,18 @@ function tPos(i){
 
 function updateTracker(){
   const type=allSlides[current].dataset.type;
-  const show=type==='case'||type==='lesson'||type==='bonus';
+  const show=type==='case'||type==='lesson'||type==='bonus'||type==='intermission';
   trackerEl.classList.toggle('visible',show);if(!show)return;
+  if(type==='intermission'){
+    // Update year label to 2020 and show beard; leave walker position as-is
+    const yrEl=document.getElementById('tracker-year');
+    if(yrEl) yrEl.textContent='2020';
+    if(!window._evoRunning){
+      document.getElementById('tav-clean')?.setAttribute('visibility','hidden');
+      document.getElementById('tav-beard')?.setAttribute('visibility','visible');
+    }
+    return;
+  }
   const si=parseInt(allSlides[current].dataset.section??-1);
   const isBonus=type==='bonus';
   // lesson dots

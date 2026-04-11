@@ -1119,19 +1119,21 @@ function playAlexIntro() {
   // Force reflow then start the sequence
   void anim.offsetWidth;
   anim.style.transformOrigin = 'center bottom';
-  // Show avatar as walk begins
-  setTimeout(() => { anim.style.opacity = '1'; }, 50);
-  // Timing:
-  //   0.0–2.0s  walk horizontally from off-stage left to under the block
-  //   2.0–2.4s  jump straight up to the block
-  //   2.4–3.2s  HIT: flash + particles + SFX + power-up grow (held at apex)
-  //   3.2–3.7s  fall back down to ground (now bigger), land with squash
-  //   3.8s      tallies begin counting up (on the intro-stats numbers)
-  anim.style.animation = 'introWalk 2s linear 0s 1 normal both';
+  // Empty stage for 2s before avatar enters
+  const DELAY = 2000;
+  setTimeout(() => { anim.style.opacity = '1'; }, DELAY);
+  // Timing (all offset by DELAY):
+  //   +0.0–2.0s  walk horizontally from off-stage left to under the block
+  //   +2.0–2.4s  jump straight up to the block
+  //   +2.4–3.2s  HIT: flash + particles + SFX + power-up grow (held at apex)
+  //   +3.2–3.7s  fall back down to ground (now bigger), land with squash
+  setTimeout(() => {
+    anim.style.animation = 'introWalk 2s linear 0s 1 normal both';
+  }, DELAY);
   // Jump up
   setTimeout(() => {
     anim.style.animation = 'introJumpUp .4s cubic-bezier(.3,.7,.4,1) 0s 1 normal both';
-  }, 2000);
+  }, DELAY + 2000);
   // HIT — at apex
   setTimeout(() => {
     flash.style.animation = 'introFlash .45s ease-out forwards';
@@ -1144,18 +1146,18 @@ function playAlexIntro() {
     });
     playIntroPowerUpSfx();
     anim.style.animation = 'introPowerUp .8s ease-out forwards';
-  }, 2400);
+  }, DELAY + 2400);
   // Paint worn headset mid-powerup
-  setTimeout(() => { if (avatarBody) paintWornHeadset(avatarBody); }, 2900);
+  setTimeout(() => { if (avatarBody) paintWornHeadset(avatarBody); }, DELAY + 2900);
   // Fall back down — gentle gravity curve, no squash
   setTimeout(() => {
     anim.style.animation = 'introFallDown .55s cubic-bezier(.55,0,.8,1) forwards';
-  }, 3200);
+  }, DELAY + 3200);
   // After fall, lock the final resting transform so nothing drifts
   setTimeout(() => {
     anim.style.animation = 'none';
     anim.style.transform = 'translate(160px, 0) scale(1.5)';
-  }, 3780);
+  }, DELAY + 3780);
   // Step 0 is done — tallies and bio are triggered by subsequent steps
 }
 

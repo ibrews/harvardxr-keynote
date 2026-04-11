@@ -181,7 +181,7 @@ const SECTIONS = [
   },
 ];
 
-const BONUS = { year:2026, title:'Every Three Years,\nEverything Changes. Ship Anyway.',
+const BONUS = { year:2026, title:'Every Three Years,\nEverything Changes.\nShip Anyway.',
   tagline:'2016: room-scale VR was the future. 2019: enterprise pivoted to AR. 2022: "the metaverse" consumed all oxygen. 2025: spatial computing and AI are rewriting every assumption. The cycle is accelerating, but the lesson is the same — ship with what exists today. The studios that survive aren\'t the ones that predict the next wave. They\'re the ones that ship through the turbulence. Learn to roll with the punches. Where do we go from here? The same place we always go — into the next wave, with the lessons from the last ten.' };
 </script>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}</script>
@@ -2292,7 +2292,7 @@ deck.appendChild(bon);allSlides.push(bon);
 
 // ── Map ──
 const mapS=document.createElement('div');mapS.className='slide slide-map';mapS.dataset.type='map';
-mapS.innerHTML=`<div class="map-label">The Journey, Mapped</div><svg id="map-svg" viewBox="0 0 1000 600"></svg>`;
+mapS.innerHTML=`<div class="map-label" style="transform:translate(-79px,13px)">The Journey, Mapped</div><svg id="map-svg" viewBox="0 0 1000 600"></svg>`;
 deck.appendChild(mapS);allSlides.push(mapS);
 
 // ── Close ──
@@ -4334,7 +4334,7 @@ function startMap(){
   const nEls=[];
   for(let i=0;i<10;i++){
     const p=mPos(i),dx=p.x-MX,dy=p.y-MY,len=Math.hypot(dx,dy);
-    const labelDist = p.x < MX - 20 ? 50 : 34; // push left-side labels further out
+    const labelDist = p.x < MX - 20 ? 70 : 34; // push left-side labels further out to clear monocle
     const lx=p.x+(dx/len)*labelDist,ly=p.y+(dy/len)*labelDist;
     const anc=p.x>MX+20?'start':p.x<MX-20?'end':'middle';
     const g=svgE('g',{opacity:'0',class:'recap-pill'});g.style.transition='opacity .4s';g.dataset.lesson=i;
@@ -4342,9 +4342,9 @@ function startMap(){
     g.appendChild(svgE('circle',{cx:p.x,cy:p.y,r:'16',fill:'rgba(0,212,255,.02)',stroke:'rgba(0,212,255,.08)','stroke-width':'0.5'}));
     // center star
     g.appendChild(svgE('circle',{cx:p.x,cy:p.y,r:'4.5',fill:'rgba(0,212,255,.15)',stroke:'rgba(0,212,255,.65)','stroke-width':'1.5'}));
-    // Nudge for 2025 (i=9) — its labels crowd the monocle cord otherwise
+    // Per-node nudges to avoid overlaps
     const yrOffX = i===9 ? -24 : 0, yrOffY = i===9 ? 6 : 0;
-    const ttOffX = i===9 ? -47 : 0, ttOffY = i===9 ? 14 : 0;
+    const ttOffX = i===9 ? -47 : i===6 ? 25 : 0, ttOffY = i===9 ? 14 : i===6 ? 1 : 0;
     // year label
     const yr=svgE('text',{x:lx+yrOffX,y:ly-(p.y<MY?12:0)+yrOffY,'text-anchor':anc,fill:'rgba(0,212,255,.8)',
       'font-family':'Space Grotesk,sans-serif','font-size':'10.5','font-weight':'600','letter-spacing':'1.2'});
@@ -4369,11 +4369,11 @@ function startMap(){
   bTt.textContent='Everything Changes. Ship Anyway.';bG.appendChild(bTt);
   svg.appendChild(bG);
 
-  // Center text
-  const cL=svgE('text',{x:MX,y:MY-4,'text-anchor':'middle','dominant-baseline':'middle',fill:'rgba(255,255,255,0)',
+  // Center text — positioned left of monocle to avoid overlap
+  const cL=svgE('text',{x:MX-MR-60,y:MY+10,'text-anchor':'end','dominant-baseline':'middle',fill:'rgba(255,255,255,0)',
     'font-family':'Space Grotesk,sans-serif','font-size':'20','font-weight':'600','letter-spacing':'4'});
   cL.textContent='AGILE LENS';svg.appendChild(cL);
-  const cS=svgE('text',{x:MX,y:MY+20,'text-anchor':'middle','dominant-baseline':'middle',fill:'rgba(255,255,255,0)',
+  const cS=svgE('text',{x:MX-MR-60,y:MY+30,'text-anchor':'end','dominant-baseline':'middle',fill:'rgba(255,255,255,0)',
     'font-family':'Space Grotesk,sans-serif','font-size':'10','font-weight':'400','letter-spacing':'2.5'});
   cS.textContent='2016 – 2026';svg.appendChild(cS);
 
@@ -4555,7 +4555,7 @@ try { (function initVoxelMorph(){
   const selfLabel = document.createElement('div');
   selfLabel.id = 'self-actualized-label';
   selfLabel.textContent = 'SELF-ACTUALIZED';
-  selfLabel.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);font-family:"Space Grotesk",sans-serif;font-size:clamp(1.4rem,3vw,2.8rem);font-weight:700;letter-spacing:.22em;color:var(--amber);opacity:0;pointer-events:none;z-index:6;white-space:nowrap;text-shadow:0 0 40px rgba(245,158,11,.6)';
+  selfLabel.style.cssText = 'position:absolute;left:50%;top:clamp(60px,8vh,100px);transform:translateX(-50%);font-family:"Space Grotesk",sans-serif;font-size:clamp(1.4rem,3vw,2.8rem);font-weight:700;letter-spacing:.22em;color:var(--amber);opacity:0;pointer-events:none;z-index:6;white-space:nowrap;text-shadow:0 0 40px rgba(245,158,11,.6)';
   mapS.appendChild(selfLabel);
 
   // SFX helpers (standalone ctx so they don't stomp other audio)

@@ -3690,31 +3690,51 @@ function nextVisible(from,dir){
 document.getElementById('btn-prev').addEventListener('click',()=>{const n=nextVisible(current,-1);if(n>=0)goTo(n);});
 document.getElementById('btn-next').addEventListener('click',()=>{const n=nextVisible(current,1);if(n>=0)goTo(n);});
 
-// ── Playing indicator — shows when the current slide has remaining steps,
-// so a viewer knows "there's more happening here, don't skip yet." ──
+// ── Playing indicator — "there's still something you haven't seen" ──
+// Shows a spinner between ←/→ when timed content is still running on
+// the current slide. Tells unfamiliar viewers: don't skip yet.
 const _navSpinner=document.getElementById('nav-playing');
-function _updateSpinner(){
-  const stepData=slideSteps.get(allSlides[current]);
-  if(stepData && stepData.current < stepData.steps.length){
-    _navSpinner.classList.add('active');
-  } else {
-    _navSpinner.classList.remove('active');
-  }
-}
+let _playingTimer=null;
+window._showPlaying=function(ms){
+  if(_playingTimer)clearTimeout(_playingTimer);
+  _navSpinner.classList.add('active');
+  _playingTimer=setTimeout(()=>{_navSpinner.classList.remove('active');_playingTimer=null;},ms);
+};
+window._hidePlaying=function(){
+  if(_playingTimer){clearTimeout(_playingTimer);_playingTimer=null;}
+  _navSpinner.classList.remove('active');
+};
 {
   const origGoTo=goTo;
   goTo=function(n){
+    window._hidePlaying(); // clear previous slide's indicator
     origGoTo(n);
-    // After entering a slide, show spinner if it has steps remaining
-    _updateSpinner();
+    // Estimate animation duration per slide type
+    const t=allSlides[current]?.dataset.type;
+    const stepData=slideSteps.get(allSlides[current]);
+    const hasSteps=stepData && stepData.steps.length>0;
+    // Slides with entry animations or steps get the indicator
+    if(t==='intro-alex') window._showPlaying(12000); // avatar walk + power-up + tallies
+    else if(t==='intro-lens') window._showPlaying(8000); // monocle orbit + countdown
+    else if(t==='venn') window._showPlaying(5000); // orbit start
+    else if(t==='intermission') window._showPlaying(6000); // avatar grow + beard flash
+    else if(t==='map') window._showPlaying(6000); // ring draw + nodes
+    else if(t==='recap') window._showPlaying(2000); // title fade in
+    else if(t==='close') window._showPlaying(3000); // voxel init + particles
+    else if(hasSteps) window._showPlaying(2000); // generic stepped slide
+    else if(t==='case'||t==='lesson') window._showPlaying(2500); // media cycler reveal
   };
 }
 {
   const origAdvance=advanceStep;
   advanceStep=function(){
     const result=origAdvance();
-    // Update after each step — hide when all steps consumed
-    _updateSpinner();
+    if(result){
+      // A step just ran — show indicator for the step's animation
+      window._showPlaying(3000);
+    } else {
+      window._hidePlaying(); // all steps done
+    }
     return result;
   };
 }

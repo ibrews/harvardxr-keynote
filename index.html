@@ -3817,8 +3817,17 @@ document.addEventListener('keydown',e=>{
   if(e.key==='h'||e.key==='H'){ e.preventDefault(); document.body.classList.toggle('presentation-mode'); _mobileBtn(); }
 });
 
-// ── Mobile: auto-hide UI + toggle button ──
+// ── URL params: ?edit / ?view / ?landscape ──
+const _params=new URLSearchParams(location.search);
+const _paramMode=_params.has('edit')?'edit':_params.has('view')?'view':null;
+const _wantLandscape=_params.has('landscape');
 const _isMobile=window.matchMedia('(max-width:900px),(pointer:coarse)').matches;
+
+// Default: view mode (presentation mode on). ?edit overrides, even on mobile.
+const _startInPres=_paramMode==='edit'?false:_paramMode==='view'?true:true; // default = view
+if(_startInPres) document.body.classList.add('presentation-mode');
+
+// Mobile eye toggle button
 function _mobileBtn(){
   const btn=document.getElementById('mobile-ui-toggle');
   if(btn) btn.textContent=document.body.classList.contains('presentation-mode')?'👁':'✕';
@@ -3828,7 +3837,29 @@ document.getElementById('mobile-ui-toggle')?.addEventListener('click',e=>{
   document.body.classList.toggle('presentation-mode');
   _mobileBtn();
 });
-if(_isMobile) { document.body.classList.add('presentation-mode'); _mobileBtn(); }
+_mobileBtn();
+
+// Hide annotation/move toggles in view mode (unless ?edit)
+if(_paramMode!=='edit'){
+  const at=document.getElementById('anno-toggle');if(at)at.style.display='none';
+  const mt=document.getElementById('move-toggle');if(mt)mt.style.display='none';
+}
+
+// Landscape prompt overlay
+if(_wantLandscape){
+  const lo=document.createElement('div');
+  lo.id='landscape-prompt';
+  lo.innerHTML='<div style="text-align:center"><div style="font-size:2.5rem;margin-bottom:12px">📱↔️</div><div style="font-size:1.1rem;font-weight:600;letter-spacing:.1em">Please rotate your device<br>to landscape mode</div></div>';
+  lo.style.cssText='position:fixed;inset:0;z-index:9999;background:var(--bg,#060810);color:var(--text,#f0f4ff);display:none;align-items:center;justify-content:center;font-family:var(--font)';
+  document.body.appendChild(lo);
+  function checkOrientation(){
+    const isPortrait=window.innerHeight>window.innerWidth;
+    lo.style.display=isPortrait?'flex':'none';
+  }
+  checkOrientation();
+  window.addEventListener('resize',checkOrientation);
+  screen.orientation?.addEventListener('change',checkOrientation);
+}
 
 // Hash routing — let the URL drive which slide we land on
 function goToFromHash() {

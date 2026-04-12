@@ -3690,32 +3690,31 @@ function nextVisible(from,dir){
 document.getElementById('btn-prev').addEventListener('click',()=>{const n=nextVisible(current,-1);if(n>=0)goTo(n);});
 document.getElementById('btn-next').addEventListener('click',()=>{const n=nextVisible(current,1);if(n>=0)goTo(n);});
 
-// ── Playing indicator (spinner between nav arrows) ──
+// ── Playing indicator — shows when the current slide has remaining steps,
+// so a viewer knows "there's more happening here, don't skip yet." ──
 const _navSpinner=document.getElementById('nav-playing');
+function _updateSpinner(){
+  const stepData=slideSteps.get(allSlides[current]);
+  if(stepData && stepData.current < stepData.steps.length){
+    _navSpinner.classList.add('active');
+  } else {
+    _navSpinner.classList.remove('active');
+  }
+}
 {
   const origGoTo=goTo;
   goTo=function(n){
-    _navSpinner.classList.add('active');
     origGoTo(n);
-    // Keep spinner visible during slide steps too
-    const stepData=slideSteps.get(allSlides[current]);
-    if(!stepData||stepData.current>=stepData.steps.length){
-      setTimeout(()=>_navSpinner.classList.remove('active'),600);
-    }
+    // After entering a slide, show spinner if it has steps remaining
+    _updateSpinner();
   };
 }
-// Also show spinner during step advancement and hide when steps exhausted
 {
   const origAdvance=advanceStep;
   advanceStep=function(){
-    _navSpinner.classList.add('active');
     const result=origAdvance();
-    const stepData=slideSteps.get(allSlides[current]);
-    if(!result||!stepData||stepData.current>=stepData.steps.length){
-      setTimeout(()=>_navSpinner.classList.remove('active'),600);
-    } else {
-      setTimeout(()=>_navSpinner.classList.remove('active'),1200);
-    }
+    // Update after each step — hide when all steps consumed
+    _updateSpinner();
     return result;
   };
 }

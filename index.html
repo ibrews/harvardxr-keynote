@@ -3703,7 +3703,7 @@ function goTo(n){
   // inside playAlexIntro(), so the stats count up as Alex grows.
   if (t !== 'intro-alex') setTimeout(()=>playTallies(nx), 400);
   // Update URL hash so the slide is shareable / re-navigable
-  if(history.replaceState) history.replaceState(null, '', '#' + (current + 1));
+  if(history.replaceState) history.replaceState(null, '', '#' + current);
   setTimeout(()=>{animating=false},520);
 }
 // ── Skip hidden slides during navigation ──

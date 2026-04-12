@@ -741,7 +741,7 @@ const deck=document.getElementById('deck'),allSlides=[],lessonIdxs=[];
 
 // ── Settings slide (slot 0, hidden by default — UI mode only) ──
 (function(){
-  const DEFAULTS={paraGap:.35,taglineScale:1,titleScale:1,imgDur:6};
+  const DEFAULTS={paraGap:.35,taglineScale:1,titleScale:1,imgDur:6,autoplayLinger:2};
   const saved=JSON.parse(localStorage.getItem('keynote-cfg')||'{}');
   const C={...DEFAULTS,...saved};
   function applyAll(){
@@ -749,6 +749,7 @@ const deck=document.getElementById('deck'),allSlides=[],lessonIdxs=[];
     document.documentElement.style.setProperty('--tagline-scale',C.taglineScale);
     document.documentElement.style.setProperty('--title-scale',C.titleScale);
     window._globalImageDuration=C.imgDur*1000;
+    window._globalAutoplayLinger=C.autoplayLinger*1000;
   }
   applyAll();
   const s=document.createElement('div');
@@ -764,6 +765,10 @@ const deck=document.getElementById('deck'),allSlides=[],lessonIdxs=[];
       <div class="cfg-row">
         <label class="cfg-label">Image hold time</label>
         <div class="cfg-control"><input type="range" id="cfg-img-dur" min="2" max="15" step="0.5" value="${C.imgDur}"><span class="cfg-val" id="v-img-dur">${C.imgDur.toFixed(1)}s</span></div>
+      </div>
+      <div class="cfg-row">
+        <label class="cfg-label">Autoplay linger</label>
+        <div class="cfg-control"><input type="range" id="cfg-autoplay-linger" min="0" max="10" step="0.5" value="${C.autoplayLinger}"><span class="cfg-val" id="v-autoplay-linger">${C.autoplayLinger.toFixed(1)}s</span></div>
       </div>
       <div class="cfg-row">
         <label class="cfg-label">Tagline size</label>
@@ -784,6 +789,7 @@ const deck=document.getElementById('deck'),allSlides=[],lessonIdxs=[];
   };
   wire('cfg-para-gap','v-para-gap',()=>C.paraGap,v=>{C.paraGap=v;},v=>v.toFixed(2)+'em');
   wire('cfg-img-dur','v-img-dur',()=>C.imgDur,v=>{C.imgDur=v;},v=>v.toFixed(1)+'s');
+  wire('cfg-autoplay-linger','v-autoplay-linger',()=>C.autoplayLinger,v=>{C.autoplayLinger=v;},v=>v.toFixed(1)+'s');
   wire('cfg-tagline-scale','v-tagline-scale',()=>C.taglineScale,v=>{C.taglineScale=v;},v=>Math.round(v*100)+'%');
   wire('cfg-title-scale','v-title-scale',()=>C.titleScale,v=>{C.titleScale=v;},v=>Math.round(v*100)+'%');
 })();
@@ -2532,6 +2538,8 @@ function buildMediaCycler(slideEl, items, opts){
     next: goNext, prev: goPrev,
     setManual() { manualMode = true; },
     setAuto()   { manualMode = false; },
+    onComplete: null,   // one-shot: called when all items cycle through once
+    itemCount: items.length,
   };
 
   function easeOut3(k){ return 1 - Math.pow(1-k, 3); }
@@ -2660,8 +2668,15 @@ function buildMediaCycler(slideEl, items, opts){
         drawPixelated(src, Math.pow(2, k*5), _flip);
         if (k >= 1){
           canvas.style.transform = 'translateX(50%)';
+          const prevIdx = idx;
           idx = (idx+1) % sources.length;
           phase='entering'; phaseStart=now;
+          // Full loop complete when we wrap back to item 0
+          if (idx === 0 && prevIdx > 0 && cyclerAPI.onComplete){
+            const cb = cyclerAPI.onComplete;
+            cyclerAPI.onComplete = null;
+            cb();
+          }
         }
         break;
       }
@@ -2676,6 +2691,7 @@ function buildMediaCycler(slideEl, items, opts){
     const cur=sources[idx];
     if (cur?.tagName==='VIDEO'){ cur.pause(); cur.currentTime=0; }
     idx=0; phase='entering'; phaseStart=0; pulseAlpha=0; videoEnded=false;
+    cyclerAPI.onComplete=null; // discard any pending autoplay callback
   }
 
   new MutationObserver(()=>{
@@ -3743,13 +3759,29 @@ let _autoplayTimer=null;
 const _autoplayCb=document.getElementById('autoplay-cb');
 function autoplayTick(){
   if(!_autoplayCb.checked)return;
-  // Try to advance step first, then next slide
+  // Try to advance a sub-step first
   if(!advanceStep()){
     const n=nextVisible(current,1);
-    if(n>=0) goTo(n);
-    else { _autoplayCb.checked=false; return; } // end of deck
+    if(n<0){ _autoplayCb.checked=false; return; } // end of deck
+    // All content on this slide is done — linger then advance
+    const linger=window._globalAutoplayLinger??2000;
+    const doAdvance=()=>{
+      if(!_autoplayCb.checked)return;
+      goTo(n);
+      _autoplayTimer=setTimeout(autoplayTick,50);
+    };
+    // If the slide has a multi-item gallery, wait for it to finish one full loop
+    if(window._activeCycler && window._activeCycler.itemCount>1){
+      window._activeCycler.onComplete=()=>{
+        if(!_autoplayCb.checked)return;
+        _autoplayTimer=setTimeout(doAdvance,linger);
+      };
+    } else {
+      _autoplayTimer=setTimeout(doAdvance,linger);
+    }
+    return;
   }
-  // Schedule next tick: longer for lesson slides, shorter for cases
+  // Sub-step was advanced — schedule next step with per-type inter-step delay
   const type=allSlides[current]?.dataset.type;
   const delay=type==='lesson'||type==='bonus'||type==='recap'?8000:type==='case'?12000:6000;
   _autoplayTimer=setTimeout(autoplayTick,delay);

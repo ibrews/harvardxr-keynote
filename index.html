@@ -347,7 +347,7 @@ canvas#stars{position:absolute;inset:0}
 .nav-playing{width:20px;height:20px;border:2px solid rgba(0,212,255,.3);border-top-color:var(--teal);border-radius:50%;opacity:0;transition:opacity .2s;pointer-events:none}
 .nav-playing.active{opacity:1;animation:navSpin .8s linear infinite}
 @keyframes navSpin{to{transform:rotate(360deg)}}
-.nav-autoplay{position:fixed;bottom:6px;right:160px;z-index:20;display:flex;align-items:center;gap:6px;font-size:.6rem;letter-spacing:.1em;color:rgba(255,255,255,.3);cursor:pointer;user-select:none}
+.nav-autoplay{display:flex;align-items:center;gap:6px;font-size:.6rem;letter-spacing:.1em;color:rgba(255,255,255,.3);cursor:pointer;user-select:none;margin-left:8px}
 .nav-autoplay input{accent-color:var(--teal);cursor:pointer}
 .nav-autoplay:hover{color:rgba(255,255,255,.5)}
 #step-indicator{position:fixed;bottom:82px;right:160px;z-index:20;font-size:.6rem;font-weight:600;letter-spacing:.14em;color:rgba(255,255,255,.3);text-align:center;width:102px;pointer-events:none}
@@ -681,8 +681,7 @@ body.edit-text .slide.active [contenteditable="true"]{outline:2px solid var(--te
 <div id="counter"></div>
 <div id="brand">Agile Lens · HXR 2026</div>
 <div id="step-indicator"></div>
-<div class="nav-arrows"><button class="nav-btn" id="btn-prev">←</button><div class="nav-playing" id="nav-playing"></div><button class="nav-btn" id="btn-next">→</button></div>
-<label class="nav-autoplay"><input type="checkbox" id="autoplay-cb">AUTOPLAY</label>
+<div class="nav-arrows"><button class="nav-btn" id="btn-prev">←</button><div class="nav-playing" id="nav-playing"></div><button class="nav-btn" id="btn-next">→</button><label class="nav-autoplay"><input type="checkbox" id="autoplay-cb">AUTO</label></div>
 
 <!-- Slide jump grid (hover bottom of screen to reveal) -->
 <div id="slide-grid-zone"></div>

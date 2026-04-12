@@ -1330,6 +1330,27 @@ function buildUE5Block(svg) {
   svg.appendChild(blockPos);
 }
 
+// ── Global SFX kill — stop all playing sounds on slide/step change ──
+// Monkey-patch AudioContext so every new instance auto-registers for cleanup.
+const _activeAudioCtxs = new Set();
+{
+  const _OrigAC = window.AudioContext || window.webkitAudioContext;
+  const _PatchedAC = function(...args) {
+    const ctx = new _OrigAC(...args);
+    _activeAudioCtxs.add(ctx);
+    const origClose = ctx.close.bind(ctx);
+    ctx.close = function() { _activeAudioCtxs.delete(ctx); return origClose(); };
+    return ctx;
+  };
+  _PatchedAC.prototype = _OrigAC.prototype;
+  window.AudioContext = _PatchedAC;
+  if (window.webkitAudioContext) window.webkitAudioContext = _PatchedAC;
+}
+window._killAllSfx = function() {
+  _activeAudioCtxs.forEach(ctx => { try { ctx.close(); } catch(e) {} });
+  _activeAudioCtxs.clear();
+};
+
 // ── Slide-advance whoosh — subtle air/page-turn sound ──
 let _whooshCtx = null;
 function playWhoosh() {
@@ -3654,6 +3675,7 @@ function resetSteps(slide) {
 let animating=false;
 function goTo(n){
   if(n<0||n>=total||n===current||animating)return;
+  window._killAllSfx();
   playWhoosh();
   animating=true;const fwd=n>current;
   const p=allSlides[current],nx=allSlides[n];

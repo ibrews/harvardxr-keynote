@@ -3537,7 +3537,7 @@ const total=allSlides.length;let current=allSlides.findIndex(s=>s.classList.cont
 let mapDone=false;
 
 // ── Nav ──
-function updateHUD(){counterEl.textContent=`${String(current+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;updateTracker()}
+function updateHUD(){counterEl.textContent=`${String(current).padStart(2,'0')} / ${String(total-1).padStart(2,'0')}`;updateTracker()}
 // ── Tally SFX ─────────────────────────────────────────────────
 let _tallyCtx = null;
 function _getTallyCtx() {
@@ -3876,7 +3876,7 @@ if(_wantLandscape){
 function goToFromHash() {
   const m = (location.hash || '').match(/^#(\d+)$/);
   if (!m) return;
-  const target = Math.max(0, Math.min(total - 1, parseInt(m[1], 10) - 1));
+  const target = Math.max(0, Math.min(total - 1, parseInt(m[1], 10)));
   if (target !== current) goTo(target);
 }
 window.addEventListener('hashchange', goToFromHash);

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){var m=document.querySelector('meta[name="viewport"]');if(m&&window.matchMedia('(pointer:coarse)').matches&&window.innerWidth>window.innerHeight)m.content='width=1280,initial-scale=1.0';}());</script>
 <title>10 Lessons from 10 Years · Alex Coulombe · HXR 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -340,7 +341,7 @@ canvas#stars{position:absolute;inset:0}
 /* HUD */
 #counter{position:fixed;top:32px;right:48px;z-index:20;font-size:clamp(.72rem,1vw,.95rem);font-weight:500;letter-spacing:.12em;color:rgba(255,255,255,.25)}
 #brand{position:fixed;bottom:28px;left:48px;z-index:20;font-size:clamp(.68rem,.95vw,.9rem);font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.18)}
-.nav-arrows{position:fixed;bottom:24px;right:160px;z-index:20;display:flex;gap:10px;align-items:center}
+.nav-arrows{position:fixed;bottom:24px;right:160px;z-index:100;display:flex;gap:10px;align-items:center}
 .nav-playing{width:20px;height:20px;border:2px solid rgba(0,212,255,.3);border-top-color:var(--teal);border-radius:50%;opacity:0;transition:opacity .2s;pointer-events:none}
 .nav-playing.active{opacity:1;animation:navSpin .8s linear infinite}
 @keyframes navSpin{to{transform:rotate(360deg)}}
@@ -3890,6 +3891,9 @@ if(_wantLandscape){
   window.addEventListener('resize',checkOrientation);
   screen.orientation?.addEventListener('change',checkOrientation);
 }
+// Mobile landscape: set viewport to 1280px wide so the deck renders at desktop
+// resolution and the browser scales it uniformly to fit — matching 16:9 desktop look
+(function(){const m=document.querySelector('meta[name="viewport"]');if(!m||!window.matchMedia('(pointer:coarse)').matches)return;function u(){m.content=window.innerWidth>window.innerHeight?'width=1280,initial-scale=1.0':'width=device-width,initial-scale=1.0';}window.addEventListener('resize',u);screen.orientation?.addEventListener('change',()=>setTimeout(u,120));})();
 
 // Hash routing — let the URL drive which slide we land on
 function goToFromHash() {
@@ -4172,7 +4176,7 @@ updateHUD=function(){
   const active=sgEl.querySelector('.sg-thumb.active');
   if(active&&sgEl.classList.contains('visible'))active.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
 };
-let tx=0,ty=0,tTime=0;
+let tx=0,ty=0,tTime=0,lastTapT=0;
 document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;tTime=Date.now();},{passive:true});
 document.addEventListener('touchend',e=>{
   const dx=e.changedTouches[0].clientX-tx;
@@ -4183,8 +4187,10 @@ document.addEventListener('touchend',e=>{
     if(dx<0){if(window._arrowSubstep!==false&&advanceStep()){}else{const n=nextVisible(current,1);if(n>=0)goTo(n);}}
     else{const n=nextVisible(current,-1);if(n>=0)goTo(n);}
   } else if(Math.abs(dx)<15&&Math.abs(dy)<15&&dt<300){
-    // Tap (not a swipe): advance step or next slide
-    if(window._arrowSubstep!==false&&advanceStep()){}else{const n=nextVisible(current,1);if(n>=0)goTo(n);}
+    // Tap: double-tap skips substep and goes next; single-tap steps normally
+    const now=Date.now();const dbl=now-lastTapT<300;lastTapT=now;
+    if(dbl){lastTapT=0;const n=nextVisible(current,1);if(n>=0)goTo(n);}
+    else if(window._arrowSubstep!==false&&advanceStep()){}else{const n=nextVisible(current,1);if(n>=0)goTo(n);}
   }
 },{passive:true});
 

@@ -33,3 +33,7 @@ Or visit the live version directly at [ibrews.github.io/harvardxr-keynote](https
 ## License
 
 All rights reserved. The framework is open-sourced separately as [Spatial Deck](https://github.com/ibrews/spatial-deck) (MIT).
+
+## Support
+
+If you like seeing this kind of thing get built and shared, [donations are always welcome](https://www.alexcoulombepresents.com/support) — they buy hardware, render time, and the freedom to keep giving most of this away.
